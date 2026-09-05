@@ -24,12 +24,17 @@ class SyncStatusProvider extends ChangeNotifier {
   String? _cycleError;
   String? _profileError;
   DateTime? _lastSyncTime;
+  int _retryCount = 0;
+  static const int _maxRetries = 5;
 
   SyncStatus get cycleStatus => _cycleStatus;
   SyncStatus get profileStatus => _profileStatus;
   String? get cycleError => _cycleError;
   String? get profileError => _profileError;
   DateTime? get lastSyncTime => _lastSyncTime;
+  int get retryCount => _retryCount;
+  int get maxRetries => _maxRetries;
+  bool get hasFailedRetries => _retryCount >= _maxRetries;
 
   /// Overall status - synced only if both are synced
   SyncStatus get overallStatus {
@@ -62,6 +67,9 @@ class SyncStatusProvider extends ChangeNotifier {
     }
     if (status == SyncStatus.synced) {
       _lastSyncTime = DateTime.now();
+      _retryCount = 0;
+    } else if (status == SyncStatus.error) {
+      _retryCount++;
     }
     notifyListeners();
   }
