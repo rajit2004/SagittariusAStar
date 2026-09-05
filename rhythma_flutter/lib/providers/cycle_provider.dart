@@ -4,14 +4,15 @@ import '../config/theme.dart';
 import '../services/local_storage_service.dart';
 
 class CycleProvider extends ChangeNotifier {
-  final DateTime _today = DateTime.now();
+  DateTime get _today => DateTime.now();
 
   late DateTime _selectedDate;
   late DateTime _displayedMonth;
 
   CycleProvider() {
-    _selectedDate = DateTime(_today.year, _today.month, _today.day);
-    _displayedMonth = DateTime(_today.year, _today.month);
+    final today = _today;
+    _selectedDate = DateTime(today.year, today.month, today.day);
+    _displayedMonth = DateTime(today.year, today.month);
   }
 
   DateTime get selectedDate => _selectedDate;
@@ -97,39 +98,39 @@ class CycleProvider extends ChangeNotifier {
     return cycleDay + 1;
   }
 
-  String phaseKey(DateTime date) {
+  /// Returns 0 (menstrual), 1 (follicular), 2 (ovulation), or 3 (luteal).
+  int _phaseIndex(DateTime date) {
     final day = _getCycleDay(date);
     final periodEnd = _periodDuration;
     final follicularEnd = (_cycleLength / 2).floor() - 2;
     final ovulationEnd = (_cycleLength / 2).floor() + 1;
 
-    if (day <= periodEnd) return 'menstrual';
-    if (day <= follicularEnd) return 'follicular';
-    if (day <= ovulationEnd) return 'ovulation';
-    return 'luteal';
+    if (day <= periodEnd) return 0;
+    if (day <= follicularEnd) return 1;
+    if (day <= ovulationEnd) return 2;
+    return 3;
+  }
+
+  String phaseKey(DateTime date) {
+    return const ['menstrual', 'follicular', 'ovulation', 'luteal']
+        [_phaseIndex(date)];
   }
 
   String phase(DateTime date, AppLocalizations l10n) {
-    final day = _getCycleDay(date);
-    final periodEnd = _periodDuration;
-    final follicularEnd = (_cycleLength / 2).floor() - 2;
-    final ovulationEnd = (_cycleLength / 2).floor() + 1;
-
-    if (day <= periodEnd) return l10n.cyclePhasePeriod;
-    if (day <= follicularEnd) return l10n.cyclePhaseFollicular;
-    if (day <= ovulationEnd) return l10n.cyclePhaseOvulation;
-    return l10n.cyclePhaseLuteal;
+    return [
+      l10n.cyclePhasePeriod,
+      l10n.cyclePhaseFollicular,
+      l10n.cyclePhaseOvulation,
+      l10n.cyclePhaseLuteal,
+    ][_phaseIndex(date)];
   }
 
   Color phaseColor(DateTime date) {
-    final day = _getCycleDay(date);
-    final periodEnd = _periodDuration;
-    final follicularEnd = (_cycleLength / 2).floor() - 2;
-    final ovulationEnd = (_cycleLength / 2).floor() + 1;
-
-    if (day <= periodEnd) return RhythmaColors.rose;
-    if (day <= follicularEnd) return RhythmaColors.primary;
-    if (day <= ovulationEnd) return RhythmaColors.teal;
-    return RhythmaColors.coral;
+    return const [
+      RhythmaColors.rose,
+      RhythmaColors.primary,
+      RhythmaColors.teal,
+      RhythmaColors.coral,
+    ][_phaseIndex(date)];
   }
 }
