@@ -146,9 +146,9 @@ The public landing page is live at **[rhythma-navy.vercel.app](https://rhythma-n
 | 📊 Cycle Variability Index (CVI)      | ✅     | Trained XGBoost model shipped in-repo, with a documented heuristic fallback.             |
 | ❤️ Menstrual Health Score (MHS)      | 🟡     | Live today as a hand-written weighted average (CVI + sleep + stress + symptoms + lifestyle). The planned Logistic Regression ensemble is not built yet, and the lifestyle component silently falls back to a default score until profile fields land (#112). |
 | 🏥 Hormonal Risk Indicator            | ✅     | 3-tier (Low/Medium/High) alerting derived from CVI.                                       |
-| 📱 Offline-First Architecture         | 🟡     | Hive local storage + Firestore sync and a sync-status indicator are implemented; automatic queue-and-retry on reconnect is not yet built (#229). |
+| 📱 Offline-First Architecture         | ✅     | Hive local storage + Firestore sync, sync-status indicator, and automatic queue-and-retry on reconnect with exponential backoff. |
 | 🔒 Privacy-First Design               | ✅     | Auth, password policy, rate limiting, and a dedicated data-privacy/export service are implemented server-side. |
-| 🌍 Indian Regional Languages          | 🟡     | 17 languages have translation files, far beyond the 3 originally announced — but 4 of the `.arb` files (`hi`, `mr`, `ta`, `te`) currently contain invalid JSON (duplicate/malformed entries) that will break `flutter gen-l10n` codegen until fixed. The base `app_en.arb` file is valid. |
+| 🌍 Indian Regional Languages          | 🟡     | 17 languages have translation files. `app_en.arb` and `app_hi.arb` are clean; `app_mr.arb`, `app_ta.arb`, `app_te.arb` may need cleanup — verify with `flutter gen-l10n`. |
 | 📩 SMS Health Summaries               | ✅     | Real Twilio `Client` integration, gated on optional env credentials.                     |
 | 🌿 Ayurvedic Correlation Layer        | ✅     | Educational wellness content layer merged (PR #436).                                     |
 | 💬 WhatsApp / Telegram Bot            | ✅     | Full chat-linking + command engine (`status`, `link`, `unlink`, `help`) implemented — well ahead of the old roadmap's "Phase 4" label. |
@@ -218,11 +218,9 @@ GitHub Actions already configured for **backend** (`pytest`, path-filtered) and 
 
 ## ⚠️ Known Issues (verified against current code)
  
-- **Broken localization JSON**: `app_hi.arb`, `app_mr.arb`, `app_ta.arb`, and `app_te.arb` contain a duplicated/malformed entry that makes them invalid JSON — this will break Flutter's ARB-based codegen until fixed. (`app_en.arb`, the base English file, is now valid.)
-- **Cycle phase display bug**: `CycleProvider.phaseKey()` in `rhythma_flutter/lib/providers/cycle_provider.dart` computes the menstrual phase from the **calendar day of month** (`date.day`) instead of the user's actual cycle day, and is used by `cycle_screen.dart`. A separate, correct method (`phase()`, scaled to the user's real cycle length) exists in the same file but isn't the one wired into the Cycle screen.
+- **Partial ARB fixes**: `app_en.arb` and `app_hi.arb` have been cleaned up. `app_mr.arb`, `app_ta.arb`, and `app_te.arb` may still contain malformed entries — run `flutter gen-l10n` to verify.
 - **MHS is not yet ML-based**: despite the original "Logistic Regression" description, it currently runs as a documented hand-written weighted average, with the lifestyle sub-score defaulting to a flat fallback value until profile fields ship (#112).
-- **No offline auto-retry queue** (#229): the sync-status indicator exists, but reconnect-triggered replay of queued writes does not yet.
-- **Web app missing parity pages and CI** (#247, #248).
+- **Web app missing parity pages** (#247) — the web app has core pages but lacks some Flutter feature parity (e.g., full cycle tracking, Ayurvedic content).
 
 ---
 
@@ -263,12 +261,12 @@ Legend: ✅ **Done** (real, working, verified against source) · 🟡 **Partial*
 | Encryption at rest | ✅ | Hive boxes are opened with `HiveAesCipher`, not just listed as a dependency |
 | Firestore sync | ✅ | Offline-first via Hive, syncs when online |
 | Sync status indicator | ✅ | `SyncStatusProvider` — synced/syncing/pending/offline/error |
-| Automatic reconnect-and-retry queue | 🟡 | Status is tracked and shown; automatic replay of queued writes on reconnect isn't built yet (#229) |
+| Automatic reconnect-and-retry queue | ✅ | Status tracked via `SyncStatusProvider`; queue items have attempt counters, exponential backoff (30s → 2h), max 5 retries, and a periodic 5-minute flush timer. Dead-letter items are dropped automatically |
 | Local notifications | ✅ | `notification_service.dart` is wired to **both** period-prediction reminders and logging reminders, plus manual toggles in Settings |
 | First-period / age-gated onboarding | ✅ | `screens/education/first_period_education_screen.dart` exists as a dedicated flow |
 | Ayurvedic correlation content | ✅ | `lib/data/ayurveda_content.dart` — real content, merged via PR #436 |
-| Cycle phase calculation | 🟡 | Two implementations exist: `phase()` correctly scales to cycle length; `phaseKey()` — the one actually used by the Cycle screen — buggily uses calendar day-of-month instead |
-| Localization — 17 Indian languages + English | 🟡 | Real `.arb` files for all 17; `hi`, `mr`, `ta`, and `te` contain malformed JSON that will break `flutter gen-l10n` until fixed. The base English file is valid |
+| Cycle phase calculation | ✅ | Extracted `_phaseIndex()` helper eliminates boundary duplication; `phaseKey()`, `phase()`, and `phaseColor()` all use it. `_today` is now a getter so the provider refreshes correctly across midnight. |
+| Localization — 17 Indian languages + English | 🟡 | Real `.arb` files for all 17; `app_en.arb` and `app_hi.arb` have been cleaned up. `app_mr.arb`, `app_ta.arb`, and `app_te.arb` may still contain malformed entries — run `flutter gen-l10n` to verify |
 | PDF report export | ✅ | `pw.Document` via `pdf`/`printing` |
 | Widget/unit tests | ✅ | 25 test files |
  
@@ -290,7 +288,7 @@ Legend: ✅ **Done** (real, working, verified against source) · 🟡 **Partial*
 |---|---|---|
 | Page, hero, features | ✅ | Live content |
 | "Learn More" CTA | ✅ | Anchors to `#features`, works |
-| "Get Started" CTA | ❌ | Renders as an `<a href="">` with an **empty href** — currently a dead link, not a missing-handler `<button>` |
+| "Get Started" CTA | ✅ | Redirects to email contact (`mailto:`) |
 | CI | ✅ | `.github/workflows/landing-page.yml` exists |
  
 ### Cross-cutting
@@ -301,7 +299,7 @@ Legend: ✅ **Done** (real, working, verified against source) · 🟡 **Partial*
 | Architecture documentation | ✅ `docs/architecture.md` |
 | Medical sourcing / disclaimers docs | ✅ `docs/medical_sources.md`, `docs/health-disclaimers.md` |
 
-> This table is maintained by contributors alongside their PRs — see [CONTRIBUTING.md → Documentation Guidelines](CONTRIBUTING.md#documentation-guidelines). A PR that implements something listed here as ❌ or 🟡 should update the relevant row in the same PR.
+> This table is maintained by contributors alongside their PRs. A PR that implements something listed here as ❌ or 🟡 should update the relevant row in the same PR.
 
 ---
 
@@ -420,7 +418,7 @@ Rhythma/
 - A Twilio account (optional — only needed for SMS)
 
 ```bash
-git clone https://github.com/ishita2740/Rhythma.git
+git clone https://github.com/rajit2004/SagittariusAStar.git Rhythma
 cd Rhythma
 ```
 
@@ -572,20 +570,16 @@ This enables:
 
 These are explicitly **not built yet** — flagged here so contributors know what's scoped as future work rather than a current gap in an existing feature:
 
-- **First Period Guidance** — a simplified, age-appropriate onboarding and education flow for first-time users (12–17), distinct from the current adult-focused onboarding (`onboarding_screen.dart`). Tracked in issue #42.
-- **WhatsApp Bot** — a Gemini-powered WhatsApp assistant via Twilio/Meta Cloud API, so users on shared or low-end devices can track cycles and ask health questions without installing the app. No code for this exists anywhere in the repo yet.
 - **Website feature parity** — cycle tracking, AI Assistant, and Insights pages for `web/`, matching what the Flutter app already does. Auth and scaffolding exist today; the feature pages don't.
-- **Ayurvedic correlation content** — the educational content layer connecting lifestyle/cycle data to Ayurvedic wellness concepts. Tracked in issue #43; no content assets exist yet.
-- **Provider-facing view** — a dashboard for healthcare professionals to view (consenting) patients' longitudinal health data.
 - **India regional health map** — an anonymized, aggregated PCOD/PCOS risk heatmap for public-health and NGO use.
+
+> **Note:** The WhatsApp/Telegram bot, Ayurvedic correlation content, and Provider portal are all already implemented and shipped — see the [Key Features](#-key-features) table above.
 
 ---
 
 ## Contributing
 
 Contributions are very welcome — code, docs, translations, design, and bug reports all matter.
-
-Please read **[CONTRIBUTING.md](CONTRIBUTING.md)** before opening an issue or pull request. It covers project setup, branch naming, commit conventions, coding style, and the PR workflow in detail.
 
 If you're looking for a place to start, the [Project Status](#project-status) tables above double as a task list: anything marked ❌ or 🟡 is fair game.
 ---
