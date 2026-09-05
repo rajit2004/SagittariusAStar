@@ -13,12 +13,31 @@ import '../providers/sync_status_provider.dart';
 /// Firestore queue handles syncing *local Hive state* to Firestore; this
 /// service handles retrying *backend REST API calls* that failed due to
 /// network errors.
+///
+/// Retry policy:
+///   - Max 5 attempts per item
+///   - Exponential backoff: 30s, 2m, 8m, 32m, 2h
+///   - Items exceeding max attempts are removed from the queue
+///   - A periodic timer retries every 5 minutes in addition to
+///     the connectivity-change trigger
 class OfflineSyncService {
   static const String _boxName = 'offline_queue';
+  static const int _maxAttempts = 5;
+  static const Duration _periodicInterval = Duration(minutes: 5);
+
+  /// Exponential backoff delays for attempts 0..4
+  static const List<Duration> _backoffDelays = [
+    Duration(seconds: 30),
+    Duration(minutes: 2),
+    Duration(minutes: 8),
+    Duration(minutes: 32),
+    Duration(hours: 2),
+  ];
 
   static Box<Map>? _box;
   static StreamSubscription<List<ConnectivityResult>>?
       _connectivitySubscription;
+  static Timer? _periodicTimer;
   static final Connectivity _connectivity = Connectivity();
   static bool _initialized = false;
   static bool _flushing = false;
@@ -42,6 +61,14 @@ class OfflineSyncService {
     _connectivitySubscription = _connectivity.onConnectivityChanged.listen(
       _onConnectivityChanged,
     );
+
+    // Periodic retry timer
+    _periodicTimer = Timer.periodic(_periodicInterval, (_) {
+      final uid = LocalStorageService.currentUserId;
+      if (uid != null && hasPendingItems) {
+        flushQueue(uid);
+      }
+    });
 
     // Flush any items that were queued from a previous session
     final uid = LocalStorageService.currentUserId;
@@ -71,6 +98,14 @@ class OfflineSyncService {
 
   static int get pendingCount => _box?.length ?? 0;
 
+  /// Number of items that have failed all retries.
+  static int get deadLetterCount {
+    if (_box == null) return 0;
+    return _box!.values
+        .where((e) => (e['attempt_count'] as int? ?? 0) >= _maxAttempts)
+        .length;
+  }
+
   /// Enqueue a failed cycle log upsert for retry.
   static Future<void> enqueueUpsert({
     required String dateKey,
@@ -87,6 +122,8 @@ class OfflineSyncService {
       'payload': payload,
       'user_id': uid,
       'created_at': DateTime.now().toIso8601String(),
+      'attempt_count': 0,
+      'last_attempt_at': null,
     });
     _updateStatus(SyncStatus.pending, 'cycle');
     debugPrint('OfflineSyncService: enqueued upsert for $dateKey');
@@ -106,6 +143,8 @@ class OfflineSyncService {
       'date_key': dateKey,
       'user_id': uid,
       'created_at': DateTime.now().toIso8601String(),
+      'attempt_count': 0,
+      'last_attempt_at': null,
     });
     _updateStatus(SyncStatus.pending, 'cycle');
     debugPrint('OfflineSyncService: enqueued delete for $dateKey');
@@ -124,10 +163,43 @@ class OfflineSyncService {
 
     try {
       final allKeys = _box!.keys.toList();
+      final now = DateTime.now();
 
-      // Separate upserts and deletes
-      final upsertKeys = allKeys.where((k) => k.toString().startsWith('upsert::$userId')).toList();
-      final deleteKeys = allKeys.where((k) => k.toString().startsWith('delete::$userId')).toList();
+      // Separate upserts and deletes, filtering out items that haven't
+      // cooled down yet (backoff delay hasn't elapsed).
+      final upsertKeys = <dynamic>[];
+      final deleteKeys = <dynamic>[];
+
+      for (final key in allKeys) {
+        final entry = _box!.get(key);
+        if (entry == null) continue;
+
+        final attemptCount = entry['attempt_count'] as int? ?? 0;
+
+        // Drop items that have exhausted all retries
+        if (attemptCount >= _maxAttempts) {
+          debugPrint(
+              'OfflineSyncService: dropping ${entry['type']} ${entry['date_key']} after $_maxAttempts failed attempts');
+          await _box!.delete(key);
+          continue;
+        }
+
+        // Respect backoff delay
+        final lastAttemptStr = entry['last_attempt_at'] as String?;
+        if (lastAttemptStr != null) {
+          final lastAttempt = DateTime.tryParse(lastAttemptStr);
+          if (lastAttempt != null) {
+            final delay = _backoffDelays[attemptCount.clamp(0, _backoffDelays.length - 1)];
+            if (now.difference(lastAttempt) < delay) continue;
+          }
+        }
+
+        if (key.toString().startsWith('upsert::$userId')) {
+          upsertKeys.add(key);
+        } else if (key.toString().startsWith('delete::$userId')) {
+          deleteKeys.add(key);
+        }
+      }
 
       // Flush upserts via batch endpoint
       if (upsertKeys.isNotEmpty) {
@@ -173,15 +245,35 @@ class OfflineSyncService {
       final response = await dio.post('/cycle/batch', data: {'items': items});
       final results = (response.data['results'] as List).cast<Map<String, dynamic>>();
 
-      // Remove successfully synced items
+      // Remove successfully synced items, bump attempt count on partial failures
       for (int i = 0; i < keys.length; i++) {
+        final entry = _box!.get(keys[i]);
+        if (entry == null) continue;
+
         final result = i < results.length ? results[i] : null;
         if (result != null && result['status'] == 'ok') {
           await _box!.delete(keys[i]);
+        } else {
+          // Increment attempt counter
+          await _box!.put(keys[i], {
+            ...Map<String, dynamic>.from(entry),
+            'attempt_count': (entry['attempt_count'] as int? ?? 0) + 1,
+            'last_attempt_at': DateTime.now().toIso8601String(),
+          });
         }
       }
     } catch (e) {
       debugPrint('OfflineSyncService: batch upsert failed: $e');
+      // Bump attempt count for all items in this batch
+      for (final key in keys) {
+        final entry = _box!.get(key);
+        if (entry == null) continue;
+        await _box!.put(key, {
+          ...Map<String, dynamic>.from(entry),
+          'attempt_count': (entry['attempt_count'] as int? ?? 0) + 1,
+          'last_attempt_at': DateTime.now().toIso8601String(),
+        });
+      }
       rethrow;
     }
   }
@@ -202,15 +294,33 @@ class OfflineSyncService {
       final response = await dio.post('/cycle/batch-delete', data: {'date_keys': dateKeys});
       final results = (response.data['results'] as List).cast<Map<String, dynamic>>();
 
-      // Remove successfully synced items
+      // Remove successfully synced items, bump attempt count on partial failures
       for (int i = 0; i < keys.length; i++) {
+        final entry = _box!.get(keys[i]);
+        if (entry == null) continue;
+
         final result = i < results.length ? results[i] : null;
         if (result != null && result['status'] == 'ok') {
           await _box!.delete(keys[i]);
+        } else {
+          await _box!.put(keys[i], {
+            ...Map<String, dynamic>.from(entry),
+            'attempt_count': (entry['attempt_count'] as int? ?? 0) + 1,
+            'last_attempt_at': DateTime.now().toIso8601String(),
+          });
         }
       }
     } catch (e) {
       debugPrint('OfflineSyncService: batch delete failed: $e');
+      for (final key in keys) {
+        final entry = _box!.get(key);
+        if (entry == null) continue;
+        await _box!.put(key, {
+          ...Map<String, dynamic>.from(entry),
+          'attempt_count': (entry['attempt_count'] as int? ?? 0) + 1,
+          'last_attempt_at': DateTime.now().toIso8601String(),
+        });
+      }
       rethrow;
     }
   }
@@ -220,6 +330,7 @@ class OfflineSyncService {
   // ──────────────────────────────────────────────────────────────────────────
 
   static void dispose() {
+    _periodicTimer?.cancel();
     _connectivitySubscription?.cancel();
   }
 }
