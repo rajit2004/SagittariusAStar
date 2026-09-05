@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://rhythma-navy.vercel.app/sitemap.xml
