@@ -1,3 +1,4 @@
+"""Backfill user emails to their normalised (lower-cased, trimmed) form."""
 
 import argparse
 import os
