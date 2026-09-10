@@ -113,12 +113,6 @@ p {
   cursor: default;
 }
 
-.error-text {
-  color: #c0392b;
-  font-size: 0.85rem;
-  margin: 0 0 0.5rem;
-}
-
 /* Password requirements on the register form. Colour reinforces the state,
    it never carries it alone — every row also shows a ✓ or a •, so met and
    unmet stay distinguishable with a red-green colour vision deficiency or
@@ -231,13 +225,6 @@ p {
 
 .page-header h1 {
   margin-bottom: 0.25rem;
-}
-
-.centered-loader {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 /* ── Shared primitives ───────────────────────────────────────────────────── */
