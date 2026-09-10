@@ -666,7 +666,7 @@ void _showAddEditContactDialog(
               child: _buildStatCard(
                 icon: Icons.psychology_rounded,
                 color: RhythmaColors.teal,
-                value: '$_mhsAverage',
+                value: '--',
                 label: AppLocalizations.of(context)!.profileAvgMentalHealth,
               ),
             ),
@@ -679,7 +679,7 @@ void _showAddEditContactDialog(
               child: _buildStatCard(
                 icon: Icons.insights_rounded,
                 color: RhythmaColors.coral,
-                value: '±1.2 ${AppLocalizations.of(context)!.homeDaysLabel}',
+                value: '--',
                 label: AppLocalizations.of(context)!.profileCycleVariability,
               ),
             ),
@@ -688,7 +688,7 @@ void _showAddEditContactDialog(
               child: _buildStatCard(
                 icon: Icons.history_toggle_off_rounded,
                 color: RhythmaColors.primary,
-                value: '27 ${AppLocalizations.of(context)!.homeDaysLabel}',
+                value: '--',
                 label: AppLocalizations.of(context)!.profileLastCycleLength,
               ),
             ),

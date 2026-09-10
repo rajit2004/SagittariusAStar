@@ -50,37 +50,53 @@ class ReportService {
           pw.Text(
             'Generated on: ${reportDate.day}/${reportDate.month}/${reportDate.year}',
           ),
-          pw.Text('Profile'),
-          pw.Text(profile.toString()),
           pw.SizedBox(height: 20),
-          pw.Text('Cycle Logs'),
-          pw.Text(cycleLogs.toString()),
+          pw.Text(
+            'Profile',
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16),
+          ),
+          pw.SizedBox(height: 8),
+          if (profile.isNotEmpty) ...[
+            _buildProfileRow('Name', profile['name'] ?? 'N/A'),
+            _buildProfileRow('Age', profile['age']?.toString() ?? 'N/A'),
+            _buildProfileRow('Weight', profile['weight']?.toString() ?? 'N/A'),
+            _buildProfileRow('Height', profile['height']?.toString() ?? 'N/A'),
+          ] else
+            pw.Text('No profile data available'),
           pw.SizedBox(height: 20),
-          pw.Text('Emergency Contacts'),
-          pw.Text(contacts.toString()),
+          pw.Text(
+            'Emergency Contacts',
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16),
+          ),
+          pw.SizedBox(height: 8),
+          if (contacts.isNotEmpty)
+            ...contacts.map(
+              (c) => pw.Text(
+                '${c['name'] ?? 'N/A'} - ${c['phone'] ?? 'N/A'}',
+              ),
+            )
+          else
+            pw.Text('No emergency contacts added'),
           pw.SizedBox(height: 20),
           pw.Text(
             'Cycle History',
-            style: pw.TextStyle(
-              fontWeight: pw.FontWeight.bold,
-              fontSize: 16,
-            ),
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16),
           ),
-          pw.SizedBox(height: 10),
+          pw.SizedBox(height: 8),
           if (cycleLogs.isEmpty)
             pw.Text('No cycle history available')
           else
             ...cycleLogs.map(
-              (log) => pw.Text(log.toString()),
+              (log) => pw.Text(
+                '${log['date'] ?? 'N/A'}: Flow ${log['flow'] ?? 'N/A'}, Mood ${log['mood'] ?? 'N/A'}',
+              ),
             ),
+          pw.SizedBox(height: 20),
           pw.Text(
             'Symptoms',
-            style: pw.TextStyle(
-              fontWeight: pw.FontWeight.bold,
-              fontSize: 16,
-            ),
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16),
           ),
-          pw.SizedBox(height: 10),
+          pw.SizedBox(height: 8),
           if (symptoms.isEmpty)
             pw.Text('No symptoms logged')
           else
@@ -90,22 +106,16 @@ class ReportService {
           pw.SizedBox(height: 20),
           pw.Text(
             'AI Health Summary',
-            style: pw.TextStyle(
-              fontWeight: pw.FontWeight.bold,
-              fontSize: 16,
-            ),
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16),
           ),
-          pw.SizedBox(height: 10),
+          pw.SizedBox(height: 8),
           pw.Text(aiSummary),
           pw.SizedBox(height: 20),
           pw.Text(
             'Health Insights',
-            style: pw.TextStyle(
-              fontWeight: pw.FontWeight.bold,
-              fontSize: 16,
-            ),
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16),
           ),
-          pw.SizedBox(height: 10),
+          pw.SizedBox(height: 8),
           pw.Text(
             'Avg Cycle Length: ${dashboard['insights']?['averageCycleLength'] ?? 'N/A'} days',
           ),
@@ -134,6 +144,24 @@ class ReportService {
     await Printing.sharePdf(
       bytes: bytes,
       filename: 'rhythma_health_report.pdf',
+    );
+  }
+
+  static pw.Widget _buildProfileRow(String label, String value) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 4),
+      child: pw.Row(
+        children: [
+          pw.SizedBox(
+            width: 120,
+            child: pw.Text(
+              label,
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+            ),
+          ),
+          pw.Expanded(child: pw.Text(value)),
+        ],
+      ),
     );
   }
 }

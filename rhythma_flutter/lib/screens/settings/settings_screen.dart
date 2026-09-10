@@ -503,29 +503,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Divider(height: 1, color: RhythmaColors.border),
                   ListTile(
                     leading: TintedIcon(
-                      icon: Icons.notifications_active_rounded,
-                      color: RhythmaColors.primary,
-                      size: 36,
-                    ),
-                    title: const Text('Test Notification Now'),
-                    subtitle: const Text('Sends an instant alert'),
-                    trailing:
-                        Icon(Icons.send_rounded, color: RhythmaColors.mutedFg),
-                    onTap: () async {
-                      bool granted = await NotificationService.instance
-                          .requestPermissions();
-                      if (granted) {
-                        NotificationService.instance.showInstantNotification(
-                          id: 9999,
-                          title: 'Rhythma Test',
-                          body: 'Native notifications are working perfectly!',
-                        );
-                      }
-                    },
-                  ),
-                  Divider(height: 1, color: RhythmaColors.border),
-                  ListTile(
-                    leading: TintedIcon(
                       icon: Icons.sms_rounded,
                       color: RhythmaColors.teal,
                       size: 36,
@@ -556,47 +533,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   ListTile(
                     leading: TintedIcon(
-                      icon: Icons.security_rounded,
-                      color: RhythmaColors.mutedFg,
-                      size: 36,
-                    ),
-                    title: Text(l10n.appPermissions),
-                    trailing: Icon(Icons.chevron_right_rounded,
-                        color: RhythmaColors.mutedFg),
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          title: Text(
-                            'Coming Soon',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: RhythmaColors.primary),
-                          ),
-                          content: const Text(
-                            'This feature is currently under development.',
-                            textAlign: TextAlign.center,
-                          ),
-                          actionsAlignment: MainAxisAlignment.center,
-                          actions: [
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: RhythmaColors.primary,
-                                foregroundColor: RhythmaColors.primaryFg,
-                              ),
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('OK'),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                  Divider(height: 1, color: RhythmaColors.border),
-                  ListTile(
-                    leading: TintedIcon(
                       icon: Icons.privacy_tip_rounded,
                       color: RhythmaColors.mutedFg,
                       size: 36,
@@ -604,36 +540,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     title: Text(l10n.privacyPolicy),
                     trailing: Icon(Icons.chevron_right_rounded,
                         color: RhythmaColors.mutedFg),
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          title: Text(
-                            'Coming Soon',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: RhythmaColors.primary),
-                          ),
-                          content: const Text(
-                            'This feature is currently under development.',
-                            textAlign: TextAlign.center,
-                          ),
-                          actionsAlignment: MainAxisAlignment.center,
-                          actions: [
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: RhythmaColors.primary,
-                                foregroundColor: RhythmaColors.primaryFg,
-                              ),
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('OK'),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
+                    onTap: () {},
                   ),
                 ],
               ),
