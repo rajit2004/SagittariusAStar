@@ -1,69 +1,7 @@
-"""Provider account security parity with the patient auth flow (issue #346).
-
-The bug this file exists to prevent coming back is an *asymmetry*, not a
-missing feature in isolation: ``/auth/register`` refused a one-character
-password while ``/provider/register`` accepted it, and ``/auth/login`` was
-metered on two keys while ``/provider/login`` was metered on one with
-hardcoded numbers. So a good number of the tests below assert the two
-routes behave the *same*, driving both with identical input and comparing
-outcomes. A test that only pinned down the provider route's behaviour
-would pass just as happily if the patient route later regressed to match
-it, which is the wrong direction to converge.
-
-Rate-limit tests set their own ceilings with ``monkeypatch.setenv`` rather
-than firing the default number of requests. The defaults are a product
-decision that should be tunable without rewriting this suite; what is
-asserted is the shape — N allowed, N+1 refused, with a usable
-``Retry-After`` — following the convention established in
-``test_auth_rate_limits.py``.
-"""
-
-import os
-import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
-# ─── Mock google.generativeai ──────────────────────────────────────────────
-class MockGemini:
-    def __getattr__(self, name):
-        return self
-
-    def configure(self, *args, **kwargs):
-        pass
-
-    def GenerativeModel(self, *args, **kwargs):
-        class MockModel:
-            def generate_content(self, *args, **kwargs):
-                class MockResponse:
-                    text = "Mock Gemini response"
-
-                return MockResponse()
-
-        return MockModel()
-
-
-sys.modules.setdefault("google.generativeai", MockGemini())
-
-os.environ["JWT_SECRET"] = "test-secret"
-os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-os.environ["GEMINI_API_KEY"] = "mock-key"
-os.environ["COOKIE_SECURE"] = "false"
-
-# ─── Mock firebase_admin ──────────────────────────────────────────────────
-_existing = sys.modules.get("firebase_admin")
-if isinstance(_existing, MagicMock):
-    mock_firebase_admin = _existing
-else:
-    mock_firebase_admin = MagicMock(_apps={})
-    sys.modules["firebase_admin"] = mock_firebase_admin
-    sys.modules["firebase_admin.auth"] = mock_firebase_admin.auth
-    sys.modules["firebase_admin.credentials"] = MagicMock()
-    sys.modules["firebase_admin.firestore"] = MagicMock()
 
 from main import app  # noqa: E402
 from core import rate_limits  # noqa: E402

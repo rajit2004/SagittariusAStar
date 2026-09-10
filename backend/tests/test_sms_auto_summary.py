@@ -1,9 +1,6 @@
-import sys
-import os
 from datetime import date, timedelta
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from api.sms import generate_cycle_sms_summary
 

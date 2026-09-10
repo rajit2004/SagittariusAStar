@@ -1,47 +1,8 @@
-"""The in-memory Firestore mock behaves like the thing it stands in for (#384).
-
-Every backend test runs against ``MockFirestoreClient``:
-``initialize_firebase()`` falls back to it when no credentials are
-present, which is exactly the CI configuration. That makes it the single
-most load-bearing piece of test infrastructure in the repo — and until
-now it had no tests of its own, which is how a method came to be defined
-twice in it without anyone noticing.
-
-The tests here are all of one shape: **assert the mock is not more
-permissive than Firestore.** A test double may be narrower — this one
-implements the six operators the codebase actually uses and refuses the
-rest loudly — but where it is looser, a test passes for a reason that
-will not hold in production.
-
-Three specific looseness bugs are covered:
-
-1. ``set`` was defined twice; the surviving copy stored the caller's dict
-   by reference, so a later mutation of that dict was an invisible write.
-2. ``order_by`` / ``limit`` on a *collection* accepted their arguments and
-   discarded them, returning everything, unordered, with no error.
-3. ``update`` on a missing document returned silently, where Firestore
-   raises.
-"""
-
-import os
-import sys
 from datetime import date, datetime, timedelta, timezone
 from unittest.mock import MagicMock
 
 import pytest
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-os.environ.setdefault("JWT_SECRET", "test-secret")
-
-# ─── Mock firebase_admin ──────────────────────────────────────────────────
-_existing = sys.modules.get("firebase_admin")
-if not isinstance(_existing, MagicMock):
-    mock_firebase_admin = MagicMock(_apps={})
-    sys.modules["firebase_admin"] = mock_firebase_admin
-    sys.modules["firebase_admin.auth"] = mock_firebase_admin.auth
-    sys.modules["firebase_admin.credentials"] = MagicMock()
-    sys.modules["firebase_admin.firestore"] = MagicMock()
 
 from services.firestore_service import (  # noqa: E402
     MockFirestoreClient,

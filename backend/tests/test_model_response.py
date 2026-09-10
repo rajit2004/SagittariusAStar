@@ -1,18 +1,6 @@
-"""What `core/model_response.interpret` says for each thing the model can do.
-
-The bug in #508 survived because `test_assistant_safety.py` asserted
-against an inline *copy* of the route's logic rather than importing it, so
-the test and the route could never disagree — a test shaped so that it
-passes no matter what the code under test does. Everything here imports
-the real function.
-"""
-
-import os
-import sys
 
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from core.model_response import (  # noqa: E402
     FINISH_MAX_TOKENS,

@@ -1,57 +1,8 @@
-"""Password policy on registration and reset (issue #330).
-
-The rule-level tests are plain function calls — no HTTP, no mocks — so a
-failure points at the rule rather than at a route. The endpoint tests then
-check the two things only integration can: that a rejection is a 422 whose
-body carries *every* broken rule, and that `/register` and `/reset-password`
-enforce the identical policy. That last one is the whole reason the rules
-live in one module, so it is asserted rather than assumed.
-"""
-
-import os
-import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
-class MockGemini:
-    def __getattr__(self, name):
-        return self
-
-    def configure(self, *args, **kwargs):
-        pass
-
-    def GenerativeModel(self, *args, **kwargs):
-        class MockModel:
-            def generate_content(self, *args, **kwargs):
-                class MockResponse:
-                    text = "Mock Gemini response"
-
-                return MockResponse()
-
-        return MockModel()
-
-
-sys.modules.setdefault("google.generativeai", MockGemini())
-
-os.environ["JWT_SECRET"] = "test-secret"
-os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-os.environ["GEMINI_API_KEY"] = "mock-key"
-os.environ["COOKIE_SECURE"] = "false"
-
-_existing = sys.modules.get("firebase_admin")
-if isinstance(_existing, MagicMock):
-    mock_firebase_admin = _existing
-else:
-    mock_firebase_admin = MagicMock(_apps={})
-    sys.modules["firebase_admin"] = mock_firebase_admin
-    sys.modules["firebase_admin.auth"] = mock_firebase_admin.auth
-    sys.modules["firebase_admin.credentials"] = MagicMock()
-    sys.modules["firebase_admin.firestore"] = MagicMock()
 
 from main import app  # noqa: E402
 from core.password_policy import (  # noqa: E402

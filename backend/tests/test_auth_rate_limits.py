@@ -1,55 +1,9 @@
-"""Rate limiting on the authentication surface (issue #329).
-
-Two layers are covered here.
-
-The policy layer (`core/rate_limits.py`) is tested directly: environment
-overrides, the refusal to accept a limit of zero, and the fact that an
-identifier never reaches storage in plaintext.
-
-The routes are tested through the real app, driving each endpoint until it
-trips. Every test sets its own limits via `monkeypatch.setenv` rather than
-firing the default number of requests — the defaults are a product decision
-that should be tunable without rewriting the suite, and a test that hardcodes
-"the 11th login fails" would have to change every time someone adjusts a
-ceiling. What is asserted is the *shape*: N allowed, N+1 refused, with a
-usable `Retry-After`.
-"""
-
 import os
-import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
-# ─── Mock google.generativeai ──────────────────────────────────────────────
-class MockGemini:
-    def __getattr__(self, name):
-        return self
-
-    def configure(self, *args, **kwargs):
-        pass
-
-    def GenerativeModel(self, *args, **kwargs):
-        class MockModel:
-            def generate_content(self, *args, **kwargs):
-                class MockResponse:
-                    text = "Mock Gemini response"
-
-                return MockResponse()
-
-        return MockModel()
-
-
-sys.modules.setdefault("google.generativeai", MockGemini())
-
-os.environ["JWT_SECRET"] = "test-secret"
-os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-os.environ["GEMINI_API_KEY"] = "mock-key"
-os.environ["COOKIE_SECURE"] = "false"
 
 # The route tests below drive each endpoint from a different address by
 # sending `X-Forwarded-For`, which only means anything to a deployment that
@@ -59,17 +13,6 @@ os.environ["COOKIE_SECURE"] = "false"
 # what happens *without* this line is the security property, and it has its
 # own tests rather than being the ambient default here.
 os.environ["TRUSTED_PROXY_IPS"] = "*"
-
-# ─── Mock firebase_admin ──────────────────────────────────────────────────
-_existing = sys.modules.get("firebase_admin")
-if isinstance(_existing, MagicMock):
-    mock_firebase_admin = _existing
-else:
-    mock_firebase_admin = MagicMock(_apps={})
-    sys.modules["firebase_admin"] = mock_firebase_admin
-    sys.modules["firebase_admin.auth"] = mock_firebase_admin.auth
-    sys.modules["firebase_admin.credentials"] = MagicMock()
-    sys.modules["firebase_admin.firestore"] = MagicMock()
 
 from main import app  # noqa: E402
 from core import rate_limits  # noqa: E402

@@ -1,17 +1,3 @@
-"""Tests for the security response headers added in issue #405.
-
-Four groups:
-
-* the header set is present on ordinary responses,
-* HSTS appears only over a secure scheme — the one rule with a footgun,
-* the headers survive every failure path, including the 500 envelope,
-* environment overrides and the do-not-clobber rule behave.
-
-The import of ``test_auth`` is what boots the app with ``firebase_admin``
-and ``google.generativeai`` mocked out, the same as every other module in
-this directory.
-"""
-
 import pytest
 from fastapi import FastAPI, HTTPException
 from fastapi.testclient import TestClient

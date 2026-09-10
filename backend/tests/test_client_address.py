@@ -1,30 +1,6 @@
-"""Which address a request is attributed to (issue #498).
-
-The behaviour under test is a security control, so the cases are written
-as the two questions an attacker and an operator each ask.
-
-*Can I choose my own bucket?* — the spoofing cases. A caller who sends
-``X-Forwarded-For`` from a peer nobody declared as a proxy must be
-bucketed on the socket they actually connected from, whatever the header
-says, and a caller behind a real proxy must not be able to prepend entries
-that get read instead of theirs.
-
-*Will my deployment still work?* — the topology cases. One reverse proxy,
-two chained proxies, a platform balancer with no publishable address, IPv6
-and ports. Each of those is a real shape and each has to resolve to the
-client rather than to an internal hop.
-
-``resolve_client_address`` is exercised directly rather than through a
-request wherever the request adds nothing: it is a pure function of a peer
-and a header, and the interesting cases are all about those two strings.
-"""
-
-import os
-import sys
 
 import pytest
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.client_address import (  # noqa: E402
     MAX_FORWARDED_ENTRIES,

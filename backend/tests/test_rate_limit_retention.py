@@ -1,24 +1,7 @@
-"""What happens to a rate-limit bucket after nobody comes back (issue #499).
-
-The enforcement behaviour is covered by ``test_auth_rate_limits.py``. What
-is under test here is the other half of a bucket's life: that it carries an
-expiry, that something eventually deletes it, and — the part worth being
-careful about — that the sweep cannot delete a bucket somebody is still
-locked out by.
-
-Everything runs against ``MockFirestoreClient`` through the module-level
-``db`` handle the service reads, which is the same handle the rest of the
-suite swaps out, so the collection here is a plain dict and can be
-inspected directly.
-"""
-
-import os
-import sys
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import services.rate_limit_service as rate_limit_service  # noqa: E402
 from services.firestore_service import MockFirestoreClient  # noqa: E402

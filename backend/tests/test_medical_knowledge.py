@@ -1,20 +1,7 @@
-"""Tests for the sourced medical reference knowledge base (issue #266).
-
-The dataset is the one public contract of this feature: every entry must be
-English, from a trusted health organization domain, carry a working source
-URL plus review/access dates, contain at least one fact, and avoid the risk
-labels the health-messaging guidelines ban. Retrieval and prompt-grounding
-behavior are tested against the real dataset file so a broken entry fails a
-test instead of silently mis-grounding the assistant.
-"""
-
-import os
-import sys
 from unittest.mock import patch
 
 import pytest
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from services.medical_knowledge_service import (  # noqa: E402
     DEFAULT_MAX_FACTS_PER_ENTRY,

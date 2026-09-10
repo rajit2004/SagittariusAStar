@@ -1,31 +1,11 @@
-"""The chat webhooks, and what they refuse to do (issue #416).
-
-Three properties are worth more than the rest of this file put together,
-and each has a test named after it:
-
-* an unverified delivery is refused;
-* a chat that has not been linked to an account cannot read one, however
-  the caller spells the identity in the payload;
-* the identity used to fetch data comes from the stored link and never
-  from the request.
-
-The last one is the regression that matters. The route this replaces read
-``payload["message"]["chat"]["id"]`` and passed it to ``get_user_scores``,
-so posting a Rhythma user id there returned that user's cycle summary to
-an unauthenticated caller.
-"""
-
 import base64
 import hashlib
 import hmac
-import os
-import sys
 from datetime import datetime, timedelta, timezone
 
 import firebase_admin.auth
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from test_auth import client, mock_auth_dependencies  # noqa: F401,E402
 

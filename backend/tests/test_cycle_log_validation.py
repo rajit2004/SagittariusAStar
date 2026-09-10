@@ -1,32 +1,8 @@
-"""What a cycle log may contain (issue #347).
-
-Two layers.
-
-The rules themselves (``core/cycle_validation.py``) are tested directly —
-they are ordinary functions raising ``ValueError``, and testing them
-through HTTP would only obscure which rule fired.
-
-The routes are tested through the real app, because the bug was not "the
-rules are wrong", it was "no rules were attached". A unit test of a
-validator that no route calls passes perfectly.
-
-A recurring theme below: several tests assert that the *stored* value
-differs from the submitted one — ``"  Cramps "`` becoming ``"cramps"``,
-``"Heavy"`` becoming ``"heavy"``. Normalisation is not cosmetic here.
-``scoring_service`` matches flow intensity against lowercase keys and
-``health_observations_service`` compares symptoms for equality, so an
-un-normalised value is not merely untidy, it is invisible to every rule
-that reads it.
-"""
-
-import os
-import sys
 from datetime import date, timedelta
 
 import pytest
 from pydantic import ValidationError
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from api.cycle import CycleLog, CycleLogUpdate  # noqa: E402
 from core.cycle_validation import (  # noqa: E402

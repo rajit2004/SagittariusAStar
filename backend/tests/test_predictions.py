@@ -1,9 +1,3 @@
-"""Tests for the cycle prediction service (issue #272).
-
-Everything here injects ``today``, so no assertion depends on the wall
-clock and the suite behaves identically in January and in December.
-"""
-
 from datetime import date, timedelta
 from unittest.mock import patch
 

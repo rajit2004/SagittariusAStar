@@ -1,20 +1,8 @@
-"""Tests for the provider dashboard and data-sharing consents (issue #267).
-
-These run against the in-memory mock Firestore that
-``firestore_service.initialize_firebase()`` falls back to, seeded directly.
-The authenticated identity is faked by overriding the ``get_current_user``
-dependency, so each test can act as a patient or a provider without going
-through the Firebase login mock.
-"""
-
 import json
-import os
-import sys
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from test_auth import client  # noqa: E402
 

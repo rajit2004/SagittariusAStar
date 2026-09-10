@@ -1,54 +1,8 @@
-import os
-import sys
 import pytest
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 from datetime import date
 
-# Ensure backend directory is on the Python path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-# ─── Mock google.generativeai ──────────────────────────────────────────────
-class MockGemini:
-    def __getattr__(self, name):
-        return self
-    def configure(self, *args, **kwargs):
-        pass
-    def GenerativeModel(self, *args, **kwargs):
-        class MockModel:
-            def generate_content(self, *args, **kwargs):
-                class MockResponse:
-                    text = "Mock Gemini response"
-                return MockResponse()
-        return MockModel()
-
-sys.modules["google.generativeai"] = MockGemini()
-
-# ─── Set environment variables ─────────────────────────────────────────────
-os.environ["JWT_SECRET"] = "test-secret"
-os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-os.environ["GEMINI_API_KEY"] = "mock-key"
-
-# ─── Mock firebase_admin ──────────────────────────────────────────────────
-# Reuse existing mock if already set up (e.g., by test_auth.py) to avoid
-# module contamination that breaks cross-test mock consistency.
-existing_firebase_admin = sys.modules.get("firebase_admin")
-if isinstance(existing_firebase_admin, MagicMock) and hasattr(existing_firebase_admin, "auth"):
-    mock_firebase_admin = existing_firebase_admin
-else:
-    mock_firebase_admin = MagicMock(_apps={})
-    sys.modules["firebase_admin"] = mock_firebase_admin
-
-mock_firebase_auth = getattr(mock_firebase_admin, "auth", None)
-if not isinstance(mock_firebase_auth, MagicMock):
-    mock_firebase_auth = MagicMock()
-    mock_firebase_admin.auth = mock_firebase_auth
-sys.modules["firebase_admin.auth"] = mock_firebase_auth
-
-sys.modules["firebase_admin.credentials"] = MagicMock()
-sys.modules["firebase_admin.firestore"] = MagicMock()
-
-# ─── Import main after mocks ──────────────────────────────────────────────
 from main import app
 from core.auth import get_current_user
 import services.firestore_service as fs

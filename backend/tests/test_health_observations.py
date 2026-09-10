@@ -1,19 +1,3 @@
-"""Tests for the observations layer added for issue #269.
-
-Two halves:
-
-* unit tests over ``services/health_observations_service.py`` — every rule
-  gets a firing case, a non-firing boundary case, and a missing-data case,
-  and the whole thing is a pure function so no Firestore is involved;
-* endpoint tests for ``GET /insights/{user_id}/observations`` and the
-  ``topObservation`` field added to ``GET /dashboard``.
-
-There is also a language test. ``menstrual_insights_guidelines.md`` bans
-diagnosis names and risk labels in user-facing copy, and that constraint is
-easy to break accidentally when adding a rule — so it is asserted rather
-than left to review.
-"""
-
 from datetime import date, timedelta
 from unittest.mock import patch
 

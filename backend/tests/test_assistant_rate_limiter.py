@@ -1,27 +1,7 @@
-"""The assistant's rate limiting, after #327 moved it to the shared service.
-
-This module used to test ``api.assistant.is_rate_limited`` and the
-module-level ``_assistant_rate_history`` dict — the assistant's own
-in-memory limiter, and the #280 fix for the unbounded key growth in it.
-Issue #327 deleted both, moving the assistant onto the Firestore-backed
-``RateLimitService`` that the auth routes already used, but this file was
-never updated. It has been importing two names that do not exist since
-then, which fails at *collection* time and so took the entire backend
-suite down with it, not just itself.
-
-Rewritten against the limiter the endpoint actually calls now. The intent
-of the original — prove that expired entries are pruned rather than
-accumulating forever — is kept, because that is the #280 regression and it
-is just as possible in the new storage as it was in the old dict.
-"""
-
-import os
-import sys
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from api.assistant import ASSISTANT_RATE_LIMIT, ASSISTANT_RATE_WINDOW
 from services.rate_limit_service import RateLimitService

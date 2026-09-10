@@ -1,70 +1,7 @@
-"""An SMS goes to the sender's own number, with the server's own text (#382).
-
-``POST /sms/send-summary`` took both its destination and its entire
-message body from the request, and compared neither against the account
-making the call:
-
-    body_text = request.message or generate_cycle_sms_summary(user_id)
-    client.messages.create(body=body_text, from_=from_phone, to=request.phone_number)
-
-So any registered account could send attacker-chosen text to any E.164
-number on earth, from the project's own Twilio sending number, billed to
-the project.
-
-Most of the tests below assert on the **arguments Twilio was called
-with**, not on the response status. A 200 says the request was accepted;
-only ``messages.create(to=..., body=...)`` says where the message
-actually went and what it said, and that is the whole question here. A
-test that only checked the status code would pass against the original
-code too.
-"""
-
-import os
-import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
-# ─── Mock google.generativeai ──────────────────────────────────────────────
-class MockGemini:
-    def __getattr__(self, name):
-        return self
-
-    def configure(self, *args, **kwargs):
-        pass
-
-    def GenerativeModel(self, *args, **kwargs):
-        class MockModel:
-            def generate_content(self, *args, **kwargs):
-                class MockResponse:
-                    text = "Mock Gemini response"
-
-                return MockResponse()
-
-        return MockModel()
-
-
-sys.modules.setdefault("google.generativeai", MockGemini())
-
-os.environ["JWT_SECRET"] = "test-secret"
-os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-os.environ["GEMINI_API_KEY"] = "mock-key"
-os.environ["COOKIE_SECURE"] = "false"
-
-# ─── Mock firebase_admin ──────────────────────────────────────────────────
-_existing = sys.modules.get("firebase_admin")
-if isinstance(_existing, MagicMock):
-    mock_firebase_admin = _existing
-else:
-    mock_firebase_admin = MagicMock(_apps={})
-    sys.modules["firebase_admin"] = mock_firebase_admin
-    sys.modules["firebase_admin.auth"] = mock_firebase_admin.auth
-    sys.modules["firebase_admin.credentials"] = MagicMock()
-    sys.modules["firebase_admin.firestore"] = MagicMock()
 
 from main import app  # noqa: E402
 from api.sms import (  # noqa: E402

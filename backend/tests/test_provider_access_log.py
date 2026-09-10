@@ -1,69 +1,9 @@
-"""Provider access to patient records is recorded (issue #350).
-
-#267 built the consent gate: no read of a patient's data happens without
-an active consent. What was missing is the other half — a patient could
-see *who had permission* and never *whether anyone used it*. The consent
-was checked and then discarded, so after a clinician opened a full cycle
-history the only trace was an operator-only HTTP log line.
-
-Three properties carry most of the weight here, and each has tests named
-after it:
-
-1. A read that happens is recorded (``patient_detail``, ``patient_list``).
-2. A read that is *refused* is not — otherwise a provider without consent
-   could write rows into any patient's history just by guessing her id.
-3. The record cannot break the read. An audit write that fails is a
-   missing record; an audit write that raises is a broken dashboard, and
-   the second is much worse.
-
-Seeded through the real ``ConsentService`` and read back through the real
-routes, following ``test_provider.py``.
-"""
-
-import os
-import sys
 from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
-class MockGemini:
-    def __getattr__(self, name):
-        return self
-
-    def configure(self, *args, **kwargs):
-        pass
-
-    def GenerativeModel(self, *args, **kwargs):
-        class MockModel:
-            def generate_content(self, *args, **kwargs):
-                class MockResponse:
-                    text = "Mock Gemini response"
-
-                return MockResponse()
-
-        return MockModel()
-
-
-sys.modules.setdefault("google.generativeai", MockGemini())
-
-os.environ["JWT_SECRET"] = "test-secret"
-os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-os.environ["GEMINI_API_KEY"] = "mock-key"
-
-_existing = sys.modules.get("firebase_admin")
-if isinstance(_existing, MagicMock):
-    mock_firebase_admin = _existing
-else:
-    mock_firebase_admin = MagicMock(_apps={})
-    sys.modules["firebase_admin"] = mock_firebase_admin
-    sys.modules["firebase_admin.auth"] = mock_firebase_admin.auth
-    sys.modules["firebase_admin.credentials"] = MagicMock()
-    sys.modules["firebase_admin.firestore"] = MagicMock()
 
 from main import app  # noqa: E402
 from core.auth import get_current_user  # noqa: E402

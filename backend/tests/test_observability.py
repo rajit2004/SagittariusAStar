@@ -1,17 +1,3 @@
-"""Tests for the observability layer added for issue #268.
-
-Covers four things:
-
-* the request-id middleware (generation, echo, propagation, isolation),
-* PII redaction in log records,
-* the JSON log sink,
-* the unified error envelope for every class of failure.
-
-The import of ``test_auth`` is what boots the app with ``firebase_admin``
-and ``google.generativeai`` mocked out — the same pattern every other test
-module in this directory uses.
-"""
-
 import json
 import re
 from unittest.mock import patch

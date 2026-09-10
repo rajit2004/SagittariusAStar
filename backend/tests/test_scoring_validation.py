@@ -1,9 +1,6 @@
-import sys
-import os
 from datetime import date, timedelta
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from services.scoring_service import build_model_features, DEFAULT_CYCLE_LENGTH
 

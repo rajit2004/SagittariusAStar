@@ -1,42 +1,16 @@
-import os
-import sys
 import pytest
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 from datetime import date
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-class MockGemini:
-    last_prompt = None
-    def __getattr__(self, name):
-        return self
-    def configure(self, *args, **kwargs):
-        pass
-    def GenerativeModel(self, *args, **kwargs):
-        class MockModel:
-            def generate_content(self, prompt, *args, **kwargs):
-                MockGemini.last_prompt = prompt
-                class MockResponse:
-                    text = "Mock Gemini response"
-                return MockResponse()
-        return MockModel()
-
-sys.modules["google.generativeai"] = MockGemini()
-
-os.environ["JWT_SECRET"] = "test-secret"
-os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-os.environ["GEMINI_API_KEY"] = "mock-key"
-
-sys.modules["firebase_admin"] = MagicMock(_apps={})
-sys.modules["firebase_admin.auth"] = MagicMock()
-sys.modules["firebase_admin.credentials"] = MagicMock()
-sys.modules["firebase_admin.firestore"] = MagicMock()
+import sys
 
 from main import app
 from core.auth import get_current_user
 import services.firestore_service as fs
 from services.firestore_service import MockFirestoreClient
+
+# Import the shared MockGemini from conftest (already in sys.modules)
+from conftest import MockGemini
 
 # Force db to be the mock client for these tests
 fs.db = MockFirestoreClient()

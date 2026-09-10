@@ -1,20 +1,8 @@
-"""Input bounds and language validation on the assistant (issue #332).
-
-The point of most of these is not just "the request is rejected" but "the
-request is rejected *before* Gemini is called". A validation error that
-still costs a model call has fixed the response and not the bill, so the
-mock records every prompt it is asked to generate and the tests assert on
-that record.
-"""
-
-import os
 import sys
 from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 class RecordingGemini:
@@ -47,16 +35,6 @@ class RecordingGemini:
 _recording = RecordingGemini()
 sys.modules["google.generativeai"] = _recording
 
-os.environ["JWT_SECRET"] = "test-secret"
-os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-os.environ["GEMINI_API_KEY"] = "mock-key"
-
-_existing = sys.modules.get("firebase_admin")
-if not isinstance(_existing, MagicMock):
-    sys.modules["firebase_admin"] = MagicMock(_apps={})
-    sys.modules["firebase_admin.auth"] = MagicMock()
-    sys.modules["firebase_admin.credentials"] = MagicMock()
-    sys.modules["firebase_admin.firestore"] = MagicMock()
 
 from main import app  # noqa: E402
 import api.assistant as assistant  # noqa: E402

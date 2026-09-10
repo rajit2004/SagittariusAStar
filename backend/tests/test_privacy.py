@@ -1,13 +1,3 @@
-"""Tests for data export and account erasure (issue #270).
-
-These run against the in-memory mock Firestore that
-``firestore_service.initialize_firebase()`` falls back to, seeded directly,
-rather than against mocked service classes. That is deliberate: the bug
-this PR fixes was a *missed collection*, and a test that mocks the service
-layer cannot catch a missed collection — it can only re-assert whatever the
-mock was told to return.
-"""
-
 import csv
 import io
 import json

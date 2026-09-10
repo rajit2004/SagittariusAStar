@@ -1,66 +1,9 @@
-"""Liveness, readiness and the detailed health view (issue #348).
-
-The bug was not that a check returned the wrong answer — there were no
-checks. `/health` returned `{"status": "ok"}` for a process running
-entirely on the in-memory mock database, silently losing every write on
-restart.
-
-So the assertion that carries the most weight in this file is
-`test_the_mock_database_fails_readiness`: it is the exact deployment
-failure the issue describes, and it is the one an operator would otherwise
-never see.
-
-The checks are exercised both directly and through HTTP. Directly, because
-a check is a function and driving `check_firestore` through a route to
-learn whether it detects a mock client only obscures what failed. Through
-HTTP, because the status *code* is the entire contract with a platform
-health probe, and that is a route concern.
-"""
-
-import os
-import sys
 import time
 from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
-class MockGemini:
-    def __getattr__(self, name):
-        return self
-
-    def configure(self, *args, **kwargs):
-        pass
-
-    def GenerativeModel(self, *args, **kwargs):
-        class MockModel:
-            def generate_content(self, *args, **kwargs):
-                class MockResponse:
-                    text = "Mock Gemini response"
-
-                return MockResponse()
-
-        return MockModel()
-
-
-sys.modules.setdefault("google.generativeai", MockGemini())
-
-os.environ["JWT_SECRET"] = "test-secret"
-os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-os.environ["GEMINI_API_KEY"] = "mock-key"
-
-_existing = sys.modules.get("firebase_admin")
-if isinstance(_existing, MagicMock):
-    mock_firebase_admin = _existing
-else:
-    mock_firebase_admin = MagicMock(_apps={})
-    sys.modules["firebase_admin"] = mock_firebase_admin
-    sys.modules["firebase_admin.auth"] = mock_firebase_admin.auth
-    sys.modules["firebase_admin.credentials"] = MagicMock()
-    sys.modules["firebase_admin.firestore"] = MagicMock()
 
 from main import app  # noqa: E402
 from services import firestore_service as fs  # noqa: E402

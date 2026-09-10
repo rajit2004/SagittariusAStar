@@ -1,18 +1,6 @@
-"""The reply engine on its own, with the identity already resolved.
-
-``ChatbotService`` no longer looks anyone up. It is handed a ``user_id``
-that ``api/bot.py`` resolved from a stored link, or ``None``, and every
-case here is about which of those two it was given. The routes' own
-tests — ``test_bot_webhook_security.py`` — cover how that value is
-arrived at.
-"""
-
-import os
-import sys
 
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import services.chat_link_service as chat_link_service  # noqa: E402
 import services.firestore_service as fs  # noqa: E402

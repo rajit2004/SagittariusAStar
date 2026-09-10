@@ -1,47 +1,10 @@
-import os
-import sys
 import pytest
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 
-
-# Ensure backend directory is on the Python path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
+import core.auth_router
 from services.rate_limit_service import RateLimitService
-# ─── Mock google.generativeai ──────────────────────────────────────────────
-class MockGemini:
-    def __getattr__(self, name):
-        return self
-    def configure(self, *args, **kwargs):
-        pass
-    def GenerativeModel(self, *args, **kwargs):
-        class MockModel:
-            def generate_content(self, *args, **kwargs):
-                class MockResponse:
-                    text = "Mock Gemini response"
-                return MockResponse()
-        return MockModel()
 
-sys.modules["google.generativeai"] = MockGemini()
-
-# ─── Set environment variables ─────────────────────────────────────────────
-os.environ["JWT_SECRET"] = "test-secret"
-os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-os.environ["GEMINI_API_KEY"] = "mock-key"
-os.environ["COOKIE_SECURE"] = "false"
-
-# ─── Mock firebase_admin ──────────────────────────────────────────────────
-mock_firebase_admin = MagicMock()
-mock_firebase_auth = MagicMock()
-mock_firebase_admin.auth = mock_firebase_auth
-sys.modules["firebase_admin"] = mock_firebase_admin
-sys.modules["firebase_admin.auth"] = mock_firebase_auth
-sys.modules["firebase_admin.credentials"] = MagicMock()
-sys.modules["firebase_admin.firestore"] = MagicMock()
-
-# ─── Import main after mocks ──────────────────────────────────────────────
 from main import app
 import firebase_admin.auth
 client = TestClient(
@@ -51,17 +14,13 @@ client = TestClient(
     }
 )
 
-import core.auth_router as _auth_router
-_auth_router.firebase_admin = mock_firebase_admin
+core.auth_router.firebase_admin = firebase_admin
 
 @pytest.fixture(autouse=True)
 def _ensure_firebase_mock():
     import core.auth_router as _ar_mod
-    _ar_mod.firebase_admin = mock_firebase_admin
-    mock_firebase_admin.auth = mock_firebase_auth
+    _ar_mod.firebase_admin = firebase_admin
     _ar_mod.COOKIE_SECURE = False
-    sys.modules["firebase_admin"] = mock_firebase_admin
-    sys.modules["firebase_admin.auth"] = mock_firebase_auth
 
 from api.sms import sms_history
 from core.auth import refresh_token_store, reset_token_store, verification_token_store

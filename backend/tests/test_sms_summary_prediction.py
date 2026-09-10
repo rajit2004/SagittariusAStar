@@ -1,30 +1,7 @@
-"""The SMS says what the app says, in the language the account is set to.
-
-Issue #483. ``api/sms.py`` carried its own cycle-length average and its
-own ``max(avg - day, 0)`` countdown, so:
-
-  - a five-days-late user was texted "~0 days" while ``/dashboard`` told
-    the same account she was five days late;
-  - the "average cycle length" was an average of gaps between *day*
-    documents, which are usually one day apart;
-  - everyone got English.
-
-Most tests below assert on the *situation* the summary service picked
-(``describe()["situation"]``) or on the numbers in the text, not on
-prose. Asserting on prose in eight languages tests the translator, not
-the code; asserting on the branch tests the thing that was broken.
-
-The wall clock is injected everywhere. A test that computed "five days
-late" from ``date.today()`` would change meaning every day it ran.
-"""
-
-import os
-import sys
 from datetime import date, timedelta
 
 import pytest
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from services.prediction_service import predict  # noqa: E402
 from services.sms_summary_service import (  # noqa: E402

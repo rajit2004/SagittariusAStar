@@ -1,79 +1,9 @@
-"""A logged value can be taken back (issue #549).
-
-Both write routes stripped every `None` before touching Firestore:
-
-    fields = {k: v for k, v in log.model_dump().items() if ... v is not None}
-
-`model_dump()` cannot tell an omitted field from one explicitly sent as
-`null` — both are `None` — so the filter that implements "merge, don't
-clobber what wasn't sent" also implemented "you may never send a
-clearing". A mis-tapped flow intensity, a sleep value typed as 12 instead
-of 2, a note naming a partner or a clinic: all editable, none removable.
-Deleting the whole day was the only way out, and it took the rest of the
-day with it.
-
-`PUT /cycle/{log_id}` with `{"notes": null}` went further and answered
-"No fields provided for update". A field *was* provided; the handler
-discarded it and reported the discarding as the caller's mistake.
-
-Two notes on what is asserted here.
-
-The tests read the stored document back through `GET /{user_id}/history`
-rather than inspecting the mock's `store`. "Is the field gone?" is only
-meaningfully answered by what a subsequent read returns, and the history
-route is what the clients actually call.
-
-And the merge behaviour is asserted alongside the clearing in almost
-every case. The risk in this change is not that clearing stops working —
-it is that clearing starts happening to fields nobody mentioned, which
-would silently destroy data on every quick-log tap. That is the property
-worth the extra line in each test.
-"""
-
-import os
-import sys
 from datetime import date, timedelta
 from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
-class MockGemini:
-    def __getattr__(self, name):
-        return self
-
-    def configure(self, *args, **kwargs):
-        pass
-
-    def GenerativeModel(self, *args, **kwargs):
-        class MockModel:
-            def generate_content(self, *args, **kwargs):
-                class MockResponse:
-                    text = "Mock Gemini response"
-
-                return MockResponse()
-
-        return MockModel()
-
-
-sys.modules.setdefault("google.generativeai", MockGemini())
-
-os.environ["JWT_SECRET"] = "test-secret"
-os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-os.environ["GEMINI_API_KEY"] = "mock-key"
-
-_existing = sys.modules.get("firebase_admin")
-if isinstance(_existing, MagicMock):
-    mock_firebase_admin = _existing
-else:
-    mock_firebase_admin = MagicMock(_apps={})
-    sys.modules["firebase_admin"] = mock_firebase_admin
-    sys.modules["firebase_admin.auth"] = mock_firebase_admin.auth
-    sys.modules["firebase_admin.credentials"] = MagicMock()
-    sys.modules["firebase_admin.firestore"] = MagicMock()
 
 from main import app  # noqa: E402
 from core.auth import create_access_token  # noqa: E402

@@ -1,69 +1,9 @@
-"""Email addresses have one canonical form, everywhere (issue #380).
-
-``core/auth_router.py`` already carried a ``normalize_email`` whose
-docstring spelled out exactly why this matters — and no route in that
-module called it. ``api/provider.py`` was its only caller, so the provider
-flow normalised and the patient flow did not.
-
-That shape is what most of this file asserts. Several tests drive the
-patient and provider routes with the *same* mixed-case input and compare
-the outcomes, rather than pinning down one route in isolation: a test that
-only described the patient side would pass just as happily if the provider
-side later regressed to match it, which is the wrong direction to
-converge. It is the same reasoning ``test_provider_auth_hardening.py``
-uses, and for the same class of bug.
-
-The tests run against the real in-memory Firestore mock rather than a
-stubbed ``UserService``. A hand-written store that matched
-case-insensitively on its own would hide the very thing under test.
-"""
-
-import os
 import sys
 from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
-# ─── Mock google.generativeai ──────────────────────────────────────────────
-class MockGemini:
-    def __getattr__(self, name):
-        return self
-
-    def configure(self, *args, **kwargs):
-        pass
-
-    def GenerativeModel(self, *args, **kwargs):
-        class MockModel:
-            def generate_content(self, *args, **kwargs):
-                class MockResponse:
-                    text = "Mock Gemini response"
-
-                return MockResponse()
-
-        return MockModel()
-
-
-sys.modules.setdefault("google.generativeai", MockGemini())
-
-os.environ["JWT_SECRET"] = "test-secret"
-os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-os.environ["GEMINI_API_KEY"] = "mock-key"
-os.environ["COOKIE_SECURE"] = "false"
-
-# ─── Mock firebase_admin ──────────────────────────────────────────────────
-_existing = sys.modules.get("firebase_admin")
-if isinstance(_existing, MagicMock):
-    mock_firebase_admin = _existing
-else:
-    mock_firebase_admin = MagicMock(_apps={})
-    sys.modules["firebase_admin"] = mock_firebase_admin
-    sys.modules["firebase_admin.auth"] = mock_firebase_admin.auth
-    sys.modules["firebase_admin.credentials"] = MagicMock()
-    sys.modules["firebase_admin.firestore"] = MagicMock()
 
 from main import app  # noqa: E402
 from core.auth import (  # noqa: E402

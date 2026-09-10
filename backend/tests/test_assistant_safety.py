@@ -1,28 +1,4 @@
-"""Safety handling for the assistant's *responses*, exercised for real.
 
-This file used to contain two tests that reimplemented the route's logic
-inside the test body::
-
-    finish_reason = str(getattr(first_candidate, "finish_reason", ""))
-    if "SAFETY" in finish_reason or finish_reason == "2":
-        reply = "..."
-
-Nothing imported. The assertions therefore held whatever the route did,
-which is why they were green throughout the whole life of #508 — the
-route was treating MAX_TOKENS (2) as a safety block and this file could
-not have noticed. A test that owns a copy of the code it is testing is
-not a test of that code.
-
-Both cases below now go through `core.model_response.interpret`, which is
-the function the route calls. The exhaustive per-reason coverage lives in
-`test_model_response.py`; these two are kept, with their original intent,
-as the direct regression pair.
-"""
-
-import os
-import sys
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from core.model_response import (  # noqa: E402
     MESSAGE_SAFETY,

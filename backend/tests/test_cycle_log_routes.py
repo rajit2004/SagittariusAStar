@@ -1,61 +1,9 @@
-"""The write routes actually enforce the cycle-log rules (issue #347).
-
-``test_cycle_log_validation.py`` covers the rules. This file covers the
-thing that was actually broken: nothing called them. A validator no route
-invokes passes its own unit tests perfectly and stores ``"banana"``
-anyway, so these drive real HTTP requests and then read the stored
-document back to confirm what landed.
-
-Run against the mock Firestore client with logs written through the real
-``CycleService``, following ``test_cycle_history.py`` — a mocked service
-would assert on what the route *passed*, which is exactly the layer under
-test.
-"""
-
-import os
-import sys
 from datetime import date, timedelta
 from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
-class MockGemini:
-    def __getattr__(self, name):
-        return self
-
-    def configure(self, *args, **kwargs):
-        pass
-
-    def GenerativeModel(self, *args, **kwargs):
-        class MockModel:
-            def generate_content(self, *args, **kwargs):
-                class MockResponse:
-                    text = "Mock Gemini response"
-
-                return MockResponse()
-
-        return MockModel()
-
-
-sys.modules.setdefault("google.generativeai", MockGemini())
-
-os.environ["JWT_SECRET"] = "test-secret"
-os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-os.environ["GEMINI_API_KEY"] = "mock-key"
-
-_existing = sys.modules.get("firebase_admin")
-if isinstance(_existing, MagicMock):
-    mock_firebase_admin = _existing
-else:
-    mock_firebase_admin = MagicMock(_apps={})
-    sys.modules["firebase_admin"] = mock_firebase_admin
-    sys.modules["firebase_admin.auth"] = mock_firebase_admin.auth
-    sys.modules["firebase_admin.credentials"] = MagicMock()
-    sys.modules["firebase_admin.firestore"] = MagicMock()
 
 from main import app  # noqa: E402
 from core.auth import get_current_user  # noqa: E402

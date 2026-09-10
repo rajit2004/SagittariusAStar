@@ -1,26 +1,7 @@
-"""Auth tokens outliving the process that minted them (issue #417).
-
-Refresh, reset, verification and deletion tokens were four module-level
-dicts. The tests below are written against the consequences of that
-rather than against the storage: a token minted "on another worker"
-resolves here, a revocation reaches sessions this process never saw, and
-nothing accumulates forever.
-
-"Another worker" is simulated by writing through ``token_store``
-directly and reading back through ``core.auth``, and vice versa. Two real
-processes cannot be spun up in a unit test, but the property that failed
-across them — that the two paths disagree about what exists — is exactly
-what a shared store makes untestable, and a shared *dict* would fail
-these cases the moment the dict were per-process.
-"""
-
-import os
-import sys
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from test_auth import client  # noqa: F401,E402
 

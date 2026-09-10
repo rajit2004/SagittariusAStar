@@ -1,27 +1,7 @@
-"""Trends compare periods, and say so honestly (issue #484).
-
-``GET /dashboard/trends`` took ``logs[0]`` and ``logs[1]`` — two adjacent
-*day* documents, because ``upsert_log`` writes one document per calendar
-day — and reported the difference as "Average sleep has decreased". Two
-untruths in one sentence: it was not an average, and it was not a
-period-over-period comparison.
-
-These tests are all against ``services/trend_service`` directly rather
-than through the route. The bug was arithmetic over a badly chosen
-window, and a pure function is where that can be pinned down; the route
-gets its own coverage in ``test_dashboard_trends.py``.
-
-Every test injects ``today``. One that derived a window from
-``date.today()`` would change meaning every day it ran.
-"""
-
-import os
-import sys
 from datetime import date, timedelta
 
 import pytest
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from services.trend_service import (  # noqa: E402
     BASIS_CYCLE,

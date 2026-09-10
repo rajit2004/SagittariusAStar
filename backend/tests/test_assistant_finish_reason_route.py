@@ -1,24 +1,11 @@
-"""`POST /assistant/chat` end to end, for each thing the model can do.
-
-`test_model_response.py` covers the reading in isolation. This file covers
-the wiring: that the route asks for the outcome, renders its text, reports
-`wasShortened`, and persists the same reply it returned.
-
-The test double here carries `candidates` with a `finish_reason` and real
-`content.parts`, unlike the minimal `text`-only double in
-`test_assistant.py`. That difference is not incidental — a double with no
-`finish_reason` cannot exercise the branch that #508 lived in, which is
-part of why the bug went unnoticed.
-"""
-
-import os
-import sys
 from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
+import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from conftest import MockGemini
+
 
 # ─── Doubles, installed before `main` is imported ─────────────────────────
 
@@ -47,22 +34,11 @@ class FakeResponse:
 
     @property
     def text(self):
-        # The live accessor raises for a blocked or truncated candidate.
-        # Raising here proves the route never depends on it.
         raise ValueError("Quick accessor for 'text' requires a valid response")
 
 
-class MockGemini:
-    """Stands in for the `genai` module the route holds a reference to.
-
-    Installed by the fixture with `monkeypatch.setattr`, not by assigning
-    into `sys.modules`. Several test modules install a `google.generativeai`
-    stub at import time, and `api.assistant` binds `genai` once when it is
-    first imported — so whichever module happened to load first would decide
-    which double the route uses. Under `pytest tests/` that is not this one,
-    and the tests here would silently exercise another file's stub.
-    """
-
+class TestMockGemini:
+    """Extended MockGemini that returns FakeResponse with finish_reason tracking."""
     last_config = None
 
     def configure(self, *args, **kwargs):
@@ -71,22 +47,11 @@ class MockGemini:
     def GenerativeModel(self, *args, **kwargs):
         class MockModel:
             def generate_content(self, prompt, *args, **kwargs):
-                MockGemini.last_config = kwargs.get("generation_config")
+                TestMockGemini.last_config = kwargs.get("generation_config")
                 return FakeResponse(_PENDING["finish_reason"], _PENDING["texts"])
 
         return MockModel()
 
-
-sys.modules.setdefault("google.generativeai", MockGemini())
-
-os.environ["JWT_SECRET"] = "test-secret"
-os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-os.environ["GEMINI_API_KEY"] = "mock-key"
-
-sys.modules["firebase_admin"] = MagicMock(_apps={})
-sys.modules["firebase_admin.auth"] = MagicMock()
-sys.modules["firebase_admin.credentials"] = MagicMock()
-sys.modules["firebase_admin.firestore"] = MagicMock()
 
 import api.assistant as assistant_api  # noqa: E402
 from api.assistant import ASSISTANT_MAX_OUTPUT_TOKENS  # noqa: E402
@@ -118,8 +83,8 @@ CURRENT_USER = {"id": "finish-reason-user-0", "username": "testuser"}
 def _overrides(monkeypatch):
     CURRENT_USER["id"] = next(_user_ids)
     app.dependency_overrides[get_current_user] = lambda: dict(CURRENT_USER)
-    monkeypatch.setattr(assistant_api, "genai", MockGemini())
-    MockGemini.last_config = None
+    monkeypatch.setattr(assistant_api, "genai", TestMockGemini())
+    TestMockGemini.last_config = None
     fs.db._collections = {}
     yield
     app.dependency_overrides.clear()

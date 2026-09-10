@@ -1,26 +1,7 @@
-"""Paging on the two provider list endpoints (issue #406).
-
-``/cycle/history`` (#331) and ``/provider/access-log`` were already paged.
-``/provider/patients`` and ``/provider/consents`` were not: both returned
-the entire collection, always, with no ``limit`` accepted and no ``page``
-returned.
-
-``/patients`` is the expensive one. Building a single summary costs a
-profile read, a scoring pass over that patient's cycle logs, *and* an
-access-log write, so an unbounded list multiplied three kinds of work by
-the size of the provider's roster on every dashboard render. Several
-assertions below are about *how much work happens*, not about the payload,
-because trimming the response while leaving the fan-out in place would
-look like a fix and not be one.
-"""
-
-import os
-import sys
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from test_auth import client, mock_auth_dependencies  # noqa: F401,E402
 
