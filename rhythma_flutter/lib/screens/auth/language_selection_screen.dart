@@ -6,10 +6,11 @@ import '../../config/theme.dart';
 import '../../providers/locale_provider.dart';
 import '../../services/local_storage_service.dart';
 import '../../config/supported_languages.dart';
-import 'login_screen.dart';
 
 class LanguageSelectionScreen extends StatefulWidget {
-  const LanguageSelectionScreen({super.key});
+  final VoidCallback onComplete;
+
+  const LanguageSelectionScreen({super.key, required this.onComplete});
 
   @override
   State<LanguageSelectionScreen> createState() =>
@@ -31,10 +32,7 @@ class _LanguageSelectionScreenState extends State<LanguageSelectionScreen> {
       await LocalStorageService.setLanguageSelectionCompleted(true);
       if (!mounted) return;
       context.read<LocaleProvider>().setLocale(Locale(_selectedLanguage));
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
+      widget.onComplete();
     } catch (e) {
       if (!mounted) return;
       final l = AppLocalizations.of(context)!;

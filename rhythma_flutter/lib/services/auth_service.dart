@@ -7,6 +7,65 @@ import 'local_storage_service.dart';
 class AuthService {
   final Dio _dio = ApiClient.dio;
 
+  Future<String> login(String email, String password) async {
+    try {
+      final response = await _dio.post(
+        '/auth/login',
+        data: {'email': email, 'password': password},
+      );
+      final token = response.data['access_token'] as String;
+      await SecureStorage.saveToken(token);
+
+      final refreshToken = response.data['refresh_token'] as String?;
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        await SecureStorage.saveRefreshToken(refreshToken);
+      }
+
+      try {
+        final me = await _dio.get('/auth/me');
+        final uid = (me.data as Map<String, dynamic>)['id']?.toString();
+        if (uid != null) {
+          await LocalStorageService.setCurrentUserId(uid);
+          await _syncProfile(uid);
+          FirestoreService.pullCycleLogs(userId: uid);
+          FirestoreService.pullProfile(userId: uid);
+          FirestoreService.syncCycleLogs(userId: uid);
+          FirestoreService.syncProfile(userId: uid);
+        }
+      } catch (_) {}
+
+      return token;
+    } on DioException catch (e) {
+      throw AuthException(_readErrorMessage(e, 'Login failed. Please check your credentials.'));
+    }
+  }
+
+  Future<String> register({
+    required String email,
+    required String password,
+    String? fullName,
+    String? username,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/auth/register',
+        data: {
+          'email': email,
+          'password': password,
+          if (fullName != null && fullName.isNotEmpty) 'full_name': fullName,
+          if (username != null && username.isNotEmpty) 'username': username,
+        },
+      );
+      final userId = response.data['id']?.toString();
+      if (userId != null) {
+        await LocalStorageService.setCurrentUserId(userId);
+      }
+      return await login(email, password);
+    } on DioException catch (e) {
+      throw AuthException(_readErrorMessage(e, 'Registration failed. Please try again.'));
+    }
+  }
+
   Future<String> firebaseLogin(String idToken) async {
     try {
       final response = await _dio.post(
@@ -18,29 +77,25 @@ class AuthService {
       final token = response.data['access_token'] as String;
       await SecureStorage.saveToken(token);
 
-      // Save refresh token if present (now returned by backend)
       final refreshToken = response.data['refresh_token'] as String?;
       if (refreshToken != null && refreshToken.isNotEmpty) {
         await SecureStorage.saveRefreshToken(refreshToken);
       }
 
-      // Scope local (profile/chat history/cycle log) storage to this
-      // account so multiple accounts on the same device don't share data.
       try {
         final me = await _dio.get('/auth/me');
         final uid = (me.data as Map<String, dynamic>)['id']?.toString();
         if (uid != null) {
           await LocalStorageService.setCurrentUserId(uid);
           await _syncProfile(uid);
-          // Sync local data with Firestore and pull remote data
+          
           FirestoreService.pullCycleLogs(userId: uid);
           FirestoreService.pullProfile(userId: uid);
           FirestoreService.syncCycleLogs(userId: uid);
           FirestoreService.syncProfile(userId: uid);
         }
       } catch (_) {
-        // Non-fatal — login itself already succeeded. Scoping will simply
-        // kick in next time validateSession() runs (e.g. next app launch).
+        
       }
 
       return token;
@@ -102,14 +157,13 @@ class AuthService {
         }
       }
     } catch (_) {
-      // Non-fatal
+      
     }
   }
 
   Future<void> logout() async {
     await SecureStorage.clearAuth();
-    // Clears which account is "active" locally — does not delete that
-    // account's cached data, so it's still there if they log back in.
+    
     await LocalStorageService.setCurrentUserId(null);
   }
 
@@ -117,7 +171,7 @@ class AuthService {
     try {
       await _dio.delete('/auth/me');
     } catch (_) {
-      // Best effort deletion on the server, but we must delete locally regardless
+      
     }
     await SecureStorage.clearAuth();
     await LocalStorageService.deleteCurrentUserData();
@@ -127,20 +181,6 @@ class AuthService {
     return await SecureStorage.hasToken();
   }
 
-  /// Confirms a locally stored token is still genuinely valid (not just
-  /// present) by calling the lightweight `/auth/me` endpoint, and scopes
-  /// local storage to the resulting user id. Used at app launch instead of
-  /// just checking for token existence.
-  ///
-  /// Returns the user id if the session is valid, or null if there's no
-  /// token or the server has confirmed it's no longer valid (expired,
-  /// tampered, or the account no longer exists).
-  ///
-  /// A network failure (offline, timeout) is treated as "can't confirm
-  /// either way" rather than "invalid" — we fall back to whatever user id
-  /// was cached from the last successful validation, so the app remains
-  /// usable offline instead of forcing a logout just because the network
-  /// request itself failed.
   Future<String?> validateSession() async {
     if (!await SecureStorage.hasToken()) return null;
 
@@ -150,7 +190,7 @@ class AuthService {
       if (uid != null) {
         await LocalStorageService.setCurrentUserId(uid);
         await _syncProfile(uid);
-        // Sync local data with Firestore and pull remote data
+        
         FirestoreService.pullCycleLogs(userId: uid);
         FirestoreService.pullProfile(userId: uid);
         FirestoreService.syncCycleLogs(userId: uid);
@@ -159,11 +199,10 @@ class AuthService {
       return uid;
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
-        // Definitely invalid. ApiClient's onError interceptor already
-        // clears the stored token when this happens.
+        
         return null;
       }
-      // Couldn't reach the server — don't force a logout for that alone.
+      
       return LocalStorageService.currentUserId;
     }
   }

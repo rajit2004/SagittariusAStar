@@ -1,235 +1,147 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart' hide User;
 import 'package:rhythma/providers/profile_provider.dart';
 import 'package:rhythma/providers/locale_provider.dart';
 import 'package:rhythma/services/auth_service.dart';
-import 'package:rhythma/l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final VoidCallback onSwitchToSignUp;
+
+  const LoginScreen({super.key, required this.onSwitchToSignUp});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _phoneController = TextEditingController();
-  final _otpController = TextEditingController();
-  
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
   bool _loading = false;
-  bool _otpSent = false;
-  String? _verificationId;
+  bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _phoneController.dispose();
-    _otpController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  void _showMessage(String message) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-  }
-
-  Future<void> _sendOtp() async {
-    final l10n = AppLocalizations.of(context)!;
-    String phone = _phoneController.text.trim();
-    if (phone.isEmpty) {
-      _showMessage(l10n.pleaseEnterPhoneNumber);
-      return;
-    }
-
-    // Automatically format to E.164 (+91 for India) if they just entered 10 digits
-    if (phone.length == 10 && !phone.startsWith('+')) {
-      phone = '+91$phone';
-    } else if (!phone.startsWith('+')) {
-      _showMessage(l10n.pleaseEnterValidPhoneNumber);
-      return;
-    }
-
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
-    
     try {
-      await FirebaseAuth.instance.verifyPhoneNumber(
-        phoneNumber: phone,
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          await _signInWithCredential(credential);
-        },
-        verificationFailed: (FirebaseAuthException e) {
-          if (!mounted) return;
-          setState(() => _loading = false);
-          _showMessage(e.message ?? l10n.verificationFailed);
-        },
-        codeSent: (String verificationId, int? resendToken) {
-          if (!mounted) return;
-          setState(() {
-            _loading = false;
-            _otpSent = true;
-            _verificationId = verificationId;
-          });
-          _showMessage(l10n.otpSentTo(phone));
-        },
-        codeAutoRetrievalTimeout: (String verificationId) {
-          _verificationId = verificationId;
-        },
-      );
-    } catch (e) {
+      final email = _emailController.text.trim();
+      final password = _passwordController.text;
+      await AuthService().login(email, password);
+
       if (!mounted) return;
-      setState(() => _loading = false);
-      _showMessage(e.toString());
-    }
-  }
-
-  Future<void> _verifyOtp() async {
-    final l10n = AppLocalizations.of(context)!;
-    final otp = _otpController.text.trim();
-    if (otp.isEmpty || _verificationId == null) {
-      _showMessage(l10n.pleaseEnterOtp);
-      return;
-    }
-
-    setState(() => _loading = true);
-
-    try {
-      final credential = PhoneAuthProvider.credential(
-        verificationId: _verificationId!,
-        smsCode: otp,
-      );
-      await _signInWithCredential(credential);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-      _showMessage(l10n.invalidOtp);
-    }
-  }
-
-  Future<void> _signInWithCredential(PhoneAuthCredential credential) async {
-    final l10n = AppLocalizations.of(context)!;
-    try {
-      final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
-      final idToken = await userCredential.user?.getIdToken();
-      
-      if (idToken == null) throw Exception(l10n.failedToGetIdToken);
-
-      await AuthService().firebaseLogin(idToken);
-      if (!mounted) return;
-
       context.read<ProfileProvider>().reloadProfile();
       final profile = context.read<ProfileProvider>().profile;
       final lang = profile['language'] as String?;
       if (lang != null) {
         context.read<LocaleProvider>().setLocale(Locale(lang));
       }
-
       Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
-      _showMessage(e.toString());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
     return Scaffold(
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  'assets/images/logo.png',
-                  height: 120,
-                  fit: BoxFit.contain,
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.welcomeToRhythma,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  _otpSent 
-                    ? l10n.enterOtpSentToPhone
-                    : l10n.loginOrSignUpWithPhone,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Theme.of(context).hintColor),
-                ),
-                const SizedBox(height: 36),
-                
-                if (!_otpSent) ...[
-                  TextField(
-                    controller: _phoneController,
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Login',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : const Color(0xFF2D1F47),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Welcome back to Rhythma',
+                    style: TextStyle(color: Theme.of(context).hintColor),
+                  ),
+                  const SizedBox(height: 36),
+                  TextFormField(
+                    controller: _emailController,
                     enabled: !_loading,
-                    keyboardType: TextInputType.phone,
+                    keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
-                    decoration: InputDecoration(
-                      labelText: l10n.phoneNumber,
-                      hintText: '+91 9876543210',
-                      prefixIcon: const Icon(Icons.phone_outlined),
-                      border: const OutlineInputBorder(),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Email is required';
+                      if (!v.contains('@')) return 'Enter a valid email';
+                      return null;
+                    },
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      hintText: 'you@example.com',
+                      prefixIcon: Icon(Icons.email_outlined),
+                      border: OutlineInputBorder(),
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: _loading ? null : _sendOtp,
-                    icon: _loading
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.send_rounded),
-                    label: Text(_loading ? l10n.sendingOtp : l10n.getOtp),
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
-                    ),
-                  ),
-                ] else ...[
-                  TextField(
-                    controller: _otpController,
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _passwordController,
                     enabled: !_loading,
-                    keyboardType: TextInputType.number,
+                    obscureText: _obscurePassword,
                     textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _verifyOtp(),
+                    onFieldSubmitted: (_) => _login(),
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Password is required';
+                      return null;
+                    },
                     decoration: InputDecoration(
-                      labelText: l10n.otp,
-                      hintText: '123456',
-                      prefixIcon: const Icon(Icons.password_outlined),
+                      labelText: 'Password',
+                      prefixIcon: const Icon(Icons.lock_outlined),
                       border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        ),
+                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: _loading ? null : _verifyOtp,
-                    icon: _loading
+                  ElevatedButton(
+                    onPressed: _loading ? null : _login,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
+                    ),
+                    child: _loading
                         ? const SizedBox(
                             width: 18,
                             height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(Icons.login_rounded),
-                    label: Text(_loading ? l10n.verifying : l10n.verifyOtp),
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
-                    ),
+                        : const Text('Login', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                   ),
+                  const SizedBox(height: 16),
                   TextButton(
-                    onPressed: _loading ? null : () => setState(() => _otpSent = false),
-                    child: Text(l10n.useDifferentPhoneNumber),
+                    onPressed: _loading ? null : widget.onSwitchToSignUp,
+                    child: const Text("Don't have an account? Sign Up"),
                   ),
                 ],
-              ],
+              ),
             ),
           ),
         ),

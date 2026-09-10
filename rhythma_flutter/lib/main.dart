@@ -25,6 +25,7 @@ import 'providers/sync_status_provider.dart';
 import 'screens/assistant/assistant_screen.dart';
 import 'screens/auth/language_selection_screen.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/auth/splash_screen.dart';
 import 'screens/cycle/cycle_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/insights/insights_screen.dart';
@@ -51,9 +52,6 @@ Future<void> main() async {
     if (!e.toString().contains('[core/duplicate-app]')) rethrow;
   }
 
-  // Initialize Firebase App Check to protect backend resources from abuse.
-  // Skip in debug builds — Play Integrity attestation fails for debug APKs
-  // and blocks phone auth reCAPTCHA verification.
   if (!kDebugMode) {
     try {
       await FirebaseAppCheck.instance.activate(
@@ -67,8 +65,6 @@ Future<void> main() async {
 
   await LocalStorageService.init();
 
-  // Migration: existing users who completed onboarding already chose a language.
-  // Mark language selection as completed so they are not shown the picker again.
   if (LocalStorageService.onboardingCompleted &&
       !LocalStorageService.languageSelectionCompleted) {
     await LocalStorageService.setLanguageSelectionCompleted(true);
@@ -115,14 +111,37 @@ class RhythmaApp extends StatefulWidget {
 }
 
 class _RhythmaAppState extends State<RhythmaApp> {
-  // Created once, not inline in build(): a FutureBuilder whose `future` is
-  // constructed fresh on every build restarts (goes back to `waiting`) on
-  // every rebuild — and rebuilds happen for reasons unrelated to auth,
-  // e.g. a locale or theme change calling notifyListeners(). That was
-  // tearing down RhythmaRoot (and whatever onboarding page the user was
-  // on) back to the splash screen, then to a brand new RhythmaRoot, every
-  // time onboarding's language step changed the locale.
   late final Future<String?> _sessionFuture = AuthService().validateSession();
+
+  void _goToLogin() {
+    final nav = rootNavigatorKey.currentState;
+    if (nav == null) return;
+    nav.push(MaterialPageRoute(
+      builder: (_) => LoginScreen(
+        onSwitchToSignUp: _goToSignUp,
+      ),
+    ));
+  }
+
+  void _goToSignUp() {
+    final nav = rootNavigatorKey.currentState;
+    if (nav == null) return;
+    nav.push(MaterialPageRoute(
+      builder: (_) => OnboardingScreen(
+        onComplete: () async {
+          await LocalStorageService.setOnboardingCompleted(true);
+          if (!mounted) return;
+          context.read<ProfileProvider>().reloadProfile();
+          final profile = context.read<ProfileProvider>().profile;
+          final lang = profile['language'] as String?;
+          if (lang != null) {
+            context.read<LocaleProvider>().setLocale(Locale(lang));
+          }
+          nav.pushNamedAndRemoveUntil('/home', (route) => false);
+        },
+      ),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -142,26 +161,12 @@ class _RhythmaAppState extends State<RhythmaApp> {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: appSupportedLanguages.map((l) => l.locale).toList(),
-      home: FutureBuilder<String?>(
-        // Confirms the stored token is still genuinely valid (not merely
-        // present) via a lightweight /auth/me check, and scopes local
-        // storage to the resulting account — see AuthService.validateSession.
-        future: _sessionFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const SplashScreen();
-          }
-          if (snapshot.data != null) {
-            return const BiometricAuthGate(child: RhythmaRoot());
-          }
-          if (!LocalStorageService.languageSelectionCompleted) {
-            return const LanguageSelectionScreen();
-          }
-          return const LoginScreen();
-        },
+      home: _LandingGate(
+        sessionFuture: _sessionFuture,
+        onLogin: _goToLogin,
+        onSignUp: _goToSignUp,
       ),
       routes: {
-        '/login': (_) => const LoginScreen(),
         '/home': (_) => const RhythmaRoot(),
         '/assistant': (_) => const ShellBackground(child: AssistantScreen()),
       },
@@ -169,9 +174,46 @@ class _RhythmaAppState extends State<RhythmaApp> {
   }
 }
 
-/// Root widget that decides whether to show onboarding or the main shell.
-/// Uses a [ValueNotifier] so the onboarding screen can trigger a rebuild
-/// without Navigator push/pop complexity.
+class _LandingGate extends StatelessWidget {
+  final Future<String?> sessionFuture;
+  final VoidCallback onLogin;
+  final VoidCallback onSignUp;
+
+  const _LandingGate({
+    required this.sessionFuture,
+    required this.onLogin,
+    required this.onSignUp,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<String?>(
+      future: sessionFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return AppSplashScreen(onLogin: onLogin, onSignUp: onSignUp);
+        }
+        if (snapshot.data != null) {
+          return const BiometricAuthGate(child: RhythmaRoot());
+        }
+        if (!LocalStorageService.languageSelectionCompleted) {
+          return LanguageSelectionScreen(
+            onComplete: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AppSplashScreen(onLogin: onLogin, onSignUp: onSignUp),
+                ),
+              );
+            },
+          );
+        }
+        return AppSplashScreen(onLogin: onLogin, onSignUp: onSignUp);
+      },
+    );
+  }
+}
+
 class RhythmaRoot extends StatefulWidget {
   const RhythmaRoot({super.key});
 
@@ -187,7 +229,6 @@ class _RhythmaRootState extends State<RhythmaRoot> {
     super.initState();
     _onboardingDone = LocalStorageService.onboardingCompleted;
 
-    // Reload profile and sync locale after session validation completes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<ProfileProvider>().reloadProfile();
@@ -263,39 +304,6 @@ class _RhythmaShellState extends State<RhythmaShell> {
           ),
           const DebugDataIndicator(),
         ],
-      ),
-    );
-  }
-}
-
-class SplashScreen extends StatelessWidget {
-  const SplashScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'assets/images/logo.png',
-              height: 120,
-              fit: BoxFit.contain,
-            ),
-            const SizedBox(height: 24),
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text(
-              'Rhythma',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).primaryColor,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

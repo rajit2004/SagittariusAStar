@@ -1,4 +1,3 @@
-// ignore_for_file: deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
@@ -9,12 +8,10 @@ import '../../config/theme.dart';
 import '../../providers/locale_provider.dart';
 import '../../services/local_storage_service.dart';
 import '../../services/profile_service.dart';
+import '../../services/auth_service.dart';
 import '../../providers/profile_provider.dart';
 import '../../components/approximate_field.dart';
 
-/// The 5-step offline-first onboarding flow.
-/// On completion, writes all collected data to LocalStorageService and
-/// navigates to the main app shell.
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onComplete;
 
@@ -37,10 +34,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   int _currentPage = 0;
   static const int _totalPages = 5;
 
-  // Step 1 – Language
   String _selectedLanguage = 'en';
 
-  // Step 2 – Basic Profile
   final _nameController = TextEditingController();
   final _ageController = TextEditingController();
   final _heightController = TextEditingController();
@@ -51,7 +46,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   String? _heightError;
   String? _weightError;
 
-  // Step 2 – "Not sure" toggle state
   bool _ageIsEstimated = false;
   String? _ageSelectedRange;
   bool _heightIsEstimated = false;
@@ -59,33 +53,33 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   bool _weightIsEstimated = false;
   String? _weightSelectedRange;
 
-  // Step 3 – Menstrual Profile
   DateTime? _lastPeriodDate;
   final bool _isLastPeriodApproximate = false;
-  // ignore: prefer_final_fields
+  
   int _cycleLength = 28;
-  // ignore: prefer_final_fields
+  
   int _periodDuration = 5;
-  // ignore: prefer_final_fields
+  
   bool _isRegular = true;
 
-  // Step 4 – Optional Info
   final _phoneController = TextEditingController();
   final _cityController = TextEditingController();
   final _stateController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
-  // Step 5 – Permissions
-  // ignore: prefer_final_fields
   bool _notificationsEnabled = false;
-  // ignore: prefer_final_fields
+  
   bool _dataConsent = false;
   String? _consentError;
   String? _phoneError;
+  String? _emailError;
+  String? _passwordError;
+  bool _obscurePassword = true;
 
   late AnimationController _pageAnimController;
   late Animation<double> _pageFade;
 
-  // E.164 format: leading '+' followed by 1-15 digits.
   static final _e164 = RegExp(r'^\+[1-9]\d{1,14}$');
 
   List<ApproxRange> _buildAgeRanges(AppLocalizations l) => [
@@ -146,11 +140,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     _phoneController.dispose();
     _cityController.dispose();
     _stateController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     _pageAnimController.dispose();
     super.dispose();
   }
-
-  // ── Data ──────────────────────────────────────────────────────────────────
 
   static const List<Map<String, String>> _languages = [
     {'code': 'en', 'label': 'English'},
@@ -160,9 +154,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     {'code': 'mr', 'label': 'मराठी'},
   ];
   
-
-  // ── Navigation ────────────────────────────────────────────────────────────
-
   bool _validateCurrentPage() {
     final l = AppLocalizations.of(context)!;
     setState(() {
@@ -172,6 +163,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       _weightError = null;
       _consentError = null;
       _phoneError = null;
+      _emailError = null;
+      _passwordError = null;
     });
 
     if (_currentPage == 1) {
@@ -181,7 +174,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         valid = false;
       }
 
-      // Age – required
       if (_ageIsEstimated) {
         if (_ageSelectedRange == null) {
           setState(() => _ageError = l.onboardingAgeRequired);
@@ -200,7 +192,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         }
       }
 
-      // Height – required
       if (_heightIsEstimated) {
         if (_heightSelectedRange == null) {
           setState(() => _heightError = l.onboardingHeightRequired);
@@ -219,7 +210,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         }
       }
 
-      // Weight – required
       if (_weightIsEstimated) {
         if (_weightSelectedRange == null) {
           setState(() => _weightError = l.onboardingWeightRequired);
@@ -249,6 +239,20 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     }
 
     if (_currentPage == 3) {
+      final email = _emailController.text.trim();
+      if (email.isEmpty) {
+        setState(() => _emailError = 'Email is required');
+        return false;
+      }
+      if (!email.contains('@') || !email.contains('.')) {
+        setState(() => _emailError = 'Enter a valid email address');
+        return false;
+      }
+      final password = _passwordController.text;
+      if (password.length < 8) {
+        setState(() => _passwordError = 'Password must be at least 8 characters');
+        return false;
+      }
       final phone = _phoneController.text.trim();
       if (phone.isNotEmpty && !_e164.hasMatch(phone)) {
         setState(() => _phoneError = l.onboardingPhoneInvalid);
@@ -308,6 +312,27 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   Future<void> _saveAndComplete() async {
     final l = AppLocalizations.of(context)!;
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    try {
+      await AuthService().register(
+        email: email,
+        password: password,
+        fullName: _nameController.text.trim().isEmpty
+            ? 'User'
+            : _nameController.text.trim(),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+      return;
+    }
+
+    if (!mounted) return;
     final profile = <String, dynamic>{
       'name': _nameController.text.trim().isEmpty
           ? 'User'
@@ -354,19 +379,15 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     if (state.isNotEmpty) profile['state'] = state;
     profile['notifications_enabled'] = _notificationsEnabled;
 
-    // 1. Persist locally first — data is never lost even if backend is down.
     await context.read<ProfileProvider>().mergeProfileWithSync(profile);
 
-    // 2. Sync to backend — best-effort, never blocks the user.
+    if (!mounted) return;
     ProfileService.patchProfile(profile);
 
-    // 3. Mark onboarding done for this user account.
     await LocalStorageService.setOnboardingCompleted(true);
 
     widget.onComplete();
   }
-
-  // ── UI ────────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -474,8 +495,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
   }
 
-  // ── Step 1 ────────────────────────────────────────────────────────────────
-
   Widget _buildStep1(AppLocalizations l) {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 8),
@@ -559,8 +578,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       ),
     );
   }
-
-  // ── Step 2 ────────────────────────────────────────────────────────────────
 
   Widget _buildStep2(AppLocalizations l) {
     return SingleChildScrollView(
@@ -646,8 +663,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             approximateLabel: l.onboardingApproximate,
           ),
           const SizedBox(height: 14),
-          // Height & Weight: side-by-side in exact mode; vertical when
-          // either enters approximate mode to avoid overflow on small screens.
+          
           if (_heightIsEstimated || _weightIsEstimated) ...[
             ApproximateField(
               label: l.onboardingHeightLabel,
@@ -758,8 +774,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
   }
 
-  // ── Step 3 ────────────────────────────────────────────────────────────────
-
   Widget _buildStep3(AppLocalizations l) {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 8),
@@ -840,7 +854,6 @@ Semantics(
   ),
 ),
 
-                
           const SizedBox(height: 24),
           _buildSliderField(
             label: l.onboardingCycleLengthLabel,
@@ -881,8 +894,6 @@ Semantics(
     );
   }
 
-  // ── Step 4 ────────────────────────────────────────────────────────────────
-
   Widget _buildStep4(AppLocalizations l) {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 32, 24, 8),
@@ -891,6 +902,54 @@ Semantics(
         children: [
           _buildStepHeader(l.onboardingStep4Title, l.onboardingStep4Subtitle),
           const SizedBox(height: 28),
+          _buildTextField(
+            controller: _emailController,
+            label: 'Email',
+            hint: 'you@example.com',
+            error: _emailError,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _passwordController,
+            obscureText: _obscurePassword,
+            style: TextStyle(color: RhythmaColors.foreground),
+            textInputAction: TextInputAction.next,
+            decoration: InputDecoration(
+              labelText: 'Password',
+              hintText: 'Min. 8 characters',
+              errorText: _passwordError,
+              labelStyle: TextStyle(color: RhythmaColors.mutedFg),
+              hintStyle: TextStyle(color: RhythmaColors.mutedFg.withValues(alpha: 0.6)),
+              filled: true,
+              fillColor: RhythmaColors.surface,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: RhythmaColors.primary.withValues(alpha: 0.2)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: RhythmaColors.primary, width: 1.5),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+              ),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                  color: RhythmaColors.mutedFg,
+                ),
+                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
           _buildTextField(
             controller: _phoneController,
             label: l.onboardingPhoneLabel,
@@ -915,8 +974,6 @@ Semantics(
       ),
     );
   }
-
-  // ── Step 5 ────────────────────────────────────────────────────────────────
 
   Widget _buildStep5(AppLocalizations l) {
   return SingleChildScrollView(
@@ -1038,9 +1095,6 @@ Semantics(
   );
 }
   
-
-  // ── Shared helpers ────────────────────────────────────────────────────────
-
   Widget _buildStepHeader(String title, String subtitle) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1245,4 +1299,3 @@ Semantics(
     );
    }
   }
-
