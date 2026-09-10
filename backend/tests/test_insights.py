@@ -108,5 +108,6 @@ def test_dashboard_and_insights_return_identical_stats(auth_headers, mock_cycle_
     assert dashboard_data["insights"]["shortestCycleLength"] == insights_data["shortestCycleLength"] == 30
     assert dashboard_data["insights"]["longestCycleLength"] == insights_data["longestCycleLength"] == 31
     assert dashboard_data["insights"]["averageBleedingDuration"] == insights_data["averageBleedingDuration"] == 5.0
-    assert dashboard_data["hasEnoughDataForInsights"] == insights_data["hasEnoughDataForInsights"] is True
+    assert dashboard_data["hasEnoughDataForInsights"] is True
+    assert insights_data["hasEnoughDataForInsights"] is True
     assert dashboard_data["loggedCycleCount"] == insights_data["loggedCycleCount"] == 3

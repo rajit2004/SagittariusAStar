@@ -118,7 +118,7 @@ class FirestoreService {
         final data = Map<String, dynamic>.from(log);
         // Add server timestamp for conflict resolution
         data['synced_at'] = FieldValue.serverTimestamp();
-        data['device_id'] = LocalStorageService.currentUserId;
+        data['user_id'] = LocalStorageService.currentUserId;
         batch.set(docRef, data, SetOptions(merge: true));
       }
 
@@ -253,7 +253,7 @@ class FirestoreService {
           data.remove('user_id');
           data.remove('queued_at');
           data['synced_at'] = FieldValue.serverTimestamp();
-          data['device_id'] = LocalStorageService.currentUserId;
+          data['user_id'] = LocalStorageService.currentUserId;
           batch.set(docRef, data, SetOptions(merge: true));
         }
 
@@ -284,7 +284,7 @@ class FirestoreService {
         data.remove('user_id');
         data.remove('queued_at');
         data['synced_at'] = FieldValue.serverTimestamp();
-        data['device_id'] = LocalStorageService.currentUserId;
+        data['user_id'] = LocalStorageService.currentUserId;
 
         await userRef.set(data, SetOptions(merge: true));
 
@@ -317,7 +317,7 @@ class FirestoreService {
       final userRef = _db!.collection('client_sync').doc(userId);
       final data = Map<String, dynamic>.from(profile);
       data['synced_at'] = FieldValue.serverTimestamp();
-      data['device_id'] = LocalStorageService.currentUserId;
+      data['user_id'] = LocalStorageService.currentUserId;
 
       await userRef.set(data, SetOptions(merge: true));
       debugPrint('FirestoreService: synced profile for $userId');
