@@ -25,19 +25,15 @@ void main() {
     test('phase() calculates cycle phase from period start date across month boundaries', () async {
       final provider = CycleProvider();
 
-      // Day 3 of cycle (Jan 30 - Menstrual Phase)
       final day3 = DateTime(2026, 1, 30);
       expect(provider.phase(day3, l10n), equals('Period'));
 
-      // Month boundary: Day 10 of cycle (Feb 6 - Follicular Phase)
       final day10 = DateTime(2026, 2, 6);
       expect(provider.phase(day10, l10n), equals('Follicular'));
 
-      // Day 15 of cycle (Feb 11 - Ovulatory Phase)
       final day15 = DateTime(2026, 2, 11);
       expect(provider.phase(day15, l10n), equals('Ovulation'));
 
-      // Day 22 of cycle (Feb 18 - Luteal Phase)
       final day22 = DateTime(2026, 2, 18);
       expect(provider.phase(day22, l10n), equals('Luteal'));
     });
@@ -96,24 +92,21 @@ void main() {
   group('CycleProvider phase color', () {
     test('phaseColor returns the phase color for each day range', () {
       final provider = CycleProvider();
-      // last_period is seeded as 2026-01-28 in setUp.
-      // Defaults: periodDuration=5, cycleLength=28
-      //   follicularEnd = (28/2).floor() - 2 = 12
-      //   ovulationEnd  = (28/2).floor() + 1 = 15
-      expect(provider.phaseColor(DateTime(2026, 1, 28)), RhythmaColors.rose);     // day 1  → period
+      
+      expect(provider.phaseColor(DateTime(2026, 1, 28)), RhythmaColors.rose);     
       expect(
-          provider.phaseColor(DateTime(2026, 2, 6)), RhythmaColors.primary);      // day 10 → follicular
+          provider.phaseColor(DateTime(2026, 2, 6)), RhythmaColors.primary);      
       expect(
-          provider.phaseColor(DateTime(2026, 2, 10)), RhythmaColors.teal);        // day 14 → ovulation
+          provider.phaseColor(DateTime(2026, 2, 10)), RhythmaColors.teal);        
       expect(
-          provider.phaseColor(DateTime(2026, 2, 18)), RhythmaColors.coral);       // day 22 → luteal
+          provider.phaseColor(DateTime(2026, 2, 18)), RhythmaColors.coral);       
     });
 
     test('phase falls back to day-of-month when no last period is saved',
         () async {
       await Hive.box<Map>('user_profile').delete('profile');
       final provider = CycleProvider();
-      // 7th of the month -> day 7 -> Follicular.
+      
       expect(provider.phase(DateTime(2026, 3, 7), l10n), l10n.cyclePhaseFollicular);
       expect(provider.phase(DateTime(2026, 3, 20), l10n), l10n.cyclePhaseLuteal);
     });

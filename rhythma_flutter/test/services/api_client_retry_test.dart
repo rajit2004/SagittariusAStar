@@ -1,14 +1,3 @@
-// The retry policy driven through the real interceptor (issue #500).
-//
-// `api_retry_test.dart` covers the decisions. This covers the wiring: that
-// a retryable failure really is replayed, that a non-retryable one really
-// is not, that the transient budget and the token-refresh budget stay
-// separate, and that a refresh which fails in an unexpected way still ends
-// with the user signed out rather than with a request that never settles.
-//
-// `ApiClient.retryPolicy` is replaced for the duration with one whose
-// jitter is pinned to zero, so a test that exercises three attempts costs
-// no wall-clock and cannot flake on timing.
 
 import 'dart:io';
 
@@ -102,9 +91,6 @@ void main() {
         throwsA(isA<DioException>()),
       );
 
-      // The original send plus `maxAttempts` replays. A persistently
-      // failing endpoint costs a bounded number of requests, not an
-      // unbounded one.
       expect(attempts, 1 + ApiClient.retryPolicy.maxAttempts);
     });
 
@@ -126,8 +112,7 @@ void main() {
     });
 
     test('a POST that fails transiently is not replayed', () async {
-      // The duplicate-log case. A `POST /cycle/log` that got a 503 may
-      // already have been committed server-side.
+      
       var attempts = 0;
 
       installMockDioAdapter((options) {
@@ -270,7 +255,7 @@ void main() {
 
       expect(response.statusCode, 200);
       expect(refreshCalls, 1);
-      // Once with the stale token, once with the fresh one. Not four.
+      
       expect(dashboardCalls, 2);
     });
 
@@ -291,7 +276,7 @@ void main() {
 
         dashboardCalls++;
         if (options.headers['Authorization'] == 'Bearer fresh-access-token') {
-          // The replay lands on a backend that is now failing transiently.
+          
           return const MockDioResponse(503);
         }
         return const MockDioResponse(401, {'detail': 'Token expired'});
@@ -304,17 +289,12 @@ void main() {
         throwsA(isA<DioException>()),
       );
 
-      // The stale-token send and the one replay. The two budgets must not
-      // multiply into six requests.
       expect(dashboardCalls, 2);
     });
 
     test('a refresh answering 200 with the wrong body signs the user out',
         () async {
-      // The `TypeError` case. `response.data['access_token'] as String`
-      // threw for a body like this, and the throw escaped the interceptor:
-      // credentials were left in place, the unauthorized callback never
-      // fired, and the user sat there signed in with a dead token.
+      
       await SecureStorage.saveToken('expired-access-token');
       await SecureStorage.saveRefreshToken('valid-refresh-token');
 
@@ -341,9 +321,7 @@ void main() {
 
     test('a refresh that omits a rotated token keeps the one already stored',
         () async {
-      // A backend that does not rotate refresh tokens sends only an access
-      // token. Overwriting the stored refresh token with nothing would
-      // sign the user out at the next refresh.
+      
       await SecureStorage.saveToken('expired-access-token');
       await SecureStorage.saveRefreshToken('long-lived-refresh-token');
 

@@ -25,8 +25,6 @@ export function RegisterPage() {
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Recomputed as she types, so the requirements tick off in place rather
-  // than only appearing after a rejected submission.
   const passwordRules = useMemo(
     () => evaluatePassword(password, { email, username }),
     [password, email, username],
@@ -42,9 +40,7 @@ export function RegisterPage() {
       await register(username, email, password, fullName);
       navigate('/login', { replace: true });
     } catch (err) {
-      // The server's own per-rule messages take precedence over the local
-      // mirror in lib/password.ts — it is the thing that actually decides,
-      // and it may know rules this build does not.
+      
       const failures = serverPasswordFailures(err);
       if (failures.length > 0) {
         setPasswordErrors(failures);
@@ -107,9 +103,7 @@ export function RegisterPage() {
           />
         </label>
 
-        {/* Rendered before anything is typed, not only after a rejection —
-            requirements a user discovers by failing are requirements she
-            works around rather than meets. */}
+        {}
         <div id="password-requirements" className="password-requirements">
           <p>{t('auth.passwordRequirementsTitle')}</p>
           <ul>
@@ -130,8 +124,7 @@ export function RegisterPage() {
           </ul>
         </div>
 
-        {/* Disabled only on rules this build knows about; the server still
-            has the final say on submit. */}
+        {}
         <button type="submit" disabled={loading || !passwordReady}>
           {loading ? t('auth.registering') : t('auth.registerButton')}
         </button>

@@ -49,13 +49,12 @@ void main() {
       int refreshCallCount = 0;
 
       installMockDioAdapter((options) {
-        // First call to /dashboard fails with 401
+        
         if (options.path == '/dashboard' &&
             options.headers['Authorization'] == 'Bearer expired-access-token') {
           return const MockDioResponse(401, {'detail': 'Token expired'});
         }
 
-        // Refresh endpoint
         if (options.path == '/auth/refresh') {
           refreshCallCount++;
           final body = options.data as Map<String, dynamic>;
@@ -69,7 +68,6 @@ void main() {
           return const MockDioResponse(401, {'detail': 'Invalid refresh token'});
         }
 
-        // Retried /dashboard with new token succeeds
         if (options.path == '/dashboard' &&
             options.headers['Authorization'] == 'Bearer new-access-token') {
           return const MockDioResponse(200, {'user': {'name': 'Asha'}});
@@ -85,7 +83,6 @@ void main() {
       expect(response.data['user']['name'], 'Asha');
       expect(refreshCallCount, 1);
 
-      // New tokens should be stored
       expect(await SecureStorage.getToken(), 'new-access-token');
       expect(await SecureStorage.getRefreshToken(), 'new-refresh-token');
     });
@@ -137,7 +134,7 @@ void main() {
         }
         if (options.path == '/auth/refresh') {
           refreshCallCount++;
-          // Simulate a slow refresh to prove concurrency handling
+          
           return const MockDioResponse(200, {
             'access_token': 'new-access-token',
             'refresh_token': 'new-refresh-token',
@@ -149,7 +146,6 @@ void main() {
 
       ApiClient.init();
 
-      // Fire two requests simultaneously
       final future1 = ApiClient.dio.get('/dashboard');
       final future2 = ApiClient.dio.get('/profile');
 
@@ -157,7 +153,7 @@ void main() {
 
       expect(results[0].statusCode, 200);
       expect(results[1].statusCode, 200);
-      // Only ONE refresh call despite two concurrent 401s
+      
       expect(refreshCallCount, 1);
     });
 
@@ -185,7 +181,6 @@ void main() {
         throwsA(isA<DioException>()),
       );
 
-      // Should only attempt refresh once, not loop forever
       expect(refreshCallCount, 1);
     });
 
@@ -261,7 +256,6 @@ void main() {
         throwsA(isA<DioException>()),
       );
 
-      // Should NOT have called refresh for a public endpoint
       expect(refreshCallCount, 0);
     });
 
@@ -274,7 +268,7 @@ void main() {
       installMockDioAdapter((options) {
         if (options.path == '/dashboard') {
           requestCount++;
-          // Even the retried request gets 401 — simulating a bad state
+          
           return const MockDioResponse(401, {'detail': 'Still unauthorized'});
         }
         if (options.path == '/auth/refresh') {
@@ -297,8 +291,7 @@ void main() {
         throwsA(isA<DioException>()),
       );
 
-      // Should have tried once, refreshed, retried once, then given up
-      expect(requestCount, 2); // original + 1 retry
+      expect(requestCount, 2); 
       expect(unauthorizedCalled, true);
     });
   });

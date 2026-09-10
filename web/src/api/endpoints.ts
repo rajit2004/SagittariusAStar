@@ -1,7 +1,5 @@
 import { apiClient } from './client';
 
-// ─── Dashboard ──────────────────────────────────────────────────────────────
-
 export interface DashboardCycle {
   day: number | null;
   total: number;
@@ -28,32 +26,10 @@ export interface SymptomFrequency {
   acne: number;
 }
 
-// ─── Predictions (issue #419) ──────────────────────────────────────────────
-//
-// `backend/services/prediction_service.py` was written for #272 to replace
-// the three lines that used to answer "when is my next period?":
-//
-//     next_period_days = max(avg_cycle_length - cycle_day, 0)
-//
-// The clamp at zero is the part that matters — it makes "due today" and
-// "five days late" the same number, and being late is *the* signal a
-// tracker exists to surface. `/dashboard` has returned a `prediction`
-// object alongside the legacy `cycle` block since then; the web client
-// simply did not declare it, so the field was parsed and dropped, and Home
-// went on rendering the clamped estimate.
-
-/** Where the cycle-length estimate came from, worst case last. */
 export type EstimateSource = 'logged_history' | 'declared_cycle_length' | 'population_default';
 
 export type PredictionConfidence = 'high' | 'medium' | 'low';
 
-/**
- * The phases the server computes, scaled to the user's own cycle length.
- *
- * `late` is distinct from `luteal` on purpose: a fixed day-5/13/16 ladder
- * reports "luteal" forever once the count runs past 16, so a stale last
- * period pins someone in a phase that stopped being true weeks ago.
- */
 export type CyclePhase =
   | 'period'
   | 'follicular'
@@ -74,12 +50,6 @@ export interface FertileWindow {
   notForContraception: boolean;
 }
 
-/**
- * The compact prediction `/dashboard` embeds (`dashboard_summary()`).
- *
- * `daysUntilNextPeriod` goes negative when a period is late. Anything
- * rendering it must handle that rather than clamping it back.
- */
 export interface DashboardPrediction {
   nextPeriodDate: string | null;
   daysUntilNextPeriod: number | null;
@@ -92,7 +62,6 @@ export interface DashboardPrediction {
   fertileWindow: FertileWindow;
 }
 
-/** How the cycle length was estimated, and how much spread it sits on. */
 export interface CycleLengthEstimate {
   days: number;
   source: EstimateSource;
@@ -102,7 +71,6 @@ export interface CycleLengthEstimate {
   excludedCycleLengths: number[];
 }
 
-/** The full `GET /cycle/predictions` response (`Prediction.to_dict()`). */
 export interface PredictionResponse {
   today: string;
   cycleLength: CycleLengthEstimate;
@@ -130,11 +98,7 @@ export interface DashboardData {
   cycleHistory: CycleHistoryPoint[];
   symptomFrequency: SymptomFrequency | Record<string, never>;
   recentStressLevel: number | null;
-  /**
-   * Optional so a backend that predates #272 still renders — the Home
-   * screen falls back to `cycle.nextPeriodDays` when this is absent
-   * rather than showing nothing.
-   */
+  
   prediction?: DashboardPrediction | null;
 }
 
@@ -143,27 +107,12 @@ export async function fetchDashboard(): Promise<DashboardData> {
   return response.data;
 }
 
-/**
- * The full prediction, including ovulation and the multi-cycle forecast.
- *
- * Operates on the authenticated user — the route takes no path id — so
- * there is no user id to pass and no cross-user check to get wrong.
- */
 export async function fetchPredictions(horizon?: number): Promise<PredictionResponse> {
   const response = await apiClient.get<PredictionResponse>('/cycle/predictions', {
     params: horizon ? { horizon } : undefined,
   });
   return response.data;
 }
-
-// ─── Insights (factual observations, issue #320) ───────────────────────────
-//
-// Replaces the old MHS/CVI score display. Every statement here is derived
-// directly from the user's own logged data — see
-// backend/services/health_observations_service.py for the rule engine that
-// produces it. `title`/`body` are English fallbacks; `titleKey`/`bodyKey`
-// are reserved for clients that want to localize and interpolate
-// `evidence` themselves.
 
 export type ObservationSeverity = 'info' | 'attention' | 'seek_care';
 
@@ -196,8 +145,6 @@ export async function fetchObservations(userId: string): Promise<ObservationsRes
   return response.data;
 }
 
-// ─── Cycle Tracking ─────────────────────────────────────────────────────────
-
 export interface CycleLogInput {
   start_date: string;
   end_date?: string | null;
@@ -213,10 +160,6 @@ export interface CycleLogEntry extends CycleLogInput {
   id: string;
 }
 
-/**
- * Where a page sits in the history, from the backend's `page` object.
- * Added with #331 on the server; the client threw it away until #349.
- */
 export interface CycleHistoryPageInfo {
   limit: number;
   offset: number;
@@ -231,26 +174,8 @@ export interface CycleHistory {
   page: CycleHistoryPageInfo;
 }
 
-/**
- * The server's ceiling on one page, from `MAX_HISTORY_PAGE` in
- * `backend/api/cycle.py`.
- *
- * Duplicated here on purpose, and asserted on in the tests. Asking for
- * more is not a truncated response — it is a 422 before the handler runs,
- * which is how the Cycle page came to render an empty calendar for every
- * user (#349). A named constant the client clamps to is the smallest
- * thing that makes that mismatch impossible to reintroduce by typing a
- * bigger number.
- */
 export const MAX_HISTORY_PAGE = 100;
 
-/**
- * Stop following `nextOffset` after this many requests.
- *
- * A server that always returned `hasMore: true` would otherwise spin
- * forever. Ten pages is 1000 entries — years of logs — so the ceiling is
- * a bug-stopper, not a product limit.
- */
 const MAX_PAGES_FOLLOWED = 10;
 
 export async function submitCycleLog(log: CycleLogInput) {
@@ -264,21 +189,12 @@ export async function submitCycleLog(log: CycleLogInput) {
 export interface CycleHistoryQuery {
   limit?: number;
   offset?: number;
-  /** Inclusive, `YYYY-MM-DD`. */
+  
   startDate?: string;
-  /** Inclusive, `YYYY-MM-DD`. */
+  
   endDate?: string;
 }
 
-/**
- * One page of history, `page` object included.
- *
- * `limit` is clamped rather than passed through: a caller asking for a
- * year has made an ordinary mistake about what this endpoint offers, and
- * turning that into a 422 — which the calling page then renders as "no
- * logs" — is a worse outcome than returning the first hundred and
- * reporting `hasMore`.
- */
 export async function fetchCycleHistoryPage(
   userId: string,
   query: CycleHistoryQuery = {},
@@ -294,16 +210,6 @@ export async function fetchCycleHistoryPage(
   return response.data;
 }
 
-/**
- * Every entry in a date window, following `nextOffset` until the server
- * says there is no more.
- *
- * Fetching by window rather than by count is the point. The calendar
- * renders one month at a time, and `start_date`/`end_date` were added to
- * the endpoint in #331 for exactly this — no client used them. A month is
- * at most 31 entries, so in practice this is a single request that
- * happens to be correct if a user somehow has more.
- */
 export async function fetchCycleHistoryRange(
   userId: string,
   startDate: string,
@@ -321,10 +227,6 @@ export async function fetchCycleHistoryRange(
     });
     entries.push(...result.entries);
 
-    // `nextOffset` is null on the last page. Guarding on the offset
-    // *advancing* as well as on `hasMore` means a server that reported
-    // `hasMore: true` with an unchanged offset ends the loop instead of
-    // re-fetching the same page until the ceiling.
     const next = result.page?.nextOffset;
     if (!result.page?.hasMore || next == null || next <= offset) break;
     offset = next;
@@ -333,13 +235,6 @@ export async function fetchCycleHistoryRange(
   return entries;
 }
 
-/**
- * The most recent entries, newest first.
- *
- * Kept for callers that genuinely want "the last N", such as the Home
- * screen. The `limit` is clamped to the server's ceiling — the previous
- * signature accepted any number and passed it straight through.
- */
 export async function fetchCycleHistory(userId: string, limit = 90): Promise<CycleLogEntry[]> {
   const result = await fetchCycleHistoryPage(userId, { limit });
   return result.entries;
@@ -348,8 +243,6 @@ export async function fetchCycleHistory(userId: string, limit = 90): Promise<Cyc
 export async function deleteCycleLog(logId: string) {
   await apiClient.delete(`/cycle/${logId}`);
 }
-
-// ─── AI Assistant ───────────────────────────────────────────────────────────
 
 export interface ChatMessage {
   role: 'user' | 'model';
@@ -385,8 +278,6 @@ export async function fetchSupportedLanguages(): Promise<SupportedLanguage[]> {
   return response.data;
 }
 
-// ─── SMS ────────────────────────────────────────────────────────────────────
-
 export interface SmsSettings {
   phoneNumber: string;
   enabled: boolean;
@@ -397,7 +288,7 @@ export async function fetchSmsSettings(): Promise<SmsSettings> {
     const response = await apiClient.get<SmsSettings>('/sms/settings');
     return response.data;
   } catch (error) {
-    // 404 means the user has never saved settings — a normal first run.
+    
     if (error && typeof error === 'object' && 'response' in error) {
       const status = (error as { response?: { status?: number } }).response?.status;
       if (status === 404) return { phoneNumber: '', enabled: false };
@@ -418,8 +309,6 @@ export async function sendSmsSummary(phone_number: string, message: string) {
   });
   return response.data;
 }
-
-// ─── Profile ────────────────────────────────────────────────────────────────
 
 export interface Profile {
   id?: string;
@@ -471,26 +360,10 @@ export async function patchProfile(updates: ProfileUpdate): Promise<Profile> {
   return response.data;
 }
 
-/**
- * @deprecated Use the two-step flow in the "Data & privacy" section below.
- *
- * `DELETE /auth/me` is the legacy erasure route. Its own docstring says to
- * prefer `POST /privacy/delete-account`, which previews the impact before
- * it confirms and reports per-collection counts. Kept only because a
- * client somewhere may still be calling it.
- */
 export async function deleteAccount() {
   await apiClient.delete('/auth/me');
 }
 
-// ─── Data & privacy (issue #418) ───────────────────────────────────────────
-//
-// The backend has had all of this since #270 and no client called any of
-// it: `grep -rn "privacy" web/src` returned nothing. Settings offered no
-// way to see what is stored and no way to download it, and its Delete
-// button went to the legacy route above with its failures swallowed.
-
-/** One row of the "what do you have on me" inventory. */
 export interface DataCategory {
   key: string;
   label: string;
@@ -509,13 +382,6 @@ export interface DataSummary {
   totalRecords: number;
 }
 
-/**
- * Step one of deletion: what will be destroyed, and the token to confirm.
- *
- * `impact` is the same shape as `GET /privacy/summary`, so the preview a
- * user is shown before confirming is built from the same counts as the
- * inventory she was reading a moment earlier.
- */
 export interface DeletionPreview {
   confirmationToken: string;
   expiresInSeconds: number;
@@ -543,15 +409,6 @@ export async function fetchDataSummary(): Promise<DataSummary> {
   return response.data;
 }
 
-/**
- * Filename from `Content-Disposition`, or a sensible fallback.
- *
- * The server names the file (`rhythma-data-export-2026-08-10.json`) and
- * that name is the useful one — it carries the date the export was taken,
- * which a user comparing two downloads a month apart needs. Parsed
- * defensively because a proxy that strips the header must produce a
- * download with an ordinary name rather than no download at all.
- */
 export function exportFilename(disposition: unknown, format: ExportFormat): string {
   if (typeof disposition === 'string') {
     const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition);

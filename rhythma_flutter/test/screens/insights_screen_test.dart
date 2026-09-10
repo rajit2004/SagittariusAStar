@@ -59,8 +59,7 @@ void main() {
         ),
       ),
     );
-    // InsightsScreen fetches /dashboard in initState over Dio; give the real
-    // event loop a chance to service the mocked request before settling.
+    
     await tester.runAsync(
       () => Future.delayed(const Duration(milliseconds: 200)),
     );
@@ -92,21 +91,19 @@ void main() {
       tester.element(find.byType(InsightsScreen)),
     )!;
 
-    expect(find.text('27d'), findsOneWidget); // avg cycle
-    expect(find.text('26d'), findsOneWidget); // shortest
-    expect(find.text('28d'), findsOneWidget); // longest
-    expect(find.text('5d'), findsOneWidget); // avg bleeding
-    // Variability of [26, 28, 27] rounds to 1 day.
-    expect(find.text('1 ${l10n.homeDaysLabel}'), findsOneWidget); // variability
-    expect(find.text('27 ${l10n.homeDaysLabel}'), findsOneWidget); // avg cycle from insights
+    expect(find.text('27d'), findsOneWidget); 
+    expect(find.text('26d'), findsOneWidget); 
+    expect(find.text('28d'), findsOneWidget); 
+    expect(find.text('5d'), findsOneWidget); 
+    
+    expect(find.text('1 ${l10n.homeDaysLabel}'), findsOneWidget); 
+    expect(find.text('27 ${l10n.homeDaysLabel}'), findsOneWidget); 
     expect(find.text('6.5h'), findsOneWidget);
-    expect(find.text(l10n.logEnergyHigh), findsOneWidget); // stress level 4
+    expect(find.text(l10n.logEnergyHigh), findsOneWidget); 
 
-    // Symptom frequency bars.
     expect(find.text('40%'), findsOneWidget);
     expect(find.text('20%'), findsOneWidget);
 
-    // Data-driven recommendations (low sleep + high stress).
     expect(find.text(l10n.insightsRec1), findsOneWidget);
     expect(find.text(l10n.insightsRec2), findsOneWidget);
     expect(find.text(l10n.insightsRec3), findsOneWidget);
@@ -165,11 +162,9 @@ void main() {
       tester.element(find.byType(InsightsScreen)),
     )!;
 
-    // The disclaimer should be present in the widget tree
     final disclaimerFinder = find.text(l10n.insightsDisclaimer);
     expect(disclaimerFinder, findsOneWidget);
 
-    // Verify it's not off-screen by checking it's rendered
     final widget = tester.widget<Text>(disclaimerFinder);
     expect(widget.data, isNotEmpty);
   });

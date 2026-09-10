@@ -4,8 +4,6 @@ interface ScoreRingProps {
   label?: string;
 }
 
-// Circular progress ring drawn from 12 o'clock with a primary→rose gradient,
-// mirroring the Flutter app's ScoreRing. No chart library.
 export function ScoreRing({ value, size = 120, label }: ScoreRingProps) {
   const stroke = 8;
   const radius = (size - stroke) / 2;
@@ -66,8 +64,6 @@ interface SparklineProps {
   height?: number;
 }
 
-// Normalized line/area sparkline with a dot at each point — the web
-// equivalent of the Flutter TrendChart. No axes or labels.
 export function Sparkline({ points, color, height = 80 }: SparklineProps) {
   if (points.length === 0) return null;
 

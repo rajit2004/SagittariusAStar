@@ -20,7 +20,6 @@ import sat from './locales/sat.json';
 import sd from './locales/sd.json';
 import ur from './locales/ur.json';
 
-// Matches the Flutter app's supported locales.
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)

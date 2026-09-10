@@ -2,15 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../config/theme.dart';
 
-/// Wraps a screen that normally lives inside RhythmaShell's IndexedStack
-/// (Home/Cycle/Assistant/Insights/Profile all assume that background) so it
-/// still looks right when pushed as a standalone route instead — e.g. from
-/// a shortcut on the Home screen. Without this, the pushed screen loses the
-/// shared gradient backdrop that GlassCard's frosted-glass blur needs to
-/// look right, and renders against a flat default background instead,
-/// which can look broken (empty-looking gaps, washed-out cards, mismatched
-/// contrast). A back button is included since there's no bottom nav on a
-/// standalone route to return to the previous screen.
 class ShellBackground extends StatelessWidget {
   final Widget child;
   final bool showBackButton;
@@ -37,7 +28,6 @@ class ShellBackground extends StatelessWidget {
   }
 }
 
-/// Glassmorphism card — mirrors the web .glass-card utility
 class GlassCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -90,7 +80,6 @@ class GlassCard extends StatelessWidget {
   }
 }
 
-/// Gradient container matching .gradient-primary
 class GradientBox extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -148,7 +137,6 @@ Widget build(BuildContext context) {
 }
 }
 
-/// Tinted icon box (the colored icon containers on cards)
 class TintedIcon extends StatelessWidget {
   final IconData icon;
   final Color color;
@@ -175,7 +163,6 @@ class TintedIcon extends StatelessWidget {
   }
 }
 
-/// Section header row with optional action link
 class SectionHeader extends StatelessWidget {
   final String title;
   final String? action;
@@ -222,7 +209,6 @@ class SectionHeader extends StatelessWidget {
   }
 }
 
-/// Gradient scaffold background
 class RhythmaScaffold extends StatelessWidget {
   final Widget body;
   final bool extendBody;

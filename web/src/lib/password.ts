@@ -1,35 +1,10 @@
-/**
- * Client-side mirror of the server's password policy (issue #330).
- *
- * `backend/core/password_policy.py` is the authority — this file exists so
- * the register form can tick requirements off as the user types instead of
- * making her submit to find out. Anything that passes here can still be
- * rejected by the server, and the server's answer always wins: the form
- * renders whatever rules came back from a 422 rather than assuming this
- * file agreed with it.
- *
- * Kept deliberately small and dependency-free. If the two ever disagree the
- * visible symptom is a requirement that shows as met and is then refused,
- * which is annoying but safe; the reverse — a rule enforced here and not
- * there — cannot let anything through.
- */
 
-/** Matches `DEFAULT_MIN_LENGTH` in backend/core/password_policy.py. */
 export const MIN_PASSWORD_LENGTH = 8;
 
-/**
- * bcrypt hashes at most 72 bytes and silently drops the rest, so this is a
- * property of the hash rather than a policy choice. Measured in *bytes*:
- * most Devanagari, Tamil, Telugu, Kannada and Malayalam characters cost
- * three bytes each in UTF-8, so an Indian-language passphrase reaches the
- * ceiling at roughly a third of the character count an English one does.
- */
 export const MAX_PASSWORD_BYTES = 72;
 
-/** Shortest fragment of the user's own identity treated as "contains your email". */
 const MIN_IDENTIFIER_FRAGMENT = 4;
 
-/** Length of a keyboard/alphabet run that disqualifies a password. */
 const MAX_SEQUENCE_RUN = 5;
 
 const SEQUENCES = [
@@ -40,7 +15,6 @@ const SEQUENCES = [
   'zxcvbnm',
 ];
 
-/** The head of the common-password distribution the server also refuses. */
 const COMMON_PASSWORDS = new Set([
   '123456', '123456789', '12345678', '1234567', '1234567890', '12345',
   'password', 'password1', 'password123', 'passw0rd', 'p@ssw0rd',
@@ -56,7 +30,6 @@ const COMMON_PASSWORDS = new Set([
   'rhythma', 'rhythma123', 'period123', 'health123',
 ]);
 
-/** Stable identifiers, shared with the server so messages can be localized. */
 export type PasswordRuleCode =
   | 'too_short'
   | 'too_long'
@@ -67,7 +40,7 @@ export type PasswordRuleCode =
 
 export interface PasswordRuleState {
   code: PasswordRuleCode;
-  /** False once the user has typed something that breaks this rule. */
+  
   met: boolean;
 }
 
@@ -76,17 +49,10 @@ export interface PasswordContext {
   username?: string;
 }
 
-/** Byte length under UTF-8, which is what bcrypt's 72 counts. */
 export function byteLength(value: string): number {
   return new TextEncoder().encode(value).length;
 }
 
-/**
- * Pieces of the user's own identity a password shouldn't contain. Mirrors
- * `_identifier_fragments` on the server: the local part, its dot/underscore
- * separated pieces, and the first label of the domain — but not the TLD,
- * which would make every password containing "com" illegal.
- */
 function identifierFragments({ email, username }: PasswordContext): string[] {
   const fragments: string[] = [];
 
@@ -119,13 +85,6 @@ function hasLongSequence(password: string): boolean {
   });
 }
 
-/**
- * Every rule, with whether the current value satisfies it.
- *
- * Returns the full list rather than only the failures so the form can show
- * the requirements up front — an empty password reads as "nothing met yet",
- * not as "no problems".
- */
 export function evaluatePassword(
   password: string,
   context: PasswordContext = {},
@@ -152,8 +111,7 @@ export function evaluatePassword(
       met: !fragments.some((fragment) => lowered.includes(fragment)),
     },
     {
-      // Only meaningful once there is something to judge; an empty box
-      // isn't "too repetitive", it's empty, and the length rule says so.
+      
       code: 'not_varied_enough',
       met: password.length < 4 || distinctCharacters >= 4,
     },
@@ -164,7 +122,6 @@ export function evaluatePassword(
   ];
 }
 
-/** True when nothing in the local mirror objects to this password. */
 export function isPasswordAcceptable(
   password: string,
   context: PasswordContext = {},
@@ -172,14 +129,6 @@ export function isPasswordAcceptable(
   return password.length > 0 && evaluatePassword(password, context).every((rule) => rule.met);
 }
 
-/**
- * Pull the per-rule messages out of the server's 422.
- *
- * The backend answers a weak password with the standard error envelope
- * (`core/errors.py`): `error.code === 'weak_password'` and every broken
- * rule in `error.details`. Returns an empty array for any other failure, so
- * callers can fall back to their generic message.
- */
 export function serverPasswordFailures(error: unknown): string[] {
   if (!error || typeof error !== 'object') return [];
 

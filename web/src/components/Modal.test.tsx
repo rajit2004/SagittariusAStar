@@ -1,17 +1,3 @@
-/**
- * The behaviour `role="dialog"` promises (issue #502).
- *
- * Every case here is about what happens to focus and to the rest of the
- * page, not about what the markup looks like — the old code had all the
- * right attributes and none of the behaviour, so asserting on attributes
- * is how this regresses without anyone noticing.
- *
- * Tab is dispatched with `userEvent.tab()`, which walks the DOM's tab
- * order rather than firing a keydown at whatever is focused. That means
- * these tests exercise the trap the way a keyboard does: `preventDefault`
- * in the handler is what stops the walk leaving the panel, and a hole in
- * it shows up here as focus landing on the button behind the overlay.
- */
 
 import { useState } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -20,12 +6,6 @@ import { describe, expect, it } from 'vitest';
 
 import { Modal } from './Modal';
 
-/**
- * A page with something focusable behind the dialog.
- *
- * `behind` is the escape hatch the trap has to close: it is a real button
- * in the tab order, covered by the backdrop and nothing else.
- */
 function Harness({ withForm = false }: { withForm?: boolean } = {}) {
   const [open, setOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -77,8 +57,7 @@ describe('opening', () => {
 
     const panel = dialog();
     expect(panel).toHaveAttribute('aria-modal', 'true');
-    // The name comes from the heading on screen, not from a second copy
-    // in an aria-label that can drift away from it.
+    
     expect(panel).toHaveAccessibleName('Sleep');
     expect(screen.getByRole('heading', { name: 'Sleep' })).toBeInTheDocument();
   });
@@ -89,8 +68,6 @@ describe('opening', () => {
 
     await user.click(screen.getByRole('button', { name: 'Open dialog' }));
 
-    // Previously focus stayed on the tile behind the backdrop, so a
-    // screen-reader user was told nothing had opened.
     expect(dialog()).toHaveFocus();
   });
 
@@ -108,14 +85,13 @@ describe('the trap', () => {
 
     await user.click(screen.getByRole('button', { name: 'Open dialog' }));
 
-    await user.tab(); // panel → First
+    await user.tab(); 
     expect(screen.getByRole('button', { name: 'First' })).toHaveFocus();
     await user.tab();
     expect(screen.getByRole('button', { name: 'Second' })).toHaveFocus();
     await user.tab();
     expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
 
-    // The step that used to walk out into the page.
     await user.tab();
     expect(screen.getByRole('button', { name: 'First' })).toHaveFocus();
   });
@@ -149,10 +125,6 @@ describe('the trap', () => {
     const user = userEvent.setup();
     render(<Harness />);
 
-    // Grabbed before opening, because once the dialog is up this button is
-    // `aria-hidden` and `getByRole` — which queries the accessibility tree
-    // — genuinely cannot see it any more. That is the fix working, and it
-    // is why the reference has to be taken first.
     const behind = screen.getByRole('button', { name: 'Behind the overlay' });
 
     await user.click(screen.getByRole('button', { name: 'Open dialog' }));
@@ -172,15 +144,13 @@ describe('the rest of the page', () => {
 
     await user.click(screen.getByRole('button', { name: 'Open dialog' }));
 
-    // Everything in <body> except the portal the dialog rendered into.
     const hidden = Array.from(baseElement.children).filter(
       (child) => !child.contains(dialog()),
     );
     expect(hidden.length).toBeGreaterThan(0);
     for (const element of hidden) {
       expect(element).toHaveAttribute('aria-hidden', 'true');
-      // `inert` as well as `aria-hidden`: the first hides it from a
-      // screen reader, the second takes it out of the keyboard order too.
+      
       expect(element).toHaveAttribute('inert');
     }
   });
@@ -240,8 +210,7 @@ describe('closing', () => {
   });
 
   it('stays open when a press starts inside the panel and ends outside it', async () => {
-    // Selecting text in a field and releasing past the edge of the panel
-    // used to count as a backdrop click and throw the entry away.
+    
     const user = userEvent.setup();
     const { baseElement } = render(<Harness />);
 
@@ -264,8 +233,6 @@ describe('closing', () => {
     await user.click(opener);
     await user.keyboard('{Escape}');
 
-    // Not <body>, which would restart Tab from the top of the page — the
-    // thing that made logging several tiles in a row tedious.
     await waitFor(() => expect(opener).toHaveFocus());
   });
 
@@ -288,8 +255,6 @@ describe('as a form', () => {
 
     await user.click(screen.getByRole('button', { name: 'Open dialog' }));
 
-    // The dialog *is* the form, so its submit button is inside it rather
-    // than in a wrapper one level out.
     expect(dialog().tagName).toBe('FORM');
 
     await user.click(screen.getByRole('button', { name: 'Save' }));

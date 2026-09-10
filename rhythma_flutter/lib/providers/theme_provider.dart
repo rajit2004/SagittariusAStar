@@ -17,13 +17,12 @@ class ThemeProvider extends ChangeNotifier {
   ThemeData? get theme => null;
 
   Future<void> _loadTheme() async {
-    // Load Dark Mode
+    
     String? modeStr = LocalStorageService.getThemeMode();
     if (modeStr != null) {
       _isDarkMode = modeStr == 'dark';
     }
 
-    // Load Primary Color
     int? colorVal = LocalStorageService.getPrimaryColor();
     if (colorVal != null) {
       _primaryColor = Color(colorVal);

@@ -21,25 +21,12 @@ class _AssistantScreenState extends State<AssistantScreen> {
   late List<_Msg> _messages;
   bool _initialized = false;
 
-  /// Returns the signed-in user's display name, or a safe fallback if no
-  /// profile is set yet. Centralized here so every call site (welcome
-  /// message, suggested-prompt personalization, etc.) stays consistent.
   String get _displayName {
     final name =
         (LocalStorageService.getProfile()?['name'] as String?)?.trim();
     return (name != null && name.isNotEmpty) ? name : 'User';
   }
 
-  /// Builds the localized welcome string with the user's actual name
-  /// interpolated via Flutter's ICU placeholder mechanism (`{name}` in the
-  /// .arb files → `assistantWelcome(String name)` in the generated
-  /// AppLocalizations).
-  ///
-  /// This replaces the previous `_placeholderNames` map approach, which
-  /// silently failed if a locale's welcome string didn't contain the exact
-  /// demo name the map expected (issue #90). With ICU placeholders, the
-  /// name is always interpolated correctly in every locale — there is no
-  /// per-locale lookup table to keep in sync.
   String _personalizedWelcome(AppLocalizations l10n) {
     return l10n.assistantWelcome(_displayName);
   }
@@ -64,10 +51,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
                 content: m['content'] ?? '',
                 isError: m['isError'] == 'true',
               ))
-          // Older/corrupted entries can have an empty `content` (e.g. from
-          // a previous chat-history schema, or an interrupted save) and
-          // rendered as blank, outline-only bubbles with no visible text.
-          // Drop those rather than showing dead bubbles forever.
+          
           .where((m) => m.content.trim().isNotEmpty)
           .toList();
 
@@ -82,9 +66,6 @@ class _AssistantScreenState extends State<AssistantScreen> {
       }
       _initialized = true;
 
-      // If we actually dropped any blank entries, persist the cleaned-up
-      // list so this doesn't need to re-filter (or show a brief flash of
-      // the blank bubbles) on every future load.
       if (restored.length != saved.length) {
         _persistHistory();
       }
@@ -107,10 +88,6 @@ class _AssistantScreenState extends State<AssistantScreen> {
     final t = text.trim();
     if (t.isEmpty || _isLoading) return;
 
-    // Build conversation context from what's already on screen so the
-    // assistant can answer follow-up questions, not just isolated ones.
-    // _Msg already uses the same role/content vocabulary as the backend's
-    // ChatMessage model, so no translation is needed here.
     final history = _messages
         .where((m) => !m.isError)
         .toList()
@@ -175,7 +152,6 @@ class _AssistantScreenState extends State<AssistantScreen> {
     final l10n = AppLocalizations.of(context)!;
     final lang = LocalStorageService.preferredLanguage;
 
-    //  Wrapped in Scaffold
     return Scaffold(
       backgroundColor: RhythmaColors.background,
       appBar: AppBar(
@@ -185,7 +161,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
       ),
       body: Column(
         children: [
-          // Header
+          
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
             child: Row(
@@ -239,7 +215,6 @@ class _AssistantScreenState extends State<AssistantScreen> {
           ),
           const SizedBox(height: 8),
 
-          // Chat list
           Expanded(
             child: ListView.builder(
               controller: _scroll,
@@ -252,7 +227,6 @@ class _AssistantScreenState extends State<AssistantScreen> {
             ),
           ),
 
-         // Suggested chips (only before first user message)
           if (_messages.length == 1)
             SizedBox(
               height: 38,
@@ -294,11 +268,6 @@ class _AssistantScreenState extends State<AssistantScreen> {
             ),
           const SizedBox(height: 8),
 
-          // Input bar – this TextField now has a Material ancestor (Scaffold)
-          // Extra bottom padding keeps this clear of the floating bottom nav
-          // pill (which overlaps the body because the shell uses
-          // extendBody: true), so it doesn't sit underneath — and become
-          // untappable behind — the nav bar.
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
             child: ClipRRect(
@@ -375,14 +344,6 @@ class _AssistantScreenState extends State<AssistantScreen> {
   }
 }
 
-// ─── Helper widgets ──────────────────────────────────────────────
-
-/// Canonical local message shape — deliberately mirrors the backend's
-/// `ChatMessage` model (role: "user" | "model", content: String) so the
-/// same vocabulary is used end-to-end: in widget state, in on-device
-/// persistence, and in the API request/response. Previously this used
-/// "ai"/"text" locally while the backend used "model"/"content", requiring
-/// a translation layer between the two — that mismatch is now removed.
 class _Msg {
   final String role;
   final String content;
@@ -456,8 +417,6 @@ class _ChatBubble extends StatelessWidget {
   }
 }
 
-/// Renders a subset of markdown (bold text and bullet lists) that the
-/// assistant commonly returns, instead of showing the raw `**`/`*` markers.
 class _FormattedMessage extends StatelessWidget {
   final String text;
   final Color color;

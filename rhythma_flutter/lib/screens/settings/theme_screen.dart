@@ -30,7 +30,7 @@ class ThemeScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           title: Text(
-              l10n.themeToggle), // Reusing existing localized string for title
+              l10n.themeToggle), 
           centerTitle: true,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_rounded),
@@ -59,7 +59,7 @@ class ThemeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             const SectionHeader(
-                title: 'Theme Color'), // Ideally localized later
+                title: 'Theme Color'), 
             GlassCard(
               padding: const EdgeInsets.all(20),
               child: Wrap(

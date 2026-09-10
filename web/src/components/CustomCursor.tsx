@@ -68,9 +68,6 @@ export function CustomCursor() {
 
   if (isTouchDevice) return null;
 
-  // Purely decorative — two divs that trail the pointer. Without
-  // `aria-hidden` a screen reader walks into them as unlabelled nodes in
-  // the middle of the page content (#409).
   return (
     <>
       <div

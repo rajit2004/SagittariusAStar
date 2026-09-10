@@ -1,8 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// Same approach as endpoints.test.ts: mock the client, not the network,
-// because what these functions get wrong is the URL, the params and the
-// response type — not the transport.
 vi.mock('./client', () => ({
   apiClient: {
     get: vi.fn(),
@@ -92,8 +89,7 @@ describe('exportFilename', () => {
   });
 
   it('falls back when a proxy stripped the header', () => {
-    // A download with an ordinary name beats no download at all, which is
-    // what throwing here would produce.
+    
     expect(exportFilename(undefined, 'csv')).toBe('rhythma-data-export.csv');
     expect(exportFilename('attachment', 'json')).toBe('rhythma-data-export.json');
   });
@@ -119,8 +115,7 @@ describe('deletion', () => {
   });
 
   it('uses the privacy route rather than the legacy one', async () => {
-    // `DELETE /auth/me` still exists and still deletes; it just does not
-    // preview, does not report counts, and is what Settings used to call.
+    
     mockClient.post.mockResolvedValue({ data: {} });
 
     await requestAccountDeletion();

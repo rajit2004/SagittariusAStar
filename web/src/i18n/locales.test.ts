@@ -10,16 +10,8 @@ import mr from './locales/mr.json';
 import ta from './locales/ta.json';
 import te from './locales/te.json';
 
-// A missing key does not throw — i18next falls back to the key itself, so
-// the user sees a raw string like "home.flow" in the middle of the UI. That
-// is invisible to tsc, to the linter, and to a build. It is only catchable
-// by comparing the locale files, which is what this file does.
-
 const LOCALES = { bn, gu, hi, kn, ml, mr, ta, te } as const;
 
-// Locales that currently carry a full translation of en.json. These are
-// held to strict parity: a new English key that isn't translated here
-// fails the build.
 const COMPLETE_LOCALES = [
   'bn',
   'gu',
@@ -29,8 +21,6 @@ const COMPLETE_LOCALES = [
   'te',
 ] as const;
 
-// Locales that are still catching up on translations. The value is the
-// minimum number of keys they must have so we notice regressions.
 const KNOWN_INCOMPLETE: Record<string, number> = {
   kn: 109,
   ml: 109,
@@ -83,8 +73,7 @@ describe('locale coverage', () => {
   );
 
   it('the known-incomplete list does not quietly cover a complete locale', () => {
-    // Otherwise a locale could be finished and still never get held to
-    // strict parity, which defeats the point of the list.
+    
     for (const code of Object.keys(KNOWN_INCOMPLETE)) {
       const locale = LOCALES[code as keyof typeof LOCALES] as Json;
       const present = EN_KEYS.filter((key) => valueAt(locale, key) !== undefined);
@@ -96,8 +85,7 @@ describe('locale coverage', () => {
   });
 
   it.each(Object.keys(LOCALES))('%s defines no keys English does not', (code) => {
-    // An extra key is dead weight at best, and usually a typo of a real
-    // one — which reads as "translated" while never being rendered.
+    
     const locale = LOCALES[code as keyof typeof LOCALES] as Json;
     const extra = flatten(locale).filter((key) => !EN_KEYS.includes(key));
     expect(extra, `${code} has unexpected keys: ${extra.join(', ')}`).toEqual([]);
@@ -140,8 +128,6 @@ describe('locale coverage', () => {
         return false;
       }
       
-      // We consider it an English placeholder if it matches English exactly
-      // and contains English words (excluding short units like "4h").
       return /[a-z]{3,}/i.test(locValue);
     });
     
@@ -153,8 +139,7 @@ describe('interpolation placeholders', () => {
   it.each(Object.keys(LOCALES))(
     '%s keeps the same {{placeholders}} as English',
     (code) => {
-      // A dropped placeholder renders a sentence with a hole in it; an
-      // invented one renders the literal "{{count}}" to the user.
+      
       const locale = LOCALES[code as keyof typeof LOCALES] as Json;
       const mismatched: string[] = [];
 
@@ -180,9 +165,7 @@ describe('interpolation placeholders', () => {
 
 describe('i18n registration', () => {
   it('registers every locale file that exists', async () => {
-    // A locale file can be added and simply never wired into resources —
-    // which is exactly what happened to Kannada and Malayalam in the
-    // Flutter app (issue #183).
+    
     const i18n = (await import('./index')).default;
     const registered = Object.keys(i18n.options.resources ?? {});
     for (const code of ['en', ...Object.keys(LOCALES)]) {
@@ -195,4 +178,3 @@ describe('i18n registration', () => {
     expect(i18n.options.fallbackLng).toContain('en');
   });
 });
- 

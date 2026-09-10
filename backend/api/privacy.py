@@ -1,14 +1,3 @@
-"""Data portability and account erasure endpoints.
-
-Every route here operates strictly on ``current_user["id"]``. None of them
-takes a user id from the path — an endpoint that hands out a full health
-export or destroys an account is the last place an IDOR should be
-possible, so the opportunity to get the authorization check wrong is
-removed rather than guarded.
-
-See ``services/data_privacy_service.py`` for the cascade itself and for
-why the previous deletion path was incomplete.
-"""
 
 from typing import Any, Dict, List, Optional
 
@@ -34,10 +23,6 @@ from utils.logger import logger
 
 router = APIRouter(tags=["Privacy"])
 
-
-# ─── Response models ──────────────────────────────────────────────────────
-
-
 class DataCategory(BaseModel):
     key: str
     label: str
@@ -48,16 +33,13 @@ class DataCategory(BaseModel):
     latestEntry: Optional[str] = None
     retentionNote: str
 
-
 class DataSummaryResponse(BaseModel):
     userId: str
     generatedAt: str
     categories: List[DataCategory]
     totalRecords: int
 
-
 class DeletionRequestResponse(BaseModel):
-    """Step one of deletion: what will happen, and the token to confirm it."""
 
     confirmationToken: str = Field(
         ...,
@@ -70,7 +52,6 @@ class DeletionRequestResponse(BaseModel):
     impact: DataSummaryResponse
     warning: str
 
-
 class DeletionResultResponse(BaseModel):
     status: str
     deletedCounts: Dict[str, int]
@@ -78,12 +59,10 @@ class DeletionResultResponse(BaseModel):
     deletedAt: str
     message: str
 
-
 class DeletionStatusResponse(BaseModel):
     accountExists: bool
     deletedAt: Optional[str] = None
     deletedCounts: Optional[Dict[str, int]] = None
-
 
 class DeleteAccountRequest(BaseModel):
     confirmationToken: Optional[str] = Field(
@@ -94,16 +73,11 @@ class DeleteAccountRequest(BaseModel):
         ),
     )
 
-
 DELETION_WARNING = (
     "This permanently deletes your cycle logs, symptoms, notes, profile and "
     "assistant conversation. It cannot be undone. Export your data first if "
     "you want to keep a copy."
 )
-
-
-# ─── Routes ───────────────────────────────────────────────────────────────
-
 
 @router.get(
     "/summary",
@@ -119,7 +93,6 @@ DELETION_WARNING = (
 )
 async def get_data_summary(current_user: dict = Depends(get_current_user)):
     return build_data_summary(current_user["id"])
-
 
 @router.get(
     "/export",
@@ -149,8 +122,6 @@ async def export_user_data(
 ):
     user_id = current_user["id"]
 
-    # Logged without any of the exported content: knowing an export
-    # happened is operationally useful, knowing what was in it is not.
     logger.bind(export_format=format).info("User data export requested")
 
     if format == "csv":
@@ -161,7 +132,7 @@ async def export_user_data(
                 "Content-Disposition": (
                     f'attachment; filename="{export_filename(user_id, "csv")}"'
                 ),
-                # An export is per-user and never cacheable by a shared proxy.
+
                 "Cache-Control": "no-store",
             },
         )
@@ -176,7 +147,6 @@ async def export_user_data(
             "X-Export-Schema-Version": EXPORT_SCHEMA_VERSION,
         },
     )
-
 
 @router.post(
     "/delete-account",
@@ -238,7 +208,6 @@ async def delete_account_endpoint(
     _clear_auth_cookies(deletion_response)
     return deletion_response
 
-
 @router.get(
     "/deletion-status",
     response_model=DeletionStatusResponse,
@@ -258,14 +227,7 @@ async def deletion_status(current_user: dict = Depends(get_current_user)):
         "deletedCounts": record.get("deleted_counts") if record else None,
     }
 
-
 def _clear_auth_cookies(response: Response) -> None:
-    """Drop the session cookies, the way /auth/logout does.
-
-    Without this a web client keeps sending a cookie for an account that
-    no longer exists, and every subsequent request 401s in a way that
-    looks like a bug rather than a completed deletion.
-    """
     import os
 
     domain = os.getenv("COOKIE_DOMAIN") or None

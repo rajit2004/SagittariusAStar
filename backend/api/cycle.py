@@ -19,22 +19,7 @@ from core.cycle_validation import (
 from services.firestore_service import CycleService, UserService
 from services.prediction_service import DEFAULT_FORECAST_HORIZON, predict
 
-
 class _LoggableFields(BaseModel):
-    """The fields a cycle log carries, and the rules they obey (issue #347).
-
-    Shared by ``CycleLog`` and ``CycleLogUpdate`` because the POST and the
-    PUT write to the same document and had the same gap. Keeping the
-    validators in one base is what stops a rule being added to one route
-    and forgotten on the other — the failure mode ``core/password_policy``
-    was written to avoid on register-vs-reset.
-
-    The rules themselves live in ``core/cycle_validation``; these are only
-    the hooks that attach them. Validators raise ``ValueError``, which
-    Pydantic reports through the standard 422 envelope with the offending
-    field's location attached, so a client is told *which* field it got
-    wrong rather than being handed a bare rejection.
-    """
 
     end_date: Optional[date] = None
     flow_intensity: Optional[str] = None
@@ -76,7 +61,6 @@ class _LoggableFields(BaseModel):
     def _check_notes(cls, value):
         return normalize_notes(value)
 
-
 class CycleLog(_LoggableFields):
     start_date: date
 
@@ -87,50 +71,23 @@ class CycleLog(_LoggableFields):
 
     @model_validator(mode="after")
     def _check_range(self):
-        # Cross-field, so it cannot be a field validator: an inverted range
-        # is a property of the pair, not of either date on its own.
+
         validate_end_date(self.start_date, self.end_date)
         return self
 
-
 class CycleLogUpdate(_LoggableFields):
-    """A partial update to an existing log.
-
-    ``end_date`` is bounded on its own here — there is no ``start_date`` in
-    the payload to compare it against, since the route addresses an
-    existing document by id. It is still checked against the *stored*
-    start date in :func:`update_cycle_log`, where that value is available.
-
-    Every field defaults to ``None``, which is also what an explicit
-    ``null`` parses to, so this model on its own cannot distinguish "not
-    sent" from "sent empty". :func:`_submitted_fields` reads
-    ``model_fields_set`` to recover the difference — see the note there
-    for why it matters (issue #549).
-    """
 
     @field_validator("end_date")
     @classmethod
     def _check_end_alone(cls, value):
         return validate_end_date(None, value)
 
-
 class CycleLogResponse(BaseModel):
     message: str
     id: str
     data: CycleLog
 
-
 class CycleHistoryEntry(BaseModel):
-    """One stored log, as it comes back from Firestore.
-
-    Every field but ``id`` is optional because a log is built up over
-    time — the Home screen's quick-log tiles write a single field for the
-    day, so a document holding only ``flow_intensity`` is normal, not
-    corrupt. ``model_config`` allows the extra keys Firestore carries
-    (``user_id``, ``created_at``, ``updated_at``) through untouched, so
-    typing the response does not silently drop fields the clients already
-    read.
-    """
 
     model_config = {"extra": "allow"}
 
@@ -145,9 +102,7 @@ class CycleHistoryEntry(BaseModel):
     notes: Optional[str] = None
     cycle_length: Optional[int] = Field(None, description="Days from this log's start_date to the next log's start_date, or null if this is the newest log.")
 
-
 class CycleHistoryPage(BaseModel):
-    """Where this page sits, and whether there is another one."""
 
     limit: int = Field(..., description="How many entries were requested.")
     offset: int = Field(..., description="How many entries were skipped.")
@@ -166,23 +121,19 @@ class CycleHistoryPage(BaseModel):
         description="Offset for the next page, or null when this is the last one.",
     )
 
-
 class CycleHistoryResponse(BaseModel):
     message: str
     entries: List[CycleHistoryEntry]
     page: CycleHistoryPage
-
 
 class CycleLogUpdateResponse(BaseModel):
     message: str
     id: str
     updated_fields: dict
 
-
 class CycleLogDeleteResponse(BaseModel):
     message: str
     id: str
-
 
 class BatchCycleLogItem(BaseModel):
     start_date: date
@@ -194,34 +145,27 @@ class BatchCycleLogItem(BaseModel):
     stress_level: Optional[int] = None
     notes: Optional[str] = None
 
-
 class BatchCycleResultItem(BaseModel):
     date_key: str
     status: str
     error: Optional[str] = None
 
-
 class BatchCycleRequest(BaseModel):
     items: List[BatchCycleLogItem]
-
 
 class BatchCycleResponse(BaseModel):
     results: List[BatchCycleResultItem]
 
-
 class BatchDeleteRequest(BaseModel):
     date_keys: List[str]
-
 
 class BatchDeleteResultItem(BaseModel):
     date_key: str
     status: str
     error: Optional[str] = None
 
-
 class BatchDeleteResponse(BaseModel):
     results: List[BatchDeleteResultItem]
-
 
 class CycleLengthEstimateModel(BaseModel):
     days: int = Field(..., description="Estimated cycle length in days.")
@@ -247,23 +191,19 @@ class CycleLengthEstimateModel(BaseModel):
         ),
     )
 
-
 class PredictedRange(BaseModel):
     earliest: Optional[str] = None
     latest: Optional[str] = None
 
-
 class OvulationEstimate(BaseModel):
     date: Optional[str] = None
     isEstimate: bool = True
-
 
 class FertileWindowEstimate(BaseModel):
     start: Optional[str] = None
     end: Optional[str] = None
     isEstimate: bool = True
     notForContraception: bool = True
-
 
 class PredictionResponse(BaseModel):
     today: str
@@ -288,31 +228,9 @@ class PredictionResponse(BaseModel):
     confidence: str
     disclaimer: str
 
-
 router = APIRouter(tags=["Cycle Tracking"])
 
-
 def _submitted_fields(model: BaseModel, *, skip: Tuple[str, ...] = ()) -> Dict[str, Any]:
-    """The fields the request body actually carried, values included.
-
-    ``model_dump()`` cannot tell an omitted field from one explicitly sent
-    as ``null`` — both come back as ``None`` — so the ``if v is not None``
-    filter that used to stand in for PATCH semantics also made a clearing
-    impossible to express (issue #549). A user could correct a mis-tapped
-    flow intensity but never remove it, and ``{"notes": null}`` was
-    answered with "No fields provided for update", which was not true.
-
-    ``model_fields_set`` records which keys were present in the JSON, so
-    the two cases separate cleanly: a key that is absent is left alone, a
-    key that is present and ``null`` is a request to remove it. Both go
-    down to ``CycleService``, which turns the second into Firestore's
-    ``DELETE_FIELD``.
-
-    Note this reads the *submitted* keys, not the *changed* ones. Sending
-    a field its stored value is still a write, and should be: a client
-    that resends the day's whole state is describing the day, not diffing
-    it.
-    """
     dumped = model.model_dump()
     return {
         key: value
@@ -320,15 +238,7 @@ def _submitted_fields(model: BaseModel, *, skip: Tuple[str, ...] = ()) -> Dict[s
         if key in model.model_fields_set and key not in skip
     }
 
-
 def _as_date(value: Any) -> Optional[date]:
-    """Firestore hands dates back as ``datetime``; the validators want ``date``.
-
-    Mirrors ``scoring_service.as_date``. Not imported from there because
-    that module is the scoring pipeline and this is a route concern, and a
-    route reaching into the scoring service for a date cast would be the
-    kind of dependency that makes the scoring service hard to change.
-    """
     if value is None:
         return None
     if isinstance(value, datetime):
@@ -336,7 +246,6 @@ def _as_date(value: Any) -> Optional[date]:
     if isinstance(value, date):
         return value
     return None
-
 
 @router.get(
     "/loggable-values",
@@ -354,14 +263,7 @@ def _as_date(value: Any) -> Optional[date]:
     ),
 )
 async def get_loggable_values(current_user: dict = Depends(get_current_user)):
-    """Authenticated only because every other route on this router is.
-
-    Nothing here is sensitive — it is the same information the clients
-    already hardcode — but an unauthenticated hole in an otherwise
-    authenticated router is the sort of thing that gets copied.
-    """
     return loggable_values()
-
 
 @router.post(
     "/batch",
@@ -392,7 +294,6 @@ async def batch_upsert_cycle_logs(
             ))
 
     return {"results": results}
-
 
 @router.post(
     "/batch-delete",
@@ -426,7 +327,6 @@ async def batch_delete_cycle_logs(
 
     return {"results": results}
 
-
 @router.post(
     "/log",
     response_model=CycleLogResponse,
@@ -448,17 +348,6 @@ async def log_cycle(
     log: CycleLog,
     current_user: dict = Depends(get_current_user)
 ):
-    """Write the day, including the parts of it the user has taken back.
-
-    Only keys the request body carried are written, so the Home screen's
-    quick-log tiles still merge — sending ``flow_intensity`` alone does
-    not disturb the mood logged an hour earlier.
-
-    A key sent as ``null`` clears the stored value (issue #549). The Cycle
-    screen's chips are toggles; deselecting one used to be dropped by an
-    ``is not None`` filter here, so the screen reported "Saved to your
-    account", reloaded, and lit the chip back up.
-    """
     user_id = current_user["id"]
     fields = _submitted_fields(log, skip=("start_date",))
     log_id = CycleService.upsert_log(user_id, log.start_date, fields)
@@ -468,15 +357,9 @@ async def log_cycle(
         "data": log,
     }
 
-
-#: Ceiling on one page. High enough that a month view or a year of period
-#: starts fits in a single request, low enough that no response can grow
-#: without bound on a 2G connection.
 MAX_HISTORY_PAGE = 100
 
-#: What a client gets when it asks for nothing in particular.
 DEFAULT_HISTORY_PAGE = 20
-
 
 @router.get(
     "/{user_id}/history",
@@ -519,26 +402,12 @@ async def get_cycle_history(
     ),
     current_user: dict = Depends(get_current_user)
 ):
-    """One page of the user's own history.
-
-    The bounds on ``limit`` are the point of this signature. It used to be
-    an unvalidated ``Optional[int]`` passed straight into the query, where
-    ``?limit=-1`` reached a Python slice as ``docs[:-1]`` and returned
-    every log *except the oldest* — not an error, not empty, and not what
-    anyone asked for — while ``?limit=100000`` was accepted and would
-    serialize an entire history into one response. Both are now a 422 from
-    FastAPI's own validation, before any handler code runs.
-    """
     if user_id != current_user["id"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view this user's data"
         )
 
-    # Checked here rather than by a validator because it is a relationship
-    # between two parameters, not a property of either one. An inverted
-    # range is a bug in the caller; returning an empty list would let it
-    # look like "you have no logs in March".
     if start_date and end_date and start_date > end_date:
         raise HTTPException(
             status_code=422,
@@ -565,7 +434,6 @@ async def get_cycle_history(
             "nextOffset": offset + len(entries) if has_more else None,
         },
     }
-
 
 @router.get(
     "/predictions",
@@ -595,22 +463,11 @@ async def get_cycle_predictions(
     ),
     current_user: dict = Depends(get_current_user),
 ):
-    """Predictions for the authenticated user.
-
-    Operates on ``current_user["id"]`` rather than a path parameter, so
-    there is no cross-user authorization check to get wrong.
-
-    Note this route is declared before ``PUT/DELETE /{log_id}`` but after
-    ``/{user_id}/history``; ``/predictions`` is a fixed segment so it can
-    never be shadowed by the ``{log_id}`` routes, which are on different
-    methods anyway.
-    """
     user_id = current_user["id"]
     logs = CycleService.get_logs_for_user(user_id, limit=12)
     profile = UserService.get_user_by_id(user_id) or {}
 
     return predict(logs, profile=profile, horizon=horizon).to_dict()
-
 
 @router.put(
     "/{log_id}",
@@ -629,14 +486,6 @@ async def update_cycle_log(
     log_update: CycleLogUpdate,
     current_user: dict = Depends(get_current_user)
 ):
-    """Change some of a day's fields, including back to nothing.
-
-    ``{"notes": null}`` is a valid update. It used to be a 400 saying "No
-    fields provided for update" — a field *was* provided, the handler
-    discarded it, and then reported the discarding as the caller's
-    mistake (issue #549). The 400 now fires only when the body genuinely
-    carried nothing.
-    """
     user_id = current_user["id"]
     fields = _submitted_fields(log_update)
     if not fields:
@@ -645,14 +494,6 @@ async def update_cycle_log(
             detail="No fields provided for update"
         )
 
-    # The schema bounded `end_date` on its own, but "is this end date before
-    # the start date?" needs the start date, which is not in the payload —
-    # this route addresses an existing document by id. Read it and finish
-    # the check here, so an update cannot produce a log the POST route
-    # would have refused to create.
-    #
-    # A `null` end_date is a clearing and has nothing to compare against,
-    # so it skips the check rather than failing it.
     if fields.get("end_date") is not None:
         existing = CycleService.get_log(user_id, log_id)
         stored_start = _as_date(existing.get("start_date"))
@@ -670,7 +511,6 @@ async def update_cycle_log(
         "id": log_id,
         "updated_fields": fields
     }
-
 
 @router.delete(
     "/{log_id}",

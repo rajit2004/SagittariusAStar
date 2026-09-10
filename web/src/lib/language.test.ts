@@ -17,9 +17,7 @@ describe('toAssistantLanguage', () => {
     ['hi-IN', 'hi'],
     ['ta-IN', 'ta'],
   ])('reduces the region tag %s to %s', (input, expected) => {
-    // The browser language detector reports these routinely; sending one
-    // to a validating endpoint would be a 422 over a formatting
-    // difference that means nothing to a prompt.
+    
     expect(toAssistantLanguage(input)).toBe(expected);
   });
 
@@ -33,8 +31,7 @@ describe('toAssistantLanguage', () => {
   });
 
   it('falls back to English for a language the assistant does not speak', () => {
-    // Bengali is registered in the web app's i18n but is not in
-    // GET /assistant/languages. An English answer beats an error.
+    
     expect(toAssistantLanguage('bn')).toBe('en');
   });
 

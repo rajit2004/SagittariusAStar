@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 
-/// Sync status for Issue #20 - Sync Status Indicator
 enum SyncStatus {
-  synced,      // All data synced with Firestore
-  syncing,     // Currently syncing
-  pending,     // Has pending changes waiting for connectivity
-  offline,     // No internet connection
-  error,       // Sync failed
+  synced,      
+  syncing,     
+  pending,     
+  offline,     
+  error,       
 }
 
-/// Singleton provider for sync status - exposed for Issue #20 UI indicator
 class SyncStatusProvider extends ChangeNotifier {
   static SyncStatusProvider? _instance;
   static SyncStatusProvider get instance => _instance!;
@@ -31,7 +29,6 @@ class SyncStatusProvider extends ChangeNotifier {
   String? get profileError => _profileError;
   DateTime? get lastSyncTime => _lastSyncTime;
 
-  /// Overall status - synced only if both are synced
   SyncStatus get overallStatus {
     if (_cycleStatus == SyncStatus.syncing || _profileStatus == SyncStatus.syncing) {
       return SyncStatus.syncing;
@@ -48,7 +45,6 @@ class SyncStatusProvider extends ChangeNotifier {
     return SyncStatus.synced;
   }
 
-  /// Called by FirestoreService to update status
   void updateStatus(SyncStatus status, String type, {String? error}) {
     switch (type) {
       case 'cycle':
@@ -66,14 +62,12 @@ class SyncStatusProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Called when connectivity is lost
   void setOffline() {
     _cycleStatus = SyncStatus.offline;
     _profileStatus = SyncStatus.offline;
     notifyListeners();
   }
 
-  /// Called when connectivity is restored
   void setOnline() {
     _cycleStatus = SyncStatus.pending;
     _profileStatus = SyncStatus.pending;

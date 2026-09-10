@@ -86,25 +86,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () async {
-                            Navigator.pop(context); // Close dialog
+                            Navigator.pop(context); 
 
-                            // Clear the JWT token so the user is actually logged out.
-                            //
-                            // Intentional: we do NOT wipe local storage here.
-                            // Profile info, cycle logs, chat history, and
-                            // settings are stored on-device (see
-                            // LocalStorageService) and are meant to persist
-                            // across logins — wiping them on every logout was
-                            // the cause of the profile resetting to its
-                            // defaults each time (see PR history).
-                            //
-                            // Profile/chat-history/cycle-log data is now
-                            // namespaced per account (LocalStorageService's
-                            // currentUserId scoping), so a second person
-                            // logging into a different account on this same
-                            // device gets their own data, not the previous
-                            // person's. AuthService.logout() clears the
-                            // "which account is active" pointer below.
                             await AuthService().logout();
 
                             if (context.mounted) {
@@ -113,11 +96,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   content: Text(l10n.loggedOutSuccess),
                                 ),
                               );
-                              // Clear the entire navigation stack and go back to
-                              // the Login screen — a simple Navigator.pop only
-                              // returned to the previous screen, leaving the
-                              // user "logged in" in the UI even though nothing
-                              // else about the session had changed.
+                              
                               Navigator.of(context, rootNavigator: true)
                                   .pushNamedAndRemoveUntil(
                                       '/login', (route) => false);
@@ -205,7 +184,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () async {
-                            Navigator.pop(context); // Close dialog
+                            Navigator.pop(context); 
 
                             try {
                               await AuthService().deleteAccount();
@@ -313,7 +292,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         body: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            // App Preferences Section
+            
             SectionHeader(title: l10n.appPreferences),
             GlassCard(
               padding: EdgeInsets.zero,
@@ -360,7 +339,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Notifications Section
             SectionHeader(title: l10n.notificationsTitle),
             GlassCard(
               padding: EdgeInsets.zero,
@@ -420,11 +398,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         _medicineAlerts = value;
                       });
                       if (value) {
-                        // Request permissions first
+                        
                         bool granted = await NotificationService.instance
                             .requestPermissions();
                         if (granted) {
-                          // Schedule a test medicine alert for 10 seconds from now
+                          
                           NotificationService.instance.scheduleMedicineAlert(
                             id: 1001,
                             title: 'Medicine Reminder',
@@ -433,7 +411,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 DateTime.now().add(const Duration(seconds: 10)),
                           );
                         } else {
-                          // Revert if denied
+                          
                           setState(() {
                             _medicineAlerts = false;
                           });
@@ -525,7 +503,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Security & Privacy Section
             SectionHeader(title: l10n.securityPrivacyTitle),
             GlassCard(
               padding: EdgeInsets.zero,
@@ -547,7 +524,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Data Section
             SectionHeader(title: l10n.settingsData),
             GlassCard(
               padding: EdgeInsets.zero,
@@ -584,7 +560,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 24),
 
-            // Help & Support Section
             SectionHeader(title: l10n.settingsHelpSupport),
             GlassCard(
               padding: EdgeInsets.zero,
@@ -603,7 +578,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     scheme: 'mailto',
                     path: 'support@rhythma.com',
                     query:
-                        'subject=Rhythma Support & Bug Report&body=Hi Rhythma Team,%0D%0A%0D%0AI need help with...', // %0D%0A is for line breaks
+                        'subject=Rhythma Support & Bug Report&body=Hi Rhythma Team,%0D%0A%0D%0AI need help with...', 
                   );
 
                   if (await canLaunchUrl(emailUri)) {

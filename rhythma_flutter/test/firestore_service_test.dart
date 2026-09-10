@@ -83,7 +83,6 @@ void main() {
       final box = await Hive.openBox<Map>('pending_cycle_sync');
       const userId = 'user-123';
 
-      // Store a cycle log entry
       await box.put('cycle::$userId::2025-01-15', {
         'start_date': '2025-01-15',
         'flow': 'medium',
@@ -92,7 +91,6 @@ void main() {
         'queued_at': DateTime.now().toIso8601String(),
       });
 
-      // Store a profile entry
       await box.put('profile::$userId', {
         'name': 'Test',
         'type': 'profile',
@@ -100,12 +98,10 @@ void main() {
         'queued_at': DateTime.now().toIso8601String(),
       });
 
-      // Verify both can be retrieved
       final allKeys = box.keys.toList();
       expect(allKeys, contains('cycle::$userId::2025-01-15'));
       expect(allKeys, contains('profile::$userId'));
 
-      // Verify type-based filtering
       final cycleKeys =
           allKeys.where((k) => !k.startsWith('profile::')).toList();
       expect(cycleKeys, contains('cycle::$userId::2025-01-15'));

@@ -2,14 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-// End-to-end for issue #420, at the level the bug was actually visible:
-// render the screen as one user, sign out, render it as another, and
-// assert the second user is not looking at the first one's conversation.
-//
-// `chatHistory.test.ts` covers the storage rules. This file covers the
-// wiring — a correct module reached through the wrong call is still the
-// same leak.
-
 const sendChatMessage = vi.fn();
 
 vi.mock('../../api/endpoints', () => ({
@@ -97,8 +89,7 @@ describe('a shared browser', () => {
   });
 
   it('does not send the previous account’s turns as context', async () => {
-    // Worse than showing the transcript: it would put A's disclosures
-    // into the prompt for B's question.
+    
     saveHistory(ASHA.id, [{ role: 'user', content: PRIVATE_QUESTION }]);
     currentUser = BEGUM;
     renderWithProviders(<AssistantPage />);
@@ -133,8 +124,7 @@ describe('clearing from the screen', () => {
   });
 
   it('says the transcript is kept on this device', () => {
-    // It was not obvious, and it is the kind of thing someone on a shared
-    // computer needs to know before typing a question about her body.
+    
     renderWithProviders(<AssistantPage />);
 
     expect(screen.getByText(/kept on this device/i)).toBeInTheDocument();
@@ -146,7 +136,6 @@ describe('signing out', () => {
     saveHistory(ASHA.id, [{ role: 'user', content: PRIVATE_QUESTION }]);
     saveHistory(BEGUM.id, [{ role: 'user', content: 'something else' }]);
 
-    // What `AuthContext.logout` calls in its `finally`.
     clearAllHistories();
 
     currentUser = BEGUM;

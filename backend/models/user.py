@@ -41,12 +41,6 @@ class UserResponse(BaseModel):
     updated_at: Optional[datetime] = None
 
 class UserProfileUpdate(BaseModel):
-    """PATCH-semantics profile update — all fields optional.
-
-    Stores extended health and preference data on the existing Firestore
-    user document alongside the authentication fields.  Only non-None
-    fields are written so callers can do partial updates safely.
-    """
     full_name: Optional[str] = Field(None, max_length=100)
     email: Optional[EmailStr] = None
     age: Optional[int] = Field(None, ge=10, le=120)
@@ -76,30 +70,15 @@ class UserProfileUpdate(BaseModel):
                 "Phone number must be in E.164 format, e.g. +919876543210."
             )
         return value
-        
+
     city: Optional[str] = None
     state: Optional[str] = None
 
     @field_validator("last_period")
     def validate_last_period(cls, value: Optional[str]) -> Optional[str]:
-        """Reject a last period that is malformed, in the future, or ancient.
-
-        Every other field on this model is bounded — `age` is 10-120,
-        `cycle_length` is 15-60, `period_duration` is 1-15 — and this one
-        was free text, despite being the anchor `prediction_service` hangs
-        the whole forecast off. A value it cannot parse silently empties
-        the Home screen; a value in the future gives the user a fertile
-        window computed from a period that has not happened (#501).
-
-        The rules live in `core/profile_validation` rather than here, for
-        the reason `core/cycle_validation` gives for holding the log rules:
-        so a second profile write path cannot skip them.
-        """
         return normalize_last_period(value)
 
-
 class UserProfileResponse(BaseModel):
-    """Full profile response — auth identity merged with health profile."""
     id: str
     phone: Optional[str] = None
     username: Optional[str] = None
@@ -122,13 +101,7 @@ class UserProfileResponse(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
-
 class ScoresResponse(BaseModel):
-    """Response model for GET /insights/{user_id}/scores.
-
-    Returns factual cycle statistics computed directly from CycleLog
-    history, with no clinical scoring model involved.
-    """
     averageCycleLength: Optional[float] = Field(
         None, description="Mean days between consecutive period start dates."
     )

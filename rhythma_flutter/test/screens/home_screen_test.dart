@@ -58,7 +58,7 @@ void main() {
 
   testWidgets('fetches and renders dashboard data from the backend',
       (WidgetTester tester) async {
-    // Start with the backend down so the error state is reachable.
+    
     installMockDioAdapter(
       (options) => const MockDioResponse(500, {'detail': 'server down'}),
     );
@@ -69,7 +69,6 @@ void main() {
     )!;
     expect(find.text(l10n.homeFailedLoad), findsOneWidget);
 
-    // The backend comes back; retry re-fetches and renders the data.
     installMockDioAdapter((options) {
       if (options.path == '/dashboard') {
         return const MockDioResponse(200, {
@@ -81,7 +80,6 @@ void main() {
       return const MockDioResponse(200, {});
     });
 
-    // runAsync so the fetch's Hive cache write (real file I/O) completes.
     await tester.runAsync(() async {
       await tester.tap(find.text(l10n.homeRetry));
       await Future.delayed(const Duration(milliseconds: 400));
@@ -89,17 +87,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('${l10n.homeGreeting}, Aarya Test'), findsOneWidget);
-    expect(find.text('28d'), findsOneWidget); // Avg Cycle
-    expect(find.text('5d'), findsOneWidget); // Bleeding
-    expect(find.text('8.1h'), findsOneWidget); // Sleep
-    expect(find.text('12'), findsOneWidget); // Next period in N days
+    expect(find.text('28d'), findsOneWidget); 
+    expect(find.text('5d'), findsOneWidget); 
+    expect(find.text('8.1h'), findsOneWidget); 
+    expect(find.text('12'), findsOneWidget); 
     expect(find.text(l10n.homeWeeklyInsightLabel), findsOneWidget);
   });
 
   testWidgets('falls back to the cached dashboard when the API fails',
       (WidgetTester tester) async {
-    // Seed the cache in the real zone first so _loadCachedDashboard can
-    // render it synchronously during pumpWidget.
+    
     await tester.runAsync(
       () => LocalStorageService.saveCachedDashboard({
         'user': {'name': 'Cached User'},
@@ -117,8 +114,8 @@ void main() {
       tester.element(find.byType(HomeScreen)),
     )!;
 
-    expect(find.text('28d'), findsOneWidget); // avg cycle
-    expect(find.text('5d'), findsOneWidget); // avg bleeding
+    expect(find.text('28d'), findsOneWidget); 
+    expect(find.text('5d'), findsOneWidget); 
     expect(find.text('6.5h'), findsOneWidget);
   });
 
@@ -165,7 +162,6 @@ void main() {
     expect(find.text('Log ${l10n.homeLogFlow}'), findsOneWidget);
     expect(find.text(l10n.logMedium), findsOneWidget);
 
-    // runAsync so the quick-log Hive write + /cycle/log POST complete.
     await tester.runAsync(() async {
       await tester.tap(find.text(l10n.logMedium));
       await Future.delayed(const Duration(milliseconds: 500));
@@ -179,7 +175,6 @@ void main() {
       findsOneWidget,
     );
 
-    // Saved locally (Hive is the source of truth).
     final log =
         LocalStorageService.getCycleLogForDate(DateTime.now());
     expect(log?['flow_intensity'], 'medium');

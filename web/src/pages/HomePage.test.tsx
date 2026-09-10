@@ -41,8 +41,7 @@ describe('HomePage loading and error states', () => {
   });
 
   it('shows an error message when the dashboard cannot be loaded', async () => {
-    // Rendering a blank screen is the failure mode users report as "the
-    // app is broken" with nothing actionable attached.
+    
     fetchDashboard.mockRejectedValue(new Error('500'));
 
     renderWithProviders(<HomePage />);
@@ -81,8 +80,7 @@ describe('HomePage with data', () => {
   });
 
   it('handles a brand-new account with no cycle data', async () => {
-    // Every numeric field is nullable in DashboardResponse; a component
-    // that assumes otherwise crashes on the very first session.
+    
     fetchDashboard.mockResolvedValue(
       dashboardFixture({
         cycle: { day: null, total: 28, nextPeriodDays: null },
@@ -127,9 +125,7 @@ describe('quick log', () => {
   });
 
   it('posts a flow value with an ISO start date', async () => {
-    // The backend's CycleLog model parses start_date as a date; a Date
-    // object or a locale-formatted string 422s at runtime while
-    // type-checking perfectly.
+    
     submitCycleLog.mockResolvedValue({ id: 'log-1', message: 'ok' });
 
     const dialog = await openTile(/flow/i);
@@ -142,9 +138,7 @@ describe('quick log', () => {
   });
 
   it('sends sleep as a number, not the option string', async () => {
-    // sleep_hours is a float on the backend and stress_level an int;
-    // posting "8" as a string is the kind of thing only a runtime test
-    // catches.
+    
     submitCycleLog.mockResolvedValue({ id: 'log-1', message: 'ok' });
 
     const dialog = await openTile(/sleep/i);
@@ -202,9 +196,7 @@ describe('quick log', () => {
 
 describe('the next-period answer (issue #419)', () => {
   it('reports a late period rather than the clamped zero', async () => {
-    // `cycle.nextPeriodDays` is `max(avg - day, 0)`, so it is 0 here —
-    // the same value it would carry on the day the period is due. The
-    // prediction is what carries the difference.
+    
     fetchDashboard.mockResolvedValue(
       dashboardFixture({
         cycle: { day: 32, total: 28, nextPeriodDays: 0 },
@@ -290,9 +282,6 @@ describe('the quick-log dialog (issue #502)', () => {
 
     await user.keyboard('{Escape}');
 
-    // Logging several tiles in a row is the intended interaction, and
-    // dropping focus to <body> made the second one a walk from the top of
-    // the page.
     await waitFor(() => expect(tile).toHaveFocus());
   });
 

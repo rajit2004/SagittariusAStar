@@ -26,7 +26,6 @@ void main() {
     await tester.pumpWidget(createTestApp());
     await tester.pumpAndSettle();
 
-    // The indicator should display the label and API URL
     expect(find.textContaining('Live Data'), findsOneWidget);
     expect(find.textContaining(AppConfig.apiBaseUrl), findsWidgets);
   });
@@ -35,7 +34,6 @@ void main() {
     await tester.pumpWidget(createTestApp());
     await tester.pumpAndSettle();
 
-    // Live mode shows Icons.cloud_done
     expect(find.byIcon(Icons.cloud_done), findsOneWidget);
   });
 }

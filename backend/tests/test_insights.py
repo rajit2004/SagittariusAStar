@@ -17,9 +17,7 @@ def auth_headers(mock_auth_dependencies):
 
 @pytest.fixture
 def mock_cycle_service():
-    # Insights reuses services.scoring_service (the shared source of
-    # truth for /dashboard and /insights/{user_id}/scores) instead of
-    # calling Firestore/CVI/MHS directly — see issue #86.
+
     with patch("services.scoring_service.CycleService") as MockCycleService:
         yield MockCycleService
 
@@ -41,13 +39,12 @@ _SAMPLE_LOGS = [
     {"start_date": date(2026, 3, 1), "end_date": date(2026, 3, 5), "sleep_hours": 7, "symptoms": ["cramps", "bloating"]},
 ]
 
-
 def test_get_scores_success(auth_headers, mock_cycle_service, mock_cvi, mock_mhs):
     mock_cycle_service.get_logs_for_user.return_value = _SAMPLE_LOGS
     response = client.get("/api/v1/insights/test-user-id-123/scores", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
-    # Factual cycle stats computed from the 3 logs
+
     assert data["averageCycleLength"] == 30.5
     assert data["shortestCycleLength"] == 30
     assert data["longestCycleLength"] == 31
@@ -55,24 +52,20 @@ def test_get_scores_success(auth_headers, mock_cycle_service, mock_cvi, mock_mhs
     assert data["hasEnoughDataForInsights"] is True
     assert data["loggedCycleCount"] == 3
 
-
 def test_get_scores_unauthorized(auth_headers):
     response = client.get("/api/v1/insights/other-user-id/scores", headers=auth_headers)
     assert response.status_code == 403
     assert response.json()["detail"] == "Not authorized"
 
-
 def test_get_scores_missing_fields(auth_headers):
-    # Testing with missing user_id which is a path parameter, will result in 404
+
     response = client.get("/api/v1/insights//scores", headers=auth_headers)
     assert response.status_code == 404
 
-
 def test_get_scores_invalid_payload():
-    # Sending POST request to a GET endpoint
-    response = client.post("/api/v1/insights/test-user-id-123/scores", json={"invalid": "payload"})
-    assert response.status_code == 405 # Method Not Allowed
 
+    response = client.post("/api/v1/insights/test-user-id-123/scores", json={"invalid": "payload"})
+    assert response.status_code == 405
 
 def test_get_scores_empty_history(auth_headers, mock_cycle_service, mock_cvi, mock_mhs):
     mock_cycle_service.get_logs_for_user.return_value = []
@@ -88,11 +81,7 @@ def test_get_scores_empty_history(auth_headers, mock_cycle_service, mock_cvi, mo
     assert data["hasEnoughDataForInsights"] is False
     assert data["loggedCycleCount"] == 0
 
-
 def test_dashboard_and_insights_return_identical_stats(auth_headers, mock_cycle_service, mock_cvi, mock_mhs):
-    """Regression test for issue #86: /dashboard and
-    /insights/{user_id}/scores must reuse the same computation and
-    therefore always agree for the same user."""
     mock_cycle_service.get_logs_for_user.return_value = _SAMPLE_LOGS
 
     dashboard_response = client.get("/api/v1/dashboard", headers=auth_headers)

@@ -134,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ── Header ──────────────────────────────────────────
+          
           Padding(
             padding: const EdgeInsets.fromLTRB(2, 8, 2, 20),
             child: Row(
@@ -205,11 +205,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // ── Approximate date nudge ────────────────────────────
           if (_shouldShowNudge(localProfile))
             _buildNudgeBanner(context, l10n, localProfile),
 
-          // ── Cycle ring + prediction ──────────────────────────
           GlassCard(
             child: Stack(
               children: [
@@ -332,7 +330,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
           const SizedBox(height: 14),
 
-          // ── AI Assistant CTA ────────────────────────────────
           GradientBox(
             padding: const EdgeInsets.all(18),
             child: Stack(
@@ -429,7 +426,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
           const SizedBox(height: 14),
 
-          // ── Today's log ────────────────────────────────────
           SectionHeader(
             title: l10n.homeFeelingTitle,
             action: l10n.homeLogAll,
@@ -505,7 +501,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
           const SizedBox(height: 14),
 
-          // ── Insight card ───────────────────────────────────
           GestureDetector(
             onTap: () {
               Navigator.push(
@@ -564,7 +559,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
           const SizedBox(height: 14),
 
-          // ── Education cards ────────────────────────────────
           SectionHeader(title: l10n.homeLearnTitle),
           SizedBox(
             height: 128,
@@ -602,14 +596,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ─── Helpers ────────────────────────────────────────────────────────────
-
   bool _shouldShowNudge(Map<String, dynamic> profile) {
     if (profile['last_period_is_approximate'] != true) return false;
     if (LocalStorageService.getNudgeDismissed('last_period_exact')) return false;
 
-    // Prefer onboarding_completed_at; fall back to last_period date for
-    // existing users who completed onboarding before this field was added.
     final completedAt = profile['onboarding_completed_at'] as String?;
     if (completedAt != null) {
       final date = DateTime.tryParse(completedAt);
@@ -622,7 +612,6 @@ class _HomeScreenState extends State<HomeScreen> {
       if (date != null) return DateTime.now().difference(date).inDays >= 3;
     }
 
-    // If neither date is available, show the nudge so the user can update.
     return true;
   }
 
@@ -855,8 +844,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
-// ── Small helpers ──────────────────────────────────────────────────────────────
 
 class _HeaderIcon extends StatelessWidget {
   final IconData icon;

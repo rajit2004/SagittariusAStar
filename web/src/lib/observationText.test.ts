@@ -18,9 +18,6 @@ import mr from '../i18n/locales/mr.json';
 import ta from '../i18n/locales/ta.json';
 import te from '../i18n/locales/te.json';
 
-// A stand-in for the i18next instance. Real i18next is exercised through
-// InsightsPage.test.tsx; here the point is the branching, which is easier
-// to pin down against a controlled `exists`.
 function fakeI18n(knownKeys: string[]) {
   return { exists: (key: string) => knownKeys.includes(key) };
 }
@@ -53,8 +50,7 @@ describe('translatedOr', () => {
   });
 
   it('falls back to the English the server sent when the key is missing', () => {
-    // This is the normal state of the world, not an edge case: the
-    // backend adds rules, and the locale files are updated separately.
+    
     const t = vi.fn() as unknown as TFunction;
 
     const result = translatedOr(
@@ -69,9 +65,7 @@ describe('translatedOr', () => {
   });
 
   it('never renders a raw dotted key to the reader', () => {
-    // `t()` returning the key back is i18next's behaviour for a missing
-    // string. Showing "observations.foo.title" in the middle of a health
-    // screen is strictly worse than the English it replaced.
+    
     const key = 'observations.long_cycle_observed.title';
     const t = vi.fn(() => key) as unknown as TFunction;
 
@@ -124,8 +118,7 @@ describe('interpolationValues', () => {
   });
 
   it('joins arrays rather than letting them stringify themselves', () => {
-    // `start_dates`, `symptoms`, `symptoms_seen` and `recent_gaps` are all
-    // arrays in the observations payload.
+    
     expect(
       interpolationValues({ symptoms_seen: ['cramps', 'back pain'] }),
     ).toEqual({ symptoms_seen: 'cramps, back pain' });
@@ -167,8 +160,7 @@ describe('observationTitle and observationBody', () => {
   });
 
   it('fall back independently of each other', () => {
-    // A locale with a title but no body is a plausible half-finished
-    // state; it must not take the title down with it.
+    
     const t = vi.fn(() => 'शीर्षक') as unknown as TFunction;
     const i18n = fakeI18n(['observations.long_cycle_observed.title']);
 
@@ -177,18 +169,6 @@ describe('observationTitle and observationBody', () => {
   });
 });
 
-// ─── The catalogue itself ─────────────────────────────────────────────────
-//
-// `locales.test.ts` already checks parity and placeholder agreement across
-// every locale. These tests check the thing it cannot: that the keys the
-// *backend* emits are the keys the locale files define. A perfectly
-// consistent set of translations for codes the server never sends would
-// pass every test in that file.
-
-// Every code emitted by `backend/services/health_observations_service.py`.
-// Kept here rather than derived, so adding a rule server-side without a
-// translation is a failing test in this repo rather than an English
-// sentence appearing on a Hindi screen.
 const BACKEND_OBSERVATION_CODES = [
   'insufficient_data',
   'no_recent_period_logged',
@@ -231,8 +211,7 @@ describe('observation translation catalogue', () => {
   );
 
   it('defines no observation the backend does not emit', () => {
-    // A stale key is dead weight, and usually a typo of a real code —
-    // which reads as "translated" while never being rendered.
+    
     const extra = Object.keys((en as { observations: Catalogue }).observations).filter(
       (code) => !BACKEND_OBSERVATION_CODES.includes(code as never),
     );
@@ -241,10 +220,7 @@ describe('observation translation catalogue', () => {
   });
 
   it('translates the two seek_care rules in every locale', () => {
-    // `no_recent_period_logged` and `prolonged_bleeding` are the two rules
-    // menstrual_insights_guidelines.md designates as prompts to consult a
-    // professional. They are the strings that most need to reach a reader
-    // in a language she reads, and the reason this issue is not cosmetic.
+    
     for (const [locale, bundle] of Object.entries(TRANSLATED)) {
       const observations = (bundle as { observations: Catalogue }).observations;
       for (const code of ['no_recent_period_logged', 'prolonged_bleeding']) {
@@ -257,9 +233,7 @@ describe('observation translation catalogue', () => {
   });
 
   it('keeps every placeholder the English string uses', () => {
-    // Duplicated in spirit by locales.test.ts, but that file only covers
-    // the locales listed in its own LOCALES map. A dropped {{days}} here
-    // renders a health sentence with a hole in it.
+    
     const placeholders = (text: string) =>
       [...text.matchAll(/\{\{(\w+)\}\}/g)].map((match) => match[1]).sort().join();
 
@@ -281,8 +255,7 @@ describe('observation translation catalogue', () => {
   });
 
   it('uses only placeholders the backend actually sends as evidence', () => {
-    // A translation referencing {{cycle_length}} when the backend sends
-    // `average_cycle_days` renders the literal braces to the user.
+    
     const EVIDENCE_KEYS: Record<string, string[]> = {
       insufficient_data: ['logged_cycles', 'needed'],
       no_recent_period_logged: [

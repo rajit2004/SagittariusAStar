@@ -17,7 +17,6 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Multi-lingual layout rendering support (Kannada, Malayalam, etc.) */
 .nav-link,
 button,
 .chip,
@@ -113,10 +112,6 @@ p {
   cursor: default;
 }
 
-/* Password requirements on the register form. Colour reinforces the state,
-   it never carries it alone — every row also shows a ✓ or a •, so met and
-   unmet stay distinguishable with a red-green colour vision deficiency or
-   on a monochrome screen. */
 .password-requirements {
   margin: 0 0 0.75rem;
   font-size: 0.8rem;
@@ -150,8 +145,6 @@ p {
   align-items: center;
   justify-content: center;
 }
-
-/* ── App layout & navigation ─────────────────────────────────────────────── */
 
 .app-layout {
   min-height: 100vh;
@@ -227,8 +220,6 @@ p {
   margin-bottom: 0.25rem;
 }
 
-/* ── Shared primitives ───────────────────────────────────────────────────── */
-
 .glass-card {
   border: 1px solid var(--border);
   border-radius: 24px;
@@ -303,16 +294,12 @@ p {
   width: 100%;
 }
 
-/* ── Prediction (issue #419) ──────────────────────────────────────────── */
-
 .prediction-card-body {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
 }
 
-/* The overdue count is the one number on this screen that has to read
-   differently from the others — it is a state, not a countdown. */
 .cycle-next-number.is-overdue,
 .stat-value.is-overdue {
   color: #c0392b;
@@ -450,8 +437,6 @@ p {
   fill: var(--text);
 }
 
-/* ── Modal (quick-log picker, edit profile) ──────────────────────────────── */
-
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -463,21 +448,11 @@ p {
   padding: 1rem;
 }
 
-/* The panel is focused on open so its name is announced before its
-   contents (#502). It is not a Tab stop, so the ring browsers draw on it
-   is telling the user about a control they cannot return to — the visible
-   focus that matters here is on the controls inside. Only this one
-   outline is suppressed; every other `:focus-visible` in the app is
-   untouched. */
 .quick-log-panel:focus,
 .edit-panel:focus {
   outline: none;
 }
 
-/* Was an <h3> written out by each screen. Now the dialog's accessible
-   name, rendered once by the component and pointed at by
-   `aria-labelledby`, so the name assistive technology reads is the same
-   string the user can see. */
 .modal-title {
   margin: 0;
   font-size: 1.05rem;
@@ -512,8 +487,6 @@ p {
   color: inherit;
   background: var(--bg);
 }
-
-/* ── Home / Dashboard ────────────────────────────────────────────────────── */
 
 .cycle-card-top {
   display: flex;
@@ -671,8 +644,6 @@ p {
   margin-top: 0.2rem;
 }
 
-/* ── Cycle Tracker ───────────────────────────────────────────────────────── */
-
 .calendar-toolbar {
   display: flex;
   align-items: center;
@@ -805,8 +776,6 @@ p {
   font-weight: 600;
   color: var(--text-h);
 }
-
-/* ── Assistant ───────────────────────────────────────────────────────────── */
 
 .assistant-page {
   height: calc(100vh - 180px);
@@ -980,8 +949,6 @@ p {
   padding-top: 0.4rem;
 }
 
-/* ── Insights ────────────────────────────────────────────────────────────── */
-
 .mini-stats {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1117,8 +1084,6 @@ p {
   margin: 0;
 }
 
-/* ── Profile ─────────────────────────────────────────────────────────────── */
-
 .profile-header {
   flex-direction: row;
   align-items: center;
@@ -1192,8 +1157,6 @@ p {
   cursor: default;
 }
 
-/* ── Data & privacy (issue #418) ──────────────────────────────────────── */
-
 .data-category-list {
   list-style: none;
   margin: 0.75rem 0 0;
@@ -1225,9 +1188,6 @@ p {
   font-weight: 600;
 }
 
-/* The field list can be long — every column of a cycle log — and it is
-   reference material rather than something to read through, so it is set
-   smaller and allowed to wrap rather than pushed into its own scroller. */
 .data-category-fields {
   font-size: 0.8rem;
   opacity: 0.7;
@@ -1289,8 +1249,6 @@ p {
   border-color: var(--text-h);
   box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text-h);
 }
-
-/* ── Settings & SMS ──────────────────────────────────────────────────────── */
 
 .language-list {
   display: flex;
@@ -1373,8 +1331,6 @@ p {
   color: var(--text-h);
   margin: 0;
 }
-
-/* ── Provider dashboard & data sharing (issue #267) ─────────────────────── */
 
 .provider-grid {
   display: grid;
@@ -1489,10 +1445,6 @@ p {
   margin-bottom: 0.5rem;
 }
 
-/* ── Responsive ──────────────────────────────────────────────────────────── */
-
-/* ── Error boundary & 404 ────────────────────────────────────────────────── */
-
 .error-boundary,
 .not-found-page {
   max-width: 640px;
@@ -1510,7 +1462,6 @@ p {
   margin-top: 0.5rem;
 }
 
-/* The Link styled as a button needs the padding a <button> gets for free. */
 .error-boundary-actions a {
   text-decoration: none;
   display: inline-flex;
@@ -1524,8 +1475,7 @@ p {
   padding: 0.15rem 0.4rem;
   border-radius: 6px;
   border: 1px solid var(--border);
-  /* Long, unbreakable strings: a request id or a pasted URL must wrap
-     rather than push the page into a horizontal scroll on a phone. */
+  
   overflow-wrap: anywhere;
 }
 
@@ -1548,8 +1498,6 @@ p {
     align-items: flex-start;
   }
 }
-
-/* ── Assistant transcript privacy (issue #420) ────────────────────────── */
 
 .assistant-privacy {
   display: flex;

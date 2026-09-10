@@ -1,11 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 
-// The Sharing screen is where a patient learns what sharing actually
-// means. Before #350 it could only say who *had* permission; it now says
-// who used it. These tests are mostly about the difference between "no
-// views", "never viewed" and "the server didn't say" — three states that
-// are easy to collapse into one and mean very different things to a user.
 vi.mock('../api/endpoints', () => ({
   fetchConsents: vi.fn(),
   fetchAccessLog: vi.fn(),
@@ -123,8 +118,7 @@ describe('consent rows carry usage', () => {
   });
 
   it('says nothing at all when the server omitted the field', async () => {
-    // An older backend, or a client cached across a deploy. Rendering
-    // "never viewed" here would be a claim this client cannot support.
+    
     const consent = consentFixture();
     delete (consent as Record<string, unknown>).viewCount;
     delete (consent as Record<string, unknown>).lastAccessedAt;
@@ -134,13 +128,12 @@ describe('consent rows carry usage', () => {
 
     await screen.findByText('Dr. Priya Rao');
     expect(screen.queryByText(/Has not viewed your data yet/i)).toBeNull();
-    // Scoped to the per-consent summary — a bare /Viewed/i also matches
-    // the access-history section heading further down the page.
+    
     expect(screen.queryByText(/Viewed \d+ times/i)).toBeNull();
   });
 
   it('keeps the history visible on a revoked consent', async () => {
-    // The point of revoking is knowing what was read while it was live.
+    
     mockConsents.mockResolvedValue([
       consentFixture({ status: 'revoked', viewCount: 2 }),
     ]);
@@ -153,8 +146,7 @@ describe('consent rows carry usage', () => {
 
 describe('failure handling', () => {
   it('still shows consents when the access log cannot be loaded', async () => {
-    // Revoking is the more urgent of the two actions, so a failed access
-    // log must not take the consent list down with it.
+    
     mockConsents.mockResolvedValue([consentFixture()]);
     mockAccessLog.mockRejectedValue(new Error('500'));
 

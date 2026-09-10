@@ -21,9 +21,7 @@ def auth_headers(mock_auth_dependencies):
 
 @pytest.fixture
 def mock_cycle_service():
-    # CycleService now lives behind services.scoring_service (the shared
-    # source of truth for /dashboard and /insights/{user_id}/scores),
-    # not api.dashboard directly — see services/scoring_service.py.
+
     with patch("services.scoring_service.CycleService") as MockCycleService:
         yield MockCycleService
 
@@ -49,7 +47,7 @@ def test_build_model_features_month_boundaries():
     assert features[0]["cycle_length"] == 29
     assert features[0]["flow_duration"] == 5
     assert features[0]["flow_intensity"] == 3
-    assert features[1]["cycle_length"] == 28 # default for oldest
+    assert features[1]["cycle_length"] == 28
 
 def test_build_model_features_year_transitions():
     logs = [
@@ -58,7 +56,7 @@ def test_build_model_features_year_transitions():
     ]
     features = build_model_features(logs)
     assert features[0]["cycle_length"] == 26
-    
+
 def test_build_model_features_leap_year():
     logs = [
         {"start_date": date(2024, 3, 1), "end_date": date(2024, 3, 5)},
@@ -66,7 +64,7 @@ def test_build_model_features_leap_year():
     ]
     features = build_model_features(logs)
     assert features[0]["cycle_length"] == 29
-    
+
 def test_build_model_features_single_cycle():
     logs = [
         {"start_date": date(2026, 5, 1), "end_date": date(2026, 5, 5)},
@@ -86,10 +84,10 @@ def test_build_model_features_long_history():
     assert len(features) == 5
     assert features[0]["cycle_length"] == 30
     assert features[1]["cycle_length"] == 31
-    
+
 def test_build_model_features_empty_history():
     assert build_model_features([]) == []
-    
+
 def test_build_model_features_invalid_date_input():
     logs = [
         {"start_date": "not-a-date", "end_date": None},
@@ -119,7 +117,7 @@ def test_dashboard_api_success(auth_headers, mock_cycle_service, mock_cvi, mock_
     data = response.json()
     assert data["cycle"]["day"] == 10
     assert data["cycle"]["total"] == 30
-    # Factual cycle stats computed from the 3 logs
+
     assert data["insights"]["averageCycleLength"] == 30.5
     assert data["insights"]["shortestCycleLength"] == 30
     assert data["insights"]["longestCycleLength"] == 31

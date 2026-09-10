@@ -119,11 +119,10 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
       Navigator.of(context).pop();
     }
 
-    // Best-effort backend sync — don't block the UI if it fails.
     try {
       await CycleService().deleteLog(dateKey);
     } catch (_) {
-      // Local delete succeeded; backend sync will retry via Firestore.
+      
     }
 
     if (!mounted) return;
@@ -177,7 +176,7 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
                 child: ListView(
                   controller: scrollController,
                   children: [
-                    // Flow Intensity
+                    
                     Text(l10n.logFlowIntensity,
                         style: theme.textTheme.titleMedium),
                     const SizedBox(height: 8),
@@ -200,7 +199,6 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Mood
                     Text(l10n.logMood, style: theme.textTheme.titleMedium),
                     const SizedBox(height: 8),
                     SizedBox(
@@ -242,7 +240,6 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Sleep Hours
                     Text('${l10n.logSleepHours}: ${_sleepHours.toInt()}h',
                         style: theme.textTheme.titleMedium),
                     Slider(
@@ -259,7 +256,6 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Stress Level
                     Text('${l10n.logStressLevel}: ${_stressLevel.toInt()}',
                         style: theme.textTheme.titleMedium),
                     Slider(
@@ -276,7 +272,6 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Symptoms
                     Text(l10n.logLabelSymptoms,
                         style: theme.textTheme.titleMedium),
                     const SizedBox(height: 8),

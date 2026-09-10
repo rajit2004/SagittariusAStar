@@ -3,10 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/data_mode_provider.dart';
 
-/// A small banner visible only in debug builds that indicates the active
-/// data source (live vs dev) and the configured API endpoint.
-///
-/// This widget does nothing in profile/release builds.
 class DebugDataIndicator extends StatelessWidget {
   const DebugDataIndicator({super.key});
 

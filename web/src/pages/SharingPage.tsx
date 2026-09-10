@@ -24,14 +24,6 @@ function formatDateTime(value: string | null | undefined): string {
   return date.toLocaleString();
 }
 
-/**
- * What a consent row says about use, not just permission (issue #350).
- *
- * `viewCount` being undefined means the backend did not send the field —
- * an older server, or a client cached across a deploy. That is different
- * from a count of zero, and the row says nothing rather than claiming
- * "never viewed", which would be a statement this client cannot support.
- */
 function accessSummary(
   t: (key: string, opts?: Record<string, unknown>) => string,
   consent: Consent,
@@ -58,10 +50,7 @@ export function SharingPage() {
 
   const load = async () => {
     try {
-      // The access log is fetched alongside the consents but does not
-      // gate them: a patient who cannot see her access history should
-      // still be able to revoke, which is the more urgent action of the
-      // two. `.catch` rather than a second try/except for that reason.
+      
       const [nextConsents, log] = await Promise.all([
         fetchConsents(),
         fetchAccessLog().catch(() => null),
@@ -77,7 +66,7 @@ export function SharingPage() {
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, []);
 
   const handleAdd = async (e: FormEvent) => {

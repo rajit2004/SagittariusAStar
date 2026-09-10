@@ -9,14 +9,6 @@ import {
   serverPasswordFailures,
 } from './password';
 
-/**
- * These mirror `backend/tests/test_password_policy.py` case for case on
- * purpose. The client copy exists only to give live feedback while typing;
- * the moment the two disagree, a user sees a green tick on a password the
- * server then refuses. Keeping the cases aligned is what makes that
- * divergence show up here rather than in production.
- */
-
 function failing(password: string, context = {}) {
   return evaluatePassword(password, context)
     .filter((rule) => !rule.met)
@@ -53,9 +45,7 @@ describe('evaluatePassword', () => {
   });
 
   it('measures the ceiling in bytes, not characters', () => {
-    // The same trap as on the server: an Indian-language passphrase reaches
-    // 72 bytes at roughly a third of the character count an English one
-    // does, and bcrypt would silently keep only the first 72.
+    
     const hindi = 'सुरक्षितपासवर्डहैयहबहुतअच्छा';
 
     expect(hindi.length).toBeLessThan(MAX_PASSWORD_BYTES);
@@ -118,9 +108,7 @@ describe('evaluatePassword', () => {
   });
 
   it('returns the whole rule list, not only the failures', () => {
-    // The form shows requirements before anything is typed, so an empty
-    // password has to come back as "nothing met yet" rather than as an
-    // empty list, which would render as "no requirements".
+    
     const rules = evaluatePassword('');
     expect(rules).toHaveLength(6);
     expect(rules.some((rule) => !rule.met)).toBe(true);
@@ -174,9 +162,7 @@ describe('serverPasswordFailures', () => {
   });
 
   it('survives a malformed details payload', () => {
-    // Defensive rather than hypothetical: this reads a nested field off a
-    // network response, and throwing here would replace a helpful message
-    // with a blank form and a console error.
+    
     expect(serverPasswordFailures(weakPasswordResponse('not-an-array'))).toEqual([]);
     expect(serverPasswordFailures(weakPasswordResponse([null, 42, {}]))).toEqual([]);
     expect(serverPasswordFailures(undefined)).toEqual([]);

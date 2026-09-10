@@ -99,11 +99,7 @@ export function ProfilePage() {
   const initial = displayName.charAt(0).toUpperCase();
   const avatarColor = profile?.avatar && AVATAR_COLORS.includes(profile.avatar) ? profile.avatar : AVATAR_COLORS[0];
   const lengths = dashboard?.cycleHistory.map((p) => p.cycle_length) ?? [];
-  // Measured against the mean of these lengths, in days. It used to be a
-  // variance (squared deviations, never square-rooted) taken around
-  // `dashboard.cycle.total` — a rounded average from a different
-  // calculation that falls back to 28 when the user has almost no
-  // history. See lib/cycleStats.ts and issue #383.
+  
   const spread = formatSpread(cycleSpread(lengths));
   const lastCycle = lengths.length > 0 ? lengths[lengths.length - 1] : null;
 
@@ -159,10 +155,7 @@ export function ProfilePage() {
         </Link>
       </section>
 
-      {/* Same dialog behaviour as Home's quick-log panel, from the same
-          component (#502). This one previously had no Escape handler at
-          all, which is what happens when the behaviour lives in the page:
-          one screen gets it and the next one does not. */}
+      {}
       <Modal
         open={editing}
         onClose={() => setEditing(false)}

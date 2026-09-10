@@ -25,10 +25,10 @@ void main() {
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
-      final saveButton = find.text('Save'); // Depends on l10n, using default English
+      final saveButton = find.text('Save'); 
       if (saveButton.evaluate().isNotEmpty) {
         await tester.tap(saveButton);
-        await tester.pump(); // Trigger frame for snackbar
+        await tester.pump(); 
         
         expect(find.byType(SnackBar), findsOneWidget);
       }
@@ -41,12 +41,12 @@ void main() {
       final deleteButton = find.byIcon(Icons.delete_outline);
       if (deleteButton.evaluate().isNotEmpty) {
         await tester.tap(deleteButton);
-        await tester.pumpAndSettle(); // Wait for dialog
+        await tester.pumpAndSettle(); 
         
         final confirmDelete = find.text('Delete');
         if (confirmDelete.evaluate().isNotEmpty) {
             await tester.tap(confirmDelete);
-            await tester.pump(); // Trigger frame for snackbar
+            await tester.pump(); 
             
             expect(find.byType(SnackBar), findsOneWidget);
         }

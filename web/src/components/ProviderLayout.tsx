@@ -32,10 +32,7 @@ export function ProviderLayout() {
         </NavLink>
       </nav>
 
-      {/* id and tabIndex make this the skip link's target and the
-          place focus lands after a route change (#409). tabIndex={-1}
-          is focusable programmatically but not by Tab, so it adds no
-          stop to the keyboard order. */}
+      {}
       <main id={MAIN_CONTENT_ID} tabIndex={-1} className="app-main">
         <Outlet />
       </main>

@@ -16,12 +16,6 @@ vi.mock('../../api/client', async () => {
 
 let lastRequestId: string | null = null;
 
-/**
- * React logs every caught error to the console itself, on top of our own
- * componentDidCatch call. Silenced so a passing run isn't full of red
- * stack traces that look like failures — the assertions below check the
- * boundary's behaviour, not the console.
- */
 beforeEach(() => {
   lastRequestId = null;
   vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -51,8 +45,7 @@ describe('ErrorBoundary', () => {
   });
 
   it('shows a fallback instead of a blank page when a child throws', () => {
-    // Without a boundary React unmounts the whole tree: no message, no way
-    // back, and a reload that throws again on the same route.
+    
     renderInRouter(
       <ErrorBoundary>
         <Boom />
@@ -103,7 +96,7 @@ describe('ErrorBoundary', () => {
   });
 
   it('shows the API request id when there is one', () => {
-    // Turns "the app broke" in a bug report into a specific server log line.
+    
     lastRequestId = 'req-abc-123';
 
     renderInRouter(
@@ -128,10 +121,6 @@ describe('ErrorBoundary', () => {
   it('recovers when retry is clicked and the child no longer throws', async () => {
     const user = userEvent.setup();
 
-    // Driven by an external flag rather than a render counter: React 19
-    // may render a component twice (it retries synchronously after a
-    // concurrent render throws), so "throw only on the first call" is not
-    // a reliable way to describe a transient failure.
     let failing = true;
 
     function Flaky() {
@@ -183,8 +172,7 @@ describe('ErrorBoundary', () => {
 
 describe('RouteErrorBoundary', () => {
   it('clears itself when the user navigates away from the broken page', async () => {
-    // A latched boundary would keep showing the error screen on pages that
-    // are perfectly fine, which is worse than the crash it replaced.
+    
     const user = userEvent.setup();
 
     renderInRouter(
@@ -199,8 +187,6 @@ describe('RouteErrorBoundary', () => {
 
     expect(screen.getByRole('alert')).toBeInTheDocument();
 
-    // The throwing route unmounted with the error, so the only way out is
-    // the fallback's own link — which is the point of it being there.
     await user.click(screen.getByRole('link', { name: i18n.t('errors.goHome') }));
 
     expect(await screen.findByText('Home page')).toBeInTheDocument();

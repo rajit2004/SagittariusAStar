@@ -1,18 +1,3 @@
-/**
- * ProfilePage's edit panel as a dialog (issue #502).
- *
- * Deliberately a file of its own rather than an addition to
- * `ProfilePage.test.tsx`. That file is a busy one — #491 is open against
- * it too — and two branches appending a `describe` to the same tail
- * conflict over nothing but adjacency. What is under test here is a
- * property of the dialog rather than of the profile screen's data, so it
- * reads as well separately as it would there.
- *
- * `components/Modal.test.tsx` covers the component. This covers the
- * wiring: that the page actually uses it, and that a panel which
- * previously could only be dismissed with a mouse no longer traps a
- * keyboard user.
- */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
@@ -84,8 +69,7 @@ describe('ProfilePage — the edit dialog (issue #502)', () => {
   });
 
   it('closes on Escape, which it could not do before', async () => {
-    // This panel had no Escape handler at all — Home's was a `window`
-    // listener that page installed for itself, and Profile never got one.
+    
     const { user } = await openEdit();
 
     await user.keyboard('{Escape}');

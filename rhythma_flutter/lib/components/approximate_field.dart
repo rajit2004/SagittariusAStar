@@ -2,20 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../config/theme.dart';
 
-/// Describes one selectable range in an [ApproximateField].
-///
-/// The [key] is a stable identifier (e.g. `'under_18'`) used for storage and
-/// analytics — it is NOT displayed.  The [label] should come from
-/// localization so it adapts to the active locale.
 class ApproxRange {
-  /// Machine-readable key stored in profile maps and passed to analytics.
+  
   final String key;
 
-  /// Human-readable label sourced from i18n (e.g. "18–25").
   final String label;
 
-  /// Numeric midpoint used when this range is selected but the user chose
-  /// "Not sure".  Stored as the value in the profile map.
   final double midpoint;
 
   const ApproxRange({
@@ -25,58 +17,36 @@ class ApproxRange {
   });
 }
 
-/// A composite field that lets users enter an exact numeric value *or* pick
-/// an approximate range via a "Not sure" toggle.
-///
-/// When the user toggles "Not sure", the text field is disabled and a
-/// vertical list of [RadioListTile] range options appears below.  The text
-/// field's content is always preserved in [controller] so toggling back
-/// restores the previous input.
 class ApproximateField extends StatelessWidget {
-  /// Label shown above the field (e.g. "Age" from i18n).
+  
   final String label;
 
-  /// Hint text for the text field (e.g. "Enter your age" from i18n).
   final String hint;
 
-  /// Unit suffix shown in the text field (e.g. "years", "cm", "kg").
   final String unit;
 
-  /// Available ranges for the "Not sure" picker.
   final List<ApproxRange> ranges;
 
-  /// Controller for the exact-value text field.
   final TextEditingController controller;
 
-  /// Whether the user is currently in "Not sure" / approximate mode.
   final bool isEstimated;
 
-  /// Called when the "Not sure" switch is toggled.
   final ValueChanged<bool> onEstimatedChanged;
 
-  /// Key of the currently selected range (matches [ApproxRange.key]).
   final String? selectedRange;
 
-  /// Called when a range is selected.
   final ValueChanged<String> onRangeChanged;
 
-  /// Validation error to display below the field.
   final String? error;
 
-  /// Whether decimal input is allowed.
   final bool isDecimal;
 
-  /// Minimum allowed value (for validation).
   final double minValue;
 
-  /// Maximum allowed value (for validation).
   final double maxValue;
 
-  /// Localized label for the "Not sure" toggle (e.g. "Not sure" from i18n).
   final String toggleLabel;
 
-  /// Localized label shown in the "(Approximate)" chip when estimated
-  /// (e.g. "Approximate" from i18n).
   final String approximateLabel;
 
   const ApproximateField({
@@ -103,7 +73,7 @@ class ApproximateField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Label row with optional "(Approximate)" chip ───────────────
+        
         Row(
           children: [
             Text(
@@ -132,7 +102,6 @@ class ApproximateField extends StatelessWidget {
         ),
         const SizedBox(height: 8),
 
-        // ── Exact text field ───────────────────────────────────────────
         TextField(
           controller: controller,
           keyboardType: isDecimal
@@ -187,7 +156,6 @@ class ApproximateField extends StatelessWidget {
         ),
         const SizedBox(height: 8),
 
-        // ── "Not sure" toggle BELOW input area ─────────────────────────
         GestureDetector(
           onTap: () => onEstimatedChanged(!isEstimated),
           child: Row(
@@ -216,7 +184,6 @@ class ApproximateField extends StatelessWidget {
           ),
         ),
 
-        // ── Range picker (vertical RadioListTile) ──────────────────────
         if (isEstimated) ...[
           const SizedBox(height: 8),
           ...ranges.map((range) {

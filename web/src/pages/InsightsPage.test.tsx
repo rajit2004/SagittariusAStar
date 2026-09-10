@@ -164,12 +164,7 @@ describe('InsightsPage empty / not-enough-data state', () => {
 });
 
 describe('InsightsPage observation localization (#485)', () => {
-  // The page rendered `observation.title` / `.body` — the server's English
-  // fallbacks — in every locale, so the chrome translated and the content
-  // did not. These tests drive the real i18n instance rather than a mock,
-  // because the bug was that a correct payload was being ignored, and a
-  // mocked `t` would have kept passing throughout.
-
+  
   afterEach(async () => {
     await i18n.changeLanguage('en');
   });
@@ -180,7 +175,6 @@ describe('InsightsPage observation localization (#485)', () => {
 
     renderWithProviders(<InsightsPage />);
 
-    // The English fallback the server sent must not be what is shown.
     await waitFor(() =>
       expect(screen.queryByText('A longer cycle than most')).not.toBeInTheDocument(),
     );
@@ -195,18 +189,13 @@ describe('InsightsPage observation localization (#485)', () => {
 
     renderWithProviders(<InsightsPage />);
 
-    // 42 is `evidence.longest_cycle_days`. If the placeholder were dropped
-    // in translation, or the evidence not passed, the number would be
-    // missing from a sentence that is entirely about it.
     const body = await screen.findByText(/42/);
     expect(body).toBeInTheDocument();
     expect(body.textContent).not.toContain('{{');
   });
 
   it('falls back to English for a code no locale has a string for yet', async () => {
-    // The normal state of the world: the backend ships a rule, the locale
-    // files catch up later. The reader must see the server's English, not
-    // "observations.a_new_rule.title".
+    
     await i18n.changeLanguage('hi');
     fetchObservations.mockResolvedValue(
       observationsFixture({
@@ -244,10 +233,7 @@ describe('InsightsPage observation localization (#485)', () => {
   });
 
   it('translates a seek_care observation, which is the point of the issue', async () => {
-    // `prolonged_bleeding` is one of the two rules
-    // menstrual_insights_guidelines.md designates as a prompt to consult a
-    // professional. A user who chose Tamil because she does not read
-    // English fluently was being shown it in English.
+    
     await i18n.changeLanguage('ta');
     fetchObservations.mockResolvedValue(
       observationsFixture({

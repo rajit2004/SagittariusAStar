@@ -1,9 +1,7 @@
 from datetime import datetime, timezone, timedelta
 import pytest
 
-
 from core.auth import refresh_token_store, cleanup_expired_refresh_tokens, _hash_token
-
 
 def test_cleanup_expired_refresh_tokens():
     expired_hash = _hash_token("expired_test_token")
@@ -20,5 +18,4 @@ def test_cleanup_expired_refresh_tokens():
     assert expired_hash not in refresh_token_store
     assert valid_hash in refresh_token_store
 
-    # Cleanup
     refresh_token_store.pop(valid_hash, None)

@@ -1,15 +1,12 @@
 from datetime import datetime, timezone, timedelta
 import pytest
 
-
 from services.rate_limit_service import RateLimitService
-
 
 def test_rate_limit_service_handles_iso_strings_and_naive_datetimes():
     now_iso = (datetime.now(timezone.utc) - timedelta(seconds=10)).isoformat()
     now_naive = datetime.now() - timedelta(seconds=20)
 
-    # Mock Firestore doc containing string and naive timestamps
     class MockDoc:
         exists = True
         def to_dict(self):
@@ -25,7 +22,7 @@ def test_rate_limit_service_handles_iso_strings_and_naive_datetimes():
     RateLimitService._document = staticmethod(lambda key: MockDocRef())
 
     try:
-        # Check rate limiting safely without TypeError
+
         res = RateLimitService.is_rate_limited("test_key", limit=5, window_seconds=60)
         assert res is None
     finally:

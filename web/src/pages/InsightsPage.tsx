@@ -10,10 +10,6 @@ import {
 import { observationBody, observationTitle } from '../lib/observationText';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
 
-// No MHS/CVI score here — this page is built entirely against the factual
-// /insights/{user_id}/observations endpoint (issue #320). Every number and
-// sentence below comes straight from the user's own logged data.
-
 const SEVERITY_ICON: Record<Observation['severity'], string> = {
   info: 'ℹ️',
   attention: '💡',
@@ -56,18 +52,8 @@ export function InsightsPage() {
     return <div className="centered-loader">{t('common.loading')}</div>;
   }
 
-  // Everything the page renders comes straight off the observations
-  // response. There is no derived score here on purpose (#320): the block
-  // that used to sit in this spot computed MHS, CVI and a cycle
-  // "variability" figure from fields this endpoint does not return, and
-  // rendered none of them.
   const observations = data?.observations ?? [];
 
-  // `insufficient_data` is a signal, not a card. When the backend emits it
-  // the user has too few logged cycles for any pattern to mean anything,
-  // so the page shows one "keep logging" note instead of an observation
-  // list — showing both would be telling her there is nothing to say and
-  // then saying something.
   const isInsufficient = observations.some(
     (observation) => observation.code === 'insufficient_data',
   );
@@ -78,9 +64,7 @@ export function InsightsPage() {
   const avgCycleLength = data?.averageCycleLength ?? null;
   const analyzedCount = data?.analyzedCycleCount ?? 0;
   const consistency: CycleConsistency = data?.cycleConsistency ?? 'unknown';
-  // #306 requires the disclaimer on every insights surface, so it falls
-  // back to the generic key rather than rendering nothing when the
-  // response omits one.
+  
   const disclaimerKey = data?.disclaimerKey ?? 'insights.disclaimer';
 
   return (
@@ -151,14 +135,7 @@ export function InsightsPage() {
 
 function ObservationCard({ observation }: { observation: Observation }) {
   const { t, i18n } = useTranslation();
-  // `observation.title` / `.body` are the server's English fallbacks. The
-  // backend asks clients with a translation to render `titleKey`/`bodyKey`
-  // and interpolate `evidence` instead — which this page did not do, so
-  // every observation stayed English in all 17 locales (#485). The
-  // fallback lives inside these helpers: an observation code the client
-  // has no string for yet renders the English rather than a raw dotted
-  // key, which is the state that occurs every time the backend adds a
-  // rule ahead of the translations.
+  
   const title = observationTitle(t, i18n, observation);
   const body = observationBody(t, i18n, observation);
 

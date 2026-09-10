@@ -37,10 +37,8 @@ void main() {
       final provider = LocaleProvider();
       final initialLocale = provider.locale.languageCode;
 
-      // bn is not in the product-supported list yet
       provider.setLocale(const Locale('bn'));
 
-      // It should remain unchanged
       expect(provider.locale.languageCode, initialLocale);
       expect(LocalStorageService.preferredLanguage, initialLocale);
     });

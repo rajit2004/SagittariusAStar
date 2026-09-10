@@ -20,7 +20,6 @@ const mockClient = apiClient as unknown as {
 
 const USER = { id: 'u1', username: 'asha', email: 'asha@example.com' };
 
-/** Exposes the context so tests can drive it without a real page. */
 function Probe() {
   const { user, loading, login, register, logout } = useAuth();
   return (
@@ -52,8 +51,7 @@ beforeEach(() => {
 
 describe('session bootstrap', () => {
   it('validates a stored session against /auth/me rather than assuming it', async () => {
-    // Checking that a token *exists* is not the same as checking it is
-    // still valid; the app deliberately asks the server.
+    
     mockClient.get.mockResolvedValue({ data: USER });
 
     renderProbe();
@@ -81,8 +79,7 @@ describe('session bootstrap', () => {
   });
 
   it('ends up anonymous rather than stuck when the server is unreachable', async () => {
-    // Offline must resolve loading, or ProtectedRoute renders its spinner
-    // forever and the user cannot even reach the login page.
+    
     mockClient.get.mockRejectedValue(new Error('network'));
 
     renderProbe();
@@ -101,9 +98,7 @@ describe('session bootstrap', () => {
 
 describe('login', () => {
   it('posts to the endpoint the backend actually serves', async () => {
-    // This is the #259 regression, locked down: the client once posted to
-    // /auth/token, which does not exist. core/auth_router.py registers
-    // /auth/login.
+    
     mockClient.get.mockResolvedValue({ data: USER });
     mockClient.post.mockResolvedValue({ data: { token_type: 'bearer' } });
 
@@ -120,8 +115,7 @@ describe('login', () => {
   });
 
   it('re-reads /auth/me after logging in instead of trusting the login body', async () => {
-    // The web client ignores the access_token in the response body (that
-    // is for Flutter); the cookie is already set, so it asks who it is.
+    
     mockClient.get.mockResolvedValue({ data: USER });
     mockClient.post.mockResolvedValue({ data: {} });
 
@@ -148,7 +142,7 @@ describe('login', () => {
 
 describe('register', () => {
   it('posts to /auth/register with the field names the backend model uses', async () => {
-    // RegisterRequest expects full_name, not fullName.
+    
     mockClient.get.mockResolvedValue({ data: USER });
     mockClient.post.mockResolvedValue({ data: {} });
 
@@ -169,8 +163,7 @@ describe('register', () => {
 
 describe('logout', () => {
   it('tells the server to clear the cookie', async () => {
-    // The cookie is HttpOnly, so the client cannot clear it itself —
-    // skipping this call would leave the session alive on the server.
+    
     mockClient.get.mockResolvedValue({ data: USER });
     mockClient.post.mockResolvedValue({ data: {} });
 

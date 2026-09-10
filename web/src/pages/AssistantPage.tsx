@@ -14,8 +14,7 @@ import { useDocumentMeta } from '../lib/useDocumentMeta';
 type UiMessage = StoredMessage;
 
 function formatMessage(content: string): ReactNode {
-  // Render the small markdown subset the Flutter app supports: **bold**
-  // and lines starting with "- " or "* " as bullets.
+  
   const lines = content.split('\n');
   return lines.map((line, i) => {
     if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
@@ -61,11 +60,6 @@ export function AssistantPage() {
     [t, user?.username],
   );
 
-  // Seeded from *this account's* transcript. The initializer runs once,
-  // before the id is necessarily known, so the effect below re-seeds when
-  // it arrives — and, crucially, when it changes: mounting with A's
-  // messages and then having B sign in is the exact sequence that used to
-  // show one user another's conversation.
   const [messages, setMessages] = useState<UiMessage[]>(() => {
     const saved = loadHistory(userId);
     return saved.length > 0 ? saved : [greeting()];
@@ -77,10 +71,7 @@ export function AssistantPage() {
   useEffect(() => {
     const saved = loadHistory(userId);
     setMessages(saved.length > 0 ? saved : [greeting()]);
-    // `greeting` is intentionally out of the dependency list: it changes
-    // whenever the language does, and re-seeding the transcript on a
-    // language switch would discard the conversation.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [userId]);
 
   useEffect(() => {
@@ -102,10 +93,7 @@ export function AssistantPage() {
       .map((m) => ({ role: m.role, content: m.content }));
 
     try {
-      // `i18n.language` is a UI tag — it can be `en-US` from the browser
-      // detector, or `bn`, which the web app supports and the assistant
-      // does not. The backend validates this field now, so it has to be
-      // a code the assistant actually serves.
+      
       const result = await sendChatMessage(
         trimmed,
         toAssistantLanguage(i18n.language),
@@ -137,8 +125,7 @@ export function AssistantPage() {
   };
 
   const showSuggestions = messages.filter((m) => !m.isError).length <= 1;
-  // Only offered once there is something to clear — a button that does
-  // nothing is worse than no button.
+  
   const canClear = messages.some((m) => m.role === 'user');
 
   return (
@@ -213,9 +200,7 @@ export function AssistantPage() {
         </button>
       </form>
 
-      {/* Said out loud, because it was not obvious and it is the kind of
-          thing someone on a shared computer needs to know before she
-          types a question about her body (#420). */}
+      {}
       <div className="assistant-privacy">
         <p className="disclaimer">{t('assistant.storedOnDevice')}</p>
         {canClear ? (

@@ -1,14 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-// Loaded through Vite's `?raw` rather than `node:fs`. The app tsconfig
-// declares only `vite/client` types, and widening it to include `node`
-// would let production code reach for `fs` and `path` and still type-check
-// — a worse trade than importing these as strings.
-//
-// Read as text rather than imported as a module on purpose: the manifest
-// is a static asset Vite copies verbatim, so nothing parses or validates
-// it on the way out. A trailing comma or a renamed icon ships silently and
-// surfaces only as "Add to Home Screen" producing an unlabelled shortcut.
 import manifestRaw from '../public/manifest.webmanifest?raw';
 import indexHtml from '../index.html?raw';
 import icon192 from '../public/icon-192.svg?raw';
@@ -40,8 +31,7 @@ describe('web app manifest', () => {
   });
 
   it('declares a maskable icon', () => {
-    // Without one a launcher puts the square icon inside its own shape,
-    // and the result is a small square floating in a circle.
+    
     const maskable = (manifest.icons as { purpose?: string }[]).filter((icon) =>
       icon.purpose?.split(' ').includes('maskable'),
     );
@@ -55,8 +45,7 @@ describe('web app manifest', () => {
   });
 
   it('points every icon at a file that exists and is not empty', () => {
-    // A browser that cannot fetch the icon falls back to a screenshot of
-    // the page, which is a silent failure.
+    
     for (const icon of manifest.icons as { src: string }[]) {
       const source = ICON_SOURCES[icon.src];
       expect(source, `${icon.src} is not a known asset`).toBeDefined();
@@ -107,7 +96,7 @@ describe('index.html', () => {
   });
 
   it('does not leak the full path in a referrer', () => {
-    // Provider routes put a patient id in the URL.
+    
     expect(indexHtml).toMatch(/name="referrer"\s+content="strict-origin/);
   });
 });

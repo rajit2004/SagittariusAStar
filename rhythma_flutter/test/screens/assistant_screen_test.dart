@@ -73,7 +73,6 @@ void main() {
       tester.element(find.byType(AssistantScreen)),
     )!;
 
-    // The welcome bubble is rendered as a rich-text message.
     expect(
       find.textContaining('Aarya Test', findRichText: true),
       findsOneWidget,
@@ -89,7 +88,6 @@ void main() {
 
     await tester.enterText(find.byType(TextField), 'Is my cycle normal?');
 
-    // runAsync so the Hive chat-history write (real file I/O) completes.
     await tester.runAsync(() async {
       await tester.tap(find.byIcon(Icons.send_rounded));
       await Future.delayed(const Duration(milliseconds: 400));
@@ -102,7 +100,6 @@ void main() {
       findsOneWidget,
     );
 
-    // Suggested prompts disappear once a conversation has started.
     final l10n = AppLocalizations.of(
       tester.element(find.byType(AssistantScreen)),
     )!;
@@ -111,7 +108,7 @@ void main() {
 
   testWidgets('restores persisted chat history on startup',
       (WidgetTester tester) async {
-    // runAsync so the real Hive write completes (fake-zone I/O would hang).
+    
     await tester.runAsync(
       () => Hive.box('settings').put('test-user::chat_history', [
             {'role': 'user', 'content': 'What is my cycle phase?'},

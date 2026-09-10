@@ -5,10 +5,8 @@ import 'package:hive/hive.dart';
 import 'package:rhythma/services/local_storage_service.dart';
 import 'test_helpers/local_storage_fixture.dart';
 
-// Mirrors the regex used in onboarding_screen.dart and sms_screen.dart.
 final _e164 = RegExp(r'^\+[1-9]\d{1,14}$');
 
-/// Unit tests for the onboarding-related LocalStorageService methods.
 void main() {
   late Directory tempDir;
 
@@ -214,8 +212,6 @@ void main() {
       expect(LocalStorageService.getNudgeDismissed('nudge_b'), isFalse);
     });
   });
-
-  // ── Step 4 phone validation (E.164 regex regression) ─────────────────────
 
   group('Step 4 phone E.164 validation', () {
     test('empty phone passes (field is optional)', () {

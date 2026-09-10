@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-/// Keys used in Hive boxes
 class _Keys {
   static const cycleBox = 'cycle_logs';
   static const settingsBox = 'settings';
@@ -23,7 +22,6 @@ class _Keys {
   static const dashboardCacheTimestamp = 'dashboard_cache_timestamp';
 }
 
-/// Manages all on-device storage via Hive.
 class LocalStorageService {
   static bool _initialised = false;
   static HiveAesCipher? _cipher;
@@ -35,14 +33,11 @@ class LocalStorageService {
     _needsMigration = false;
   }
 
-  /// The AES cipher used for Hive box encryption.
-  /// Available after [init] completes.
   static HiveAesCipher? get cipher => _cipher;
 
   static const _offlineQueueBoxName = 'offline_queue';
   static const _pendingCycleSyncBoxName = 'pending_cycle_sync';
 
-  /// Call once at app startup (after WidgetsFlutterBinding.ensureInitialized)
   static Future<void> init({String? testPath}) async {
     if (_initialised) return;
 
@@ -60,50 +55,45 @@ class LocalStorageService {
       final key = Hive.generateSecureKey();
       encryptionKeyString = base64UrlEncode(key);
       await secureStorage.write(key: 'hive_key', value: encryptionKeyString);
-      needsMigration = true; // Flag that existing data is unencrypted
+      needsMigration = true; 
     }
 
     final cipher = HiveAesCipher(base64Url.decode(encryptionKeyString));
     _cipher = cipher;
     _needsMigration = needsMigration;
 
-    // 1. Handle migration for existing users for cycleBox
     if (needsMigration && await Hive.boxExists(_Keys.cycleBox)) {
       final oldBox = await Hive.openBox<Map>(_Keys.cycleBox);
       final oldData = oldBox.toMap();
       await oldBox.close();
-      await Hive.deleteBoxFromDisk(_Keys.cycleBox); // Delete unencrypted file
+      await Hive.deleteBoxFromDisk(_Keys.cycleBox); 
 
       final newBox = await Hive.openBox<Map>(_Keys.cycleBox, encryptionCipher: cipher);
-      await newBox.putAll(oldData); // Restore data securely
+      await newBox.putAll(oldData); 
     } else {
       await Hive.openBox<Map>(_Keys.cycleBox, encryptionCipher: cipher);
     }
 
-    // 2. Handle migration for existing users for userBox
     if (needsMigration && await Hive.boxExists(_Keys.userBox)) {
       final oldBox = await Hive.openBox<Map>(_Keys.userBox);
       final oldData = oldBox.toMap();
       await oldBox.close();
-      await Hive.deleteBoxFromDisk(_Keys.userBox); // Delete unencrypted file
+      await Hive.deleteBoxFromDisk(_Keys.userBox); 
 
       final newBox = await Hive.openBox<Map>(_Keys.userBox, encryptionCipher: cipher);
-      await newBox.putAll(oldData); // Restore data securely
+      await newBox.putAll(oldData); 
     } else {
       await Hive.openBox<Map>(_Keys.userBox, encryptionCipher: cipher);
     }
 
-    // 3. Migrate and open settings box with encryption
     await _openEncryptedBox<dynamic>(_Keys.settingsBox);
 
-    // 4. Migrate and open offline sync boxes with encryption
     await _openEncryptedBox<Map>(_offlineQueueBoxName);
     await _openEncryptedBox<Map>(_pendingCycleSyncBoxName);
 
     _initialised = true;
   }
 
-  /// Opens a Hive box with encryption, migrating from plaintext if needed.
   static Future<Box<T>> _openEncryptedBox<T>(String name) async {
     final c = _cipher;
     if (c == null) {
@@ -122,8 +112,6 @@ class LocalStorageService {
 
     return Hive.openBox<T>(name, encryptionCipher: c);
   }
-
-  // ── Per-account data scoping ──────────────────────────────────────────
 
   static const _kCurrentUserId = _Keys.currentUserId;
 
@@ -145,8 +133,6 @@ class LocalStorageService {
     return uid == null ? baseKey : '$uid::$baseKey';
   }
 
-  /// One-time migration: silently moves any pre-existing un-scoped entries
-  /// into the first account that logs in after this update.
   static Future<void> _migrateLegacyDataIfNeeded(String uid) async {
     final scopedProfileKey = '$uid::${_Keys.profile}';
     if (_userBox.containsKey(_Keys.profile) &&
@@ -177,8 +163,6 @@ class LocalStorageService {
     }
   }
 
-  // ── Cycle Logs ──────────────────────────────────────────────────────────
-
   static Box<Map> get _cycleBox => Hive.box<Map>(_Keys.cycleBox);
 
   static Future<void> saveCycleLog(Map<String, dynamic> log) async {
@@ -204,12 +188,9 @@ class LocalStorageService {
     return getCycleLogs().take(n).toList();
   }
 
-  /// Removes a cycle log entry identified by its date key (YYYY-MM-DD).
   static Future<void> deleteCycleLog(String dateKey) async {
     await _cycleBox.delete(_scoped(dateKey));
   }
-
-  // ── User Settings ──────────────────────────────────────────────────────
 
   static Box<dynamic> get _settings => Hive.box<dynamic>(_Keys.settingsBox);
 
@@ -270,9 +251,6 @@ class LocalStorageService {
     await _settings.put(_Keys.primaryColor, colorValue);
   }
 
-  // ── Onboarding ──────────────────────────────────────────────────────────
-
-  /// Onboarding completion is scoped per user, so each account has its own state.
   static bool get onboardingCompleted {
     return _settings.get(_scoped(_Keys.onboardingCompleted), defaultValue: false)
         as bool;
@@ -281,8 +259,6 @@ class LocalStorageService {
   static Future<void> setOnboardingCompleted(bool value) async {
     await _settings.put(_scoped(_Keys.onboardingCompleted), value);
   }
-
-  // ── User Profile ────────────────────────────────────────────────────────
 
   static Box<Map> get _userBox => Hive.box<Map>(_Keys.userBox);
 
@@ -303,8 +279,6 @@ class LocalStorageService {
     await saveProfile(merged);
   }
 
-  // ── Quick Log Field ────────────────────────────────────────────────────
-
   static Future<void> saveQuickLogField(DateTime date, String field, dynamic value) async {
     final key = _scoped(_dateKey(date));
     final existing = _cycleBox.get(key);
@@ -323,8 +297,6 @@ class LocalStorageService {
   static String _dateKey(DateTime date) =>
       '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
-  // ── Emergency Contacts ─────────────────────────────────────────────────
-
   static List<Map<String, String>> getEmergencyContacts() {
     final raw = _settings.get(_scoped(_Keys.emergencyContacts));
     if (raw != null) {
@@ -338,8 +310,6 @@ class LocalStorageService {
   static Future<void> saveEmergencyContacts(List<Map<String, String>> contacts) async {
     await _settings.put(_scoped(_Keys.emergencyContacts), contacts);
   }
-
-  // ── Assistant Chat History ─────────────────────────────────────────────
 
   static List<Map<String, String>> getChatHistory() {
     final raw = _settings.get(_scoped(_Keys.chatHistory));
@@ -357,8 +327,6 @@ class LocalStorageService {
   static Future<void> clearChatHistory() =>
       _settings.delete(_scoped(_Keys.chatHistory));
 
-  // ── Nudge Preferences ───────────────────────────────────────────────
-
   static bool getNudgeDismissed(String key) {
     return _settings.get(_scoped('nudge_$key'), defaultValue: false) as bool;
   }
@@ -366,8 +334,6 @@ class LocalStorageService {
   static Future<void> setNudgeDismissed(String key, bool value) async {
     await _settings.put(_scoped('nudge_$key'), value);
   }
-
-  // ── Notification Preferences ─────────────────────────────────────────
 
   static bool get periodPredictionReminders {
     return _settings.get(_scoped('period_prediction_reminders'), defaultValue: true)
@@ -387,8 +353,6 @@ class LocalStorageService {
     await _settings.put(_scoped('logging_reminders'), value);
   }
 
-  // ── Dashboard Cache ────────────────────────────────────────────────────
-
   static Map<String, dynamic>? getCachedDashboard() {
     final raw = _settings.get(_scoped(_Keys.dashboardCache));
     return raw != null ? Map<String, dynamic>.from(raw as Map) : null;
@@ -400,39 +364,31 @@ class LocalStorageService {
         _scoped(_Keys.dashboardCacheTimestamp), DateTime.now().toIso8601String());
   }
 
-  // ── Clear all data ─────────────────────────────────────────────────────
-
   static Future<void> deleteCurrentUserData() async {
     final uid = currentUserId;
     if (uid == null) return;
     final prefix = '$uid::';
 
-    // Remove cycle logs for this user
     final cycleKeys = _cycleBox.keys.where((k) => k.toString().startsWith(prefix)).toList();
     for (final k in cycleKeys) {
       await _cycleBox.delete(k);
     }
 
-    // Remove user profile for this user
     final userKeys = _userBox.keys.where((k) => k.toString().startsWith(prefix)).toList();
     for (final k in userKeys) {
       await _userBox.delete(k);
     }
 
-    // Remove settings for this user
     final settingsKeys = _settings.keys.where((k) => k.toString().startsWith(prefix)).toList();
     for (final k in settingsKeys) {
       await _settings.delete(k);
     }
     
-    // Also remove unscoped legacy profile & dashboard cache keys
     await _settings.delete(_Keys.profile);
     await _settings.delete(_Keys.dashboardCache);
 
-    // Also remove the current user id marker
     await _settings.delete(_kCurrentUserId);
 
-    // Remove pending sync entries for this user
     if (Hive.isBoxOpen(_offlineQueueBoxName)) {
       final offlineBox = Hive.box<Map>(_offlineQueueBoxName);
       final offlineKeys = offlineBox.keys

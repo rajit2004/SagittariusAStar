@@ -1,14 +1,3 @@
-// The retry policy on its own (issue #500).
-//
-// Every case here is a decision the client makes without an HTTP client in
-// the room: which requests may be replayed, which failures are worth
-// replaying, how long to wait, and which path gets a longer deadline.
-// That is the whole reason the policy is a separate file — the argument
-// for each answer is short, and it should be readable without setting up a
-// Dio instance and a mock adapter.
-//
-// `api_client_retry_test.dart` covers the same policy driven through the
-// interceptor.
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -58,9 +47,7 @@ void main() {
     });
 
     test('a POST is never replayed, however transient the failure', () {
-      // The constraint the whole file is built around: a POST /cycle/log
-      // that timed out may already have been committed, and replaying it
-      // would create a second entry for that day.
+      
       for (final status in [429, 502, 503, 504]) {
         expect(
           policy.shouldRetry(_statusError(status, method: 'POST'), 0),
@@ -78,8 +65,7 @@ void main() {
     });
 
     test('a DELETE is not replayed even though HTTP calls it idempotent', () {
-      // This API answers 404 for a second delete, so a retry after a lost
-      // success turns a completed operation into an error the user sees.
+      
       expect(
         policy.shouldRetry(_statusError(503, method: 'DELETE'), 0),
         isFalse,
@@ -103,8 +89,7 @@ void main() {
     });
 
     test('401 is left to the refresh path', () {
-      // Two budgets that must not compound: a request that spent its
-      // transient attempts and then refreshed would be sent six times.
+      
       expect(policy.shouldRetry(_statusError(401), 0), isFalse);
     });
 
@@ -122,7 +107,7 @@ void main() {
     });
 
     test('a cancellation is not a failure to retry', () {
-      // It was aborted by us; replaying it would defeat the abort.
+      
       expect(
         policy.shouldRetry(_transportError(DioExceptionType.cancel), 0),
         isFalse,
@@ -168,9 +153,7 @@ void main() {
     });
 
     test('the jitter spans the whole window, not a fraction of it', () {
-      // Without it, every client that failed against the same restart
-      // retries at the same instant and the storm is what keeps the
-      // backend down.
+      
       const none = RetryPolicy(random: _zero);
       const half = RetryPolicy(random: _half);
       const full = RetryPolicy(random: _one);
@@ -199,7 +182,7 @@ void main() {
     });
 
     test('but an absurd Retry-After is capped', () {
-      // A header a proxy got wrong must not park a request for an hour.
+      
       const full = RetryPolicy(random: _one);
 
       expect(

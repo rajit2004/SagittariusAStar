@@ -56,8 +56,7 @@ void main() {
         home: const SmsScreen(),
       ),
     );
-    // The screen loads settings over Dio in didChangeDependencies; give the
-    // real event loop a chance to service the mocked request.
+    
     await tester.runAsync(
       () => Future.delayed(const Duration(milliseconds: 200)),
     );
@@ -81,7 +80,6 @@ void main() {
     final switchWidget = tester.widget<Switch>(find.byType(Switch));
     expect(switchWidget.value, isTrue);
 
-    // Recipient is echoed under "Send a Summary Now".
     expect(find.text('+919876543210'), findsWidgets);
     expect(find.text(l10n.smsSendButton), findsOneWidget);
   });
@@ -99,7 +97,6 @@ void main() {
       tester.element(find.byType(SmsScreen)),
     )!;
 
-    // No error card is shown; the empty state is rendered instead.
     expect(find.text(l10n.smsSendNoPhone), findsOneWidget);
     final field = tester.widget<TextField>(find.byType(TextField));
     expect(field.controller?.text, isEmpty);

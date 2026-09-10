@@ -1,9 +1,7 @@
 from datetime import date
 import pytest
 
-
 from api.cycle import CycleLog, CycleLogResponse
-
 
 def test_cycle_log_response_schema_validation():
     today = date.today()
@@ -22,7 +20,6 @@ def test_cycle_log_response_schema_validation():
         "data": log_input,
     }
 
-    # Validate against CycleLogResponse Pydantic schema
     response_model = CycleLogResponse(**response_payload)
     assert response_model.id == "mock-log-123"
     assert response_model.data.start_date == today

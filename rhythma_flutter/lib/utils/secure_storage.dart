@@ -5,8 +5,6 @@ class SecureStorage {
   static const _tokenKey = 'jwt_token';
   static const _refreshTokenKey = 'jwt_refresh_token';
 
-  // ─── Access Token ──────────────────────────────────────────────────────
-
   static Future<void> saveToken(String token) async {
     await _storage.write(key: _tokenKey, value: token);
   }
@@ -23,8 +21,6 @@ class SecureStorage {
     return await _storage.read(key: _tokenKey) != null;
   }
 
-  // ─── Refresh Token ─────────────────────────────────────────────────────
-
   static Future<void> saveRefreshToken(String token) async {
     await _storage.write(key: _refreshTokenKey, value: token);
   }
@@ -40,8 +36,6 @@ class SecureStorage {
   static Future<bool> hasRefreshToken() async {
     return await _storage.read(key: _refreshTokenKey) != null;
   }
-
-  // ─── Clear All Auth State ──────────────────────────────────────────────
 
   static Future<void> clearAuth() async {
     await Future.wait([

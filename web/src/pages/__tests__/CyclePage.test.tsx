@@ -5,7 +5,6 @@ describe('CyclePage Log Deletion State Synchronization', () => {
     const logs = new Map([['2026-08-15', { id: 'log123', start_date: '2026-08-15' }]]);
     const loadMock = vi.fn();
 
-    // Simulating remove handler logic
     const selectedIso = '2026-08-15';
     const next = new Map(logs);
     next.delete(selectedIso);

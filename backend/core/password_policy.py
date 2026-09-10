@@ -1,37 +1,3 @@
-"""Password rules for account creation and password reset (issue #330).
-
-`RegisterRequest.password` was a bare `str`. `a` was a valid Rhythma
-password; so was the empty string, `123456`, and the user's own email
-address. `ResetPasswordRequest.new_password` had the same gap, so an account
-created with a good password could be *reset* to a one-character one.
-
-Everything about what makes a password acceptable lives here, and both
-routes call the same function, so the two paths cannot drift apart — which
-is the failure this module mostly exists to prevent. A rule added for
-registration but forgotten on reset is worse than no rule, because it looks
-enforced.
-
-Design notes:
-
-*No composition requirements.* There is no "must contain an uppercase letter
-and a symbol" rule, deliberately. NIST SP 800-63B stopped recommending them
-because they push people toward predictable transformations — `Password1!`
-satisfies every composition rule anyone has ever written and is on every
-cracking list. Length, plus a denylist of the passwords that actually get
-tried, is the better trade for an audience typing on phone keyboards.
-
-*Every failed rule is reported at once.* A form that surfaces one problem
-per submission is how users converge on the shortest thing that gets past
-it.
-
-*The 72-byte ceiling is a real limit, not a stylistic one.* bcrypt hashes
-at most 72 bytes and silently ignores the rest, so a longer passphrase is
-not the password the user thinks it is. This matters far more here than in
-an English-only product: UTF-8 spends three bytes on most Devanagari,
-Tamil, Telugu, Kannada and Malayalam characters, so a perfectly reasonable
-24-character Hindi passphrase is already over the line. Rejecting it with
-an explanation beats accepting it and quietly keeping the first 72 bytes.
-"""
 
 from __future__ import annotations
 
@@ -43,25 +9,12 @@ from typing import List, Optional
 
 from core.errors import AppError
 
-#: Floor for password length. NIST SP 800-63B puts the minimum at 8 for
-#: user-chosen secrets; this is the same number, overridable upward for a
-#: deployment that wants to be stricter.
 DEFAULT_MIN_LENGTH = 8
 
-#: bcrypt truncates at 72 *bytes*. Not configurable — it is a property of
-#: the hash, not a policy choice.
 MAX_PASSWORD_BYTES = 72
 
-#: The shortest run of the user's own identity that counts as "your
-#: password contains your email". Two or three characters would fire on
-#: ordinary words; four is short enough to catch `sana` in `sana@example.com`.
 MIN_IDENTIFIER_FRAGMENT = 4
 
-#: Passwords common enough that a guesser tries them before anything else.
-#: Deliberately small and hand-kept rather than a bundled 100k-line list:
-#: this is the head of the distribution, where nearly all the value is, and
-#: it costs no dependency and no file read at import. A larger list (or a
-#: k-anonymity check against a breach corpus) is a reasonable later step.
 COMMON_PASSWORDS = frozenset(
     {
         "123456", "123456789", "12345678", "1234567", "1234567890", "12345",
@@ -79,7 +32,6 @@ COMMON_PASSWORDS = frozenset(
     }
 )
 
-#: Sources for "this is just a run along the keyboard/alphabet".
 _SEQUENCES = (
     string.ascii_lowercase,
     string.digits,
@@ -88,20 +40,9 @@ _SEQUENCES = (
     "zxcvbnm",
 )
 
-#: How long a sequential run has to be before it disqualifies a password.
-#: Five keeps `abcde` out while leaving ordinary words that happen to
-#: contain `rst` alone.
 _MAX_SEQUENCE_RUN = 5
 
-
 def min_length() -> int:
-    """Minimum length, overridable via ``PASSWORD_MIN_LENGTH``.
-
-    A configured value below the default is ignored. Making a password
-    policy *weaker* by environment variable is not a knob worth having:
-    it is far more likely to be a mistake than an intention, and the
-    consequence is silent.
-    """
     raw = os.getenv("PASSWORD_MIN_LENGTH")
     if raw is None:
         return DEFAULT_MIN_LENGTH
@@ -111,15 +52,8 @@ def min_length() -> int:
         return DEFAULT_MIN_LENGTH
     return max(value, DEFAULT_MIN_LENGTH)
 
-
 @dataclass(frozen=True)
 class PasswordFailure:
-    """One rule the submitted password broke.
-
-    ``code`` is stable and machine-readable so a client can localize the
-    message itself; ``message`` is the English fallback for clients that
-    don't.
-    """
 
     code: str
     message: str
@@ -127,23 +61,13 @@ class PasswordFailure:
     def to_dict(self) -> dict:
         return {"code": self.code, "message": self.message}
 
-
 class WeakPasswordError(AppError):
-    """422 carrying every rule the password broke, not just the first."""
 
     status_code = 422
     code = "weak_password"
     message = "That password doesn't meet the requirements."
 
-
 def _identifier_fragments(email: Optional[str], username: Optional[str]) -> List[str]:
-    """Pieces of the user's own identity a password shouldn't contain.
-
-    From `sana.k@example.com` this yields `sana.k`, `sana`, `k` (dropped —
-    too short) and `example`. The domain is included because
-    `example2026` is exactly the kind of password someone signing up on a
-    company address picks.
-    """
     fragments: List[str] = []
 
     if username:
@@ -153,8 +77,7 @@ def _identifier_fragments(email: Optional[str], username: Optional[str]) -> List
         local, _, domain = email.partition("@")
         fragments.append(local)
         fragments.extend(re.split(r"[._\-+]", local))
-        # Only the registrable-ish part: `example` from `example.com`, not
-        # `com`, which would fire on any password containing "com".
+
         domain_parts = domain.split(".")
         if domain_parts:
             fragments.append(domain_parts[0])
@@ -163,9 +86,7 @@ def _identifier_fragments(email: Optional[str], username: Optional[str]) -> List
 
     return [f.lower() for f in fragments if len(f) >= MIN_IDENTIFIER_FRAGMENT]
 
-
 def _has_long_sequence(password: str) -> bool:
-    """True if the password contains a run along a keyboard row or the alphabet."""
     lowered = password.lower()
     for source in _SEQUENCES:
         reverse = source[::-1]
@@ -176,24 +97,17 @@ def _has_long_sequence(password: str) -> bool:
                 return True
     return False
 
-
 def validate_password(
     password: str,
     *,
     email: Optional[str] = None,
     username: Optional[str] = None,
 ) -> List[PasswordFailure]:
-    """Return every rule ``password`` breaks. Empty list means acceptable.
-
-    Never raises and never logs the password. Callers that want an HTTP
-    error should use :func:`enforce_password_policy`.
-    """
     failures: List[PasswordFailure] = []
     required = min_length()
 
     if password is None or password == "":
-        # Returned alone: every other rule would fire too, and eight
-        # complaints about an empty box is noise, not help.
+
         return [
             PasswordFailure(
                 code="password_required",
@@ -267,18 +181,12 @@ def validate_password(
 
     return failures
 
-
 def enforce_password_policy(
     password: str,
     *,
     email: Optional[str] = None,
     username: Optional[str] = None,
 ) -> None:
-    """Raise :class:`WeakPasswordError` if ``password`` breaks any rule.
-
-    The raised error carries *all* failures in ``details`` so a form can
-    show them together.
-    """
     failures = validate_password(password, email=email, username=username)
     if not failures:
         return
@@ -287,14 +195,7 @@ def enforce_password_policy(
         details=[failure.to_dict() for failure in failures],
     )
 
-
 def requirements() -> dict:
-    """The policy, described for a client to render before submission.
-
-    Served by ``GET /auth/password-requirements`` so the rules a user is
-    shown come from the same place as the rules she is judged against,
-    rather than being retyped in each client and going stale.
-    """
     return {
         "minLength": min_length(),
         "maxBytes": MAX_PASSWORD_BYTES,

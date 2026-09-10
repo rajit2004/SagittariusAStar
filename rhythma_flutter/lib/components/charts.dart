@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../config/theme.dart';
 
-/// Circular progress ring — mirrors the SVG CycleRing in index.tsx
 class CycleRing extends StatelessWidget {
   final int day;
   final int total;
@@ -65,7 +64,6 @@ class _RingPainter extends CustomPainter {
     const strokeWidth = 6.5;
     const startAngle = -math.pi / 2;
 
-    // Track (lavender bg)
     final trackPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
@@ -74,7 +72,6 @@ class _RingPainter extends CustomPainter {
 
     canvas.drawCircle(center, radius, trackPaint);
 
-    // Progress arc with gradient
     final sweepAngle = (day / total) * 2 * math.pi;
     final rect = Rect.fromCircle(center: center, radius: radius);
     final progressPaint = Paint()
@@ -101,7 +98,6 @@ class _RingPainter extends CustomPainter {
   bool shouldRepaint(_RingPainter old) => old.day != day || old.total != total;
 }
 
-/// Score ring for Insights screen — larger, shows percentage value
 class ScoreRing extends StatelessWidget {
   final int value;
   final double size;
@@ -165,7 +161,6 @@ class _ScorePainter extends CustomPainter {
   bool shouldRepaint(_ScorePainter old) => old.value != value;
 }
 
-/// Sparkline chart for cycle trend
 class TrendChart extends StatelessWidget {
   final List<double> points;
   final Color? color;

@@ -6,13 +6,12 @@ import 'package:share_plus/share_plus.dart';
 import 'package:rhythma/services/local_storage_service.dart';
 
 class ExportService {
-  /// Returns the export data as a pretty-printed JSON string.
+  
   static String buildExportJson() {
     final data = _buildExportData();
     return const JsonEncoder.withIndent('  ').convert(data);
   }
 
-  /// Gathers the user's profile and emergency contacts into a JSON string.
   static Map<String, dynamic> _buildExportData() {
     final profile = LocalStorageService.getProfile() ?? {};
     final contacts = LocalStorageService.getEmergencyContacts();
@@ -26,7 +25,6 @@ class ExportService {
     };
   }
 
-  /// Exports the user's data as a JSON file and opens the native share sheet.
   static Future<void> exportAndShare() async {
     final data = _buildExportData();
     final jsonString =
@@ -43,7 +41,7 @@ class ExportService {
         subject: 'Rhythma Data Export',
       );
     } catch (_) {
-      // Fallback for desktop platforms or environments without native share handlers
+      
     } finally {
       if (await file.exists()) {
         try {

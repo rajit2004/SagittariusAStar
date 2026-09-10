@@ -143,10 +143,7 @@ export function HomePage() {
       <section className="glass-card cycle-card">
         <div className="cycle-card-top">
           <ScoreRing value={total > 0 ? (day / total) * 100 : 0} size={120} label={t('home.cycleDay', { day, total })} />
-          {/* Was a single clamped number and a fixed "Fertile window +
-              High energy" string that showed on every cycle day whether
-              or not it was true. Both now come from the server's
-              `prediction` (#419). */}
+          {}
           <div className="cycle-card-info">
             <PredictionCard prediction={data?.prediction} fallbackDays={nextPeriod} />
           </div>
@@ -212,11 +209,7 @@ export function HomePage() {
         <span className="chevron">›</span>
       </Link>
 
-      {/* A real dialog: focus moves in on open and back to the tile on
-          close, Tab is trapped inside it, and the page behind is hidden
-          from assistive technology (#502). Tapping several tiles in a row
-          is the intended interaction, and dropping focus to <body> on
-          each close made that a walk from the top of the page. */}
+      {}
       <Modal
         open={activeTile !== null}
         onClose={() => setActiveTile(null)}

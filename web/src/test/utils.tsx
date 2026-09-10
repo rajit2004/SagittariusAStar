@@ -5,17 +5,10 @@ import { I18nextProvider } from 'react-i18next';
 import i18n from '../i18n';
 import { AuthProvider } from '../auth/AuthContext';
 
-/**
- * Render a component inside the providers the real app mounts it under.
- *
- * Without this, every page test would repeat the same three wrappers, and
- * a test that forgot one would fail with "useAuth must be used within an
- * AuthProvider" rather than telling you anything about the component.
- */
 interface RenderWithProvidersOptions extends Omit<RenderOptions, 'wrapper'> {
-  /** Initial history entries for MemoryRouter, e.g. ['/login']. */
+  
   route?: string;
-  /** Set false to test a component that must not be wrapped in AuthProvider. */
+  
   withAuth?: boolean;
 }
 
@@ -35,13 +28,6 @@ export function renderWithProviders(
   return render(ui, { wrapper: Wrapper, ...options });
 }
 
-/**
- * A minimal axios-shaped error.
- *
- * `friendlyAuthError` branches on `isAxiosError` and on the presence of
- * `response`, so tests need to be able to build both a "server replied
- * with a status" error and a "request never reached the server" error.
- */
 export function axiosError(status?: number, detail?: string) {
   return {
     isAxiosError: true,
@@ -52,7 +38,6 @@ export function axiosError(status?: number, detail?: string) {
   };
 }
 
-/** A minimal observations payload matching the backend's ObservationsResponse. */
 export function observationsFixture(overrides: Record<string, unknown> = {}) {
   return {
     observations: [
@@ -89,13 +74,6 @@ export function observationsFixture(overrides: Record<string, unknown> = {}) {
   };
 }
 
-/**
- * The `prediction` block `/dashboard` embeds (`dashboard_summary()`).
- *
- * Defaults describe a routine, not-late cycle. The interesting cases —
- * overdue, due today, low confidence, population default — are built by
- * overriding, so each test says in its own body which one it is about.
- */
 export function predictionFixture(overrides: Record<string, unknown> = {}) {
   return {
     nextPeriodDate: '2026-05-29',
@@ -116,7 +94,6 @@ export function predictionFixture(overrides: Record<string, unknown> = {}) {
   };
 }
 
-/** A dashboard payload matching the backend's DashboardResponse model. */
 export function dashboardFixture(overrides: Record<string, unknown> = {}) {
   return {
     user: { name: 'Asha' },

@@ -5,7 +5,7 @@ import 'package:rhythma/providers/data_mode_provider.dart';
 void main() {
   group('DataModeProvider', () {
     test('detects live mode for production API URL', () {
-      // The default AppConfig.apiBaseUrl is https://api.rhythma.app/api/v1
+      
       expect(AppConfig.apiBaseUrl.startsWith('https://api.rhythma.app'), isTrue);
 
       final provider = DataModeProvider();

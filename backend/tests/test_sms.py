@@ -46,7 +46,7 @@ def test_save_sms_settings_validation_failure(auth_headers):
     response = client.post("/api/v1/sms/settings", json=payload, headers=auth_headers)
     assert response.status_code == 400
     assert "E.164 format" in response.json()["detail"]
-    
+
     payload = {"enabled": True}
     response = client.post("/api/v1/sms/settings", json=payload, headers=auth_headers)
     assert response.status_code == 400
@@ -62,14 +62,14 @@ def test_send_summary_success(MockClient, mock_getenv, auth_headers):
         if key == "TWILIO_PHONE_NUMBER": return "+1098765432"
         return None
     mock_getenv.side_effect = side_effect
-    
+
     mock_client_instance = MagicMock()
     MockClient.return_value = mock_client_instance
     mock_client_instance.messages.create.return_value = MagicMock(sid="mock-sid")
-    
+
     payload = {"phone_number": "+1234567890", "message": "Test summary"}
     response = client.post("/api/v1/sms/send-summary", json=payload, headers=auth_headers)
-    
+
     assert response.status_code == 200
     assert response.json()["message"] == "SMS sent successfully"
 
@@ -83,13 +83,13 @@ def test_send_summary_provider_failure(MockClient, mock_getenv, auth_headers):
         if key == "TWILIO_PHONE_NUMBER": return "+1098765432"
         return None
     mock_getenv.side_effect = side_effect
-    
+
     mock_client_instance = MagicMock()
     MockClient.return_value = mock_client_instance
     mock_client_instance.messages.create.side_effect = Exception("Twilio down")
-    
+
     payload = {"phone_number": "+1234567890", "message": "Test summary"}
     response = client.post("/api/v1/sms/send-summary", json=payload, headers=auth_headers)
-    
+
     assert response.status_code == 500
     assert "Failed to send SMS" in response.json()["detail"]

@@ -3,12 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiClient, friendlyApiError, friendlyAuthError } from './client';
 import { DEFAULT_TIMEOUT_MS, LONG_TIMEOUT_MS } from './retry';
 
-/**
- * Drives the real response interceptor, the same way `client.test.ts`
- * does for the 401 path — reaching into the registered handlers rather
- * than standing up a server, because the behaviour under test is the
- * interceptor's decision-making.
- */
 function runResponseInterceptor(error: unknown) {
   const handlers = (
     apiClient.interceptors.response as unknown as {
@@ -53,7 +47,7 @@ let requestSpy: ReturnType<typeof vi.spyOn>;
 
 beforeEach(() => {
   vi.useFakeTimers();
-  // Intercept the replay so a retry does not reach the network.
+  
   requestSpy = vi
     .spyOn(apiClient, 'request')
     .mockResolvedValue({ data: 'ok' } as never);
@@ -64,7 +58,6 @@ afterEach(() => {
   requestSpy.mockRestore();
 });
 
-/** Run the interceptor and let every scheduled backoff elapse. */
 async function settle(error: unknown) {
   const promise = runResponseInterceptor(error);
   await vi.runAllTimersAsync();
@@ -77,7 +70,7 @@ describe('instance configuration', () => {
   });
 
   it('leaves the existing configuration alone', () => {
-    // #296's refresh setup and the platform header must survive.
+    
     expect(apiClient.defaults.withCredentials).toBe(true);
     expect(apiClient.defaults.headers['X-Client-Platform']).toBe('web');
   });
@@ -115,8 +108,7 @@ describe('transient retry', () => {
   });
 
   it('does not retry a POST', async () => {
-    // The important negative. A replayed POST /cycle/log silently creates
-    // a duplicate entry.
+    
     const result = await settle(axiosFailure({ status: 503, method: 'post' }));
 
     expect(requestSpy).not.toHaveBeenCalled();
@@ -161,7 +153,6 @@ describe('transient retry', () => {
       axiosFailure({ status: 429, headers: { 'retry-after': '2' } }),
     );
 
-    // Not yet — the interceptor is waiting out the server's delay.
     await vi.advanceTimersByTimeAsync(1500);
     expect(requestSpy).not.toHaveBeenCalled();
 
@@ -193,8 +184,7 @@ describe('offline', () => {
 
 describe('the 401 path is untouched', () => {
   it('a 401 does not go through the transient-retry branch', async () => {
-    // #296's refresh logic owns 401 entirely. If the retry branch caught
-    // it too, a failed refresh would be attempted several times over.
+    
     const result = await settle(
       axiosFailure({ status: 401, url: '/auth/login' }),
     );
@@ -205,8 +195,7 @@ describe('the 401 path is untouched', () => {
 
 describe('friendlyApiError', () => {
   it('names a timeout as a timeout', () => {
-    // Previously this fell through to CORS advice, which sends the reader
-    // looking in entirely the wrong place.
+    
     const message = friendlyApiError(
       { isAxiosError: true, code: 'ECONNABORTED' },
       'fallback',
@@ -215,8 +204,7 @@ describe('friendlyApiError', () => {
   });
 
   it('reads a 401 as an expired session, not bad credentials', () => {
-    // The difference from friendlyAuthError: outside the login screen a
-    // 401 does not mean the password was wrong.
+    
     expect(
       friendlyApiError({ isAxiosError: true, response: { status: 401 } }, 'fallback'),
     ).toMatch(/session/i);
@@ -244,7 +232,7 @@ describe('friendlyApiError', () => {
   });
 
   it('ignores a list-shaped detail rather than rendering [object Object]', () => {
-    // A Pydantic 422 makes `detail` a list of error objects.
+    
     expect(
       friendlyApiError(
         {

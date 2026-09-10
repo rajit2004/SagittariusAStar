@@ -9,10 +9,8 @@ from core.auth import get_current_user
 import services.firestore_service as fs
 from services.firestore_service import MockFirestoreClient
 
-# Import the shared MockGemini from conftest (already in sys.modules)
 from conftest import MockGemini
 
-# Force db to be the mock client for these tests
 fs.db = MockFirestoreClient()
 
 client = TestClient(app)
@@ -28,14 +26,12 @@ def override_dependencies():
     yield
     app.dependency_overrides.clear()
 
-
 @pytest.fixture(autouse=True)
 def setup_db():
     fs.db._collections = {}
     yield
     fs.db._collections = {}
     MockGemini.last_prompt = None
-
 
 def test_chat_success():
     payload = {"message": "What is a normal cycle length?"}
@@ -46,7 +42,6 @@ def test_chat_success():
     assert data["language"] == "en"
     assert "disclaimer" in data
 
-
 def test_chat_with_language():
     payload = {"message": "How are you?", "language": "hi"}
     response = client.post("/api/v1/assistant/chat", json=payload)
@@ -55,23 +50,18 @@ def test_chat_with_language():
     assert data["language"] == "hi"
     assert "response" in data
 
-
 def test_chat_empty_message():
-    # 422, not the old ad-hoc 400: emptiness is now decided by the request
-    # model alongside every other input rule, so all bad input on this
-    # route is shaped the same way (issue #332).
+
     payload = {"message": "   "}
     response = client.post("/api/v1/assistant/chat", json=payload)
     assert response.status_code == 422
     assert "empty" in str(response.json()["detail"]).lower()
-
 
 def test_chat_unauthorized():
     app.dependency_overrides.clear()
     payload = {"message": "Hello"}
     response = client.post("/api/v1/assistant/chat", json=payload)
     assert response.status_code == 401
-
 
 def test_languages_success():
     response = client.get("/api/v1/assistant/languages")
@@ -84,12 +74,10 @@ def test_languages_success():
     assert "mr" in codes
     assert "bn" not in codes
 
-
 def test_languages_unauthorized():
     app.dependency_overrides.clear()
     response = client.get("/api/v1/assistant/languages")
     assert response.status_code == 401
-
 
 def test_chat_with_history():
     payload = {
@@ -102,7 +90,6 @@ def test_chat_with_history():
     response = client.post("/api/v1/assistant/chat", json=payload)
     assert response.status_code == 200
     assert "response" in response.json()
-
 
 def test_chat_persists_conversation():
     payload = {"message": "What is a normal cycle length?"}
@@ -119,7 +106,6 @@ def test_chat_persists_conversation():
     assert data["messages"][1]["role"] == "model"
     assert data["messages"][1]["content"] == "Mock Gemini response"
 
-
 def test_chat_grounds_with_sourced_medical_references():
     payload = {"message": "Tell me about PCOS"}
     response = client.post("/api/v1/assistant/chat", json=payload)
@@ -133,8 +119,6 @@ def test_chat_grounds_with_sourced_medical_references():
     assert "Topic:" in prompt
     assert "Source:" in prompt
 
-    # The response carries the same sources structurally, so the client can
-    # render "verify it yourself" links.
     sources = data["sources"]
     assert sources, "expected grounded sources in the response"
     assert any(
@@ -144,7 +128,6 @@ def test_chat_grounds_with_sourced_medical_references():
     for source in sources:
         assert set(source) == {"name", "title", "url", "accessedOn"}
         assert source["url"].startswith("https://")
-
 
 def test_chat_without_medical_topic_has_no_grounding():
     payload = {"message": "Hello, how are you today?"}

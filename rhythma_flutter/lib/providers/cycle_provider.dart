@@ -20,7 +20,7 @@ class CycleProvider extends ChangeNotifier {
   void selectDate(DateTime date) {
     final today = DateTime(_today.year, _today.month, _today.day);
     final normalized = DateTime(date.year, date.month, date.day);
-    if (normalized.isAfter(today)) return; // no logging for future days
+    if (normalized.isAfter(today)) return; 
     if (_selectedDate != normalized) {
       _selectedDate = normalized;
       notifyListeners();
@@ -41,27 +41,15 @@ class CycleProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Whether anything has actually been saved for [date] (Home quick-log
-  /// tiles or the Cycle screen's log rows/Save button both write through
-  /// LocalStorageService, so this always reflects real data — not a mock).
   bool hasLogsForDate(DateTime date) {
     return LocalStorageService.getCycleLogForDate(date) != null;
   }
 
-  /// Notifies listeners (e.g. to redraw the calendar's "logged" dot) after
-  /// a log write elsewhere. The log itself is persisted by whoever calls
-  /// this — this provider intentionally doesn't hold log data itself, just
-  /// the calendar's navigation/selection state.
   void refresh() => notifyListeners();
 
   void refreshLogs() {
     notifyListeners();
   }
-
-  // ── Cycle-length settings ────────────────────────────────────────────
-  // Read fresh from the profile each time (rather than cached at
-  // construction) so edits made on the Profile/Onboarding screens are
-  // reflected immediately without having to recreate the provider.
 
   int get _periodDuration {
     final profile = LocalStorageService.getProfile();
@@ -73,9 +61,6 @@ class CycleProvider extends ChangeNotifier {
     return (profile?['cycle_length'] as num?)?.toInt() ?? 28;
   }
 
-  /// Day-of-cycle for [date], counted from the saved `last_period` start
-  /// date (1-indexed, wraps across multiple cycle lengths). Falls back to
-  /// the plain day-of-month when no `last_period` has been saved yet.
   int _getCycleDay(DateTime date) {
     final profile = LocalStorageService.getProfile();
     final lastPeriodStr = profile?['last_period'] as String?;
@@ -92,7 +77,6 @@ class CycleProvider extends ChangeNotifier {
     final cycleLength = _cycleLength;
     if (cycleLength <= 0) return date.day;
 
-    // Modulo that stays positive even if `date` falls before `last_period`.
     final cycleDay = ((daysSince % cycleLength) + cycleLength) % cycleLength;
     return cycleDay + 1;
   }

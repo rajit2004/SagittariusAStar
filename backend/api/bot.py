@@ -1,31 +1,3 @@
-"""Inbound chat webhooks, and the route that links a chat to an account.
-
-Every other route in this API is reached by a signed-in client. These two
-are reached by Telegram and by Twilio, and before this module was
-rewritten they were reached by anybody: neither checked a signature,
-neither was rate-limited, and both took the identity whose health data
-they would read straight out of the request body.
-
-The order of work in a webhook handler is the whole security story, so it
-is the same in both and it is deliberate:
-
-1. **Rate-limit on the network address.** Ahead of verification, because
-   an unverified flood is exactly the traffic worth shedding first, and
-   because signature checking is the most expensive thing here.
-2. **Verify the delivery** against the platform's shared secret. A
-   failure is a flat 401 with no detail — a caller who cannot authenticate
-   is not owed a reason.
-3. **Resolve the chat to an account** through ``chat_link_service``. The
-   payload's chat id is a *lookup key*, never an identity: an unlinked
-   chat resolves to ``None`` and gets public text back.
-4. **Compose a reply** in ``ChatbotService``, which by then cannot see
-   anything the caller supplied about who they are.
-
-Replies go back in each platform's own response shape. Telegram reads a
-JSON body describing a method to call; Twilio reads TwiML. The previous
-WhatsApp handler returned ``{"status": "success", ...}``, which Twilio
-ignores, so nothing was ever delivered.
-"""
 
 from typing import Any, Dict, Optional
 from xml.sax.saxutils import escape
@@ -54,36 +26,26 @@ from utils.logger import logger
 
 router = APIRouter(tags=["Chatbot Engine"])
 
-
 class LinkCodeRequest(BaseModel):
     channel: str = Field(
         "telegram",
         description="Which bot the code is for: telegram or whatsapp.",
     )
 
-
 class LinkCodeResponse(BaseModel):
     code: str
     channel: str
     expiresInSeconds: int
-
 
 class LinkedChat(BaseModel):
     channel: str
     chatId: str
     linkedAt: Optional[str] = None
 
-
 class LinkedChatsResponse(BaseModel):
     links: list[LinkedChat]
 
-
 def _reject_unverified(channel: str, exc: WebhookVerificationError) -> HTTPException:
-    """One 401 for every verification failure, with the reason in the log.
-
-    The reason is useful to whoever is configuring the bot and useless to
-    anyone else, so it goes where the first group can read it.
-    """
     logger.bind(channel=channel, reason=exc.reason).warning(
         "Rejected an unverified webhook delivery"
     )
@@ -91,10 +53,6 @@ def _reject_unverified(channel: str, exc: WebhookVerificationError) -> HTTPExcep
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="This webhook could not be verified.",
     )
-
-
-# ─── Telegram ─────────────────────────────────────────────────────────────
-
 
 @router.post(
     "/telegram/webhook",
@@ -117,11 +75,6 @@ async def telegram_webhook(request: Request, payload: Dict[str, Any]):
     except WebhookVerificationError as exc:
         raise _reject_unverified(CHANNEL_TELEGRAM, exc)
 
-    # `message` for a normal send, `edited_message` for a correction. A
-    # payload with neither (a poll answer, a chat-member change) is
-    # acknowledged and ignored — Telegram retries anything that is not a
-    # 2xx, so answering an update we do not handle with an error would
-    # have it redelivered forever.
     message = payload.get("message") or payload.get("edited_message") or {}
     chat = message.get("chat") or {}
     chat_id = str(chat.get("id") or "").strip()
@@ -138,30 +91,14 @@ async def telegram_webhook(request: Request, payload: Dict[str, Any]):
         user_id=user_id,
     )
 
-    # Answering the webhook with the method to call saves an outbound
-    # request per message. `parse_mode` is deliberately absent: the reply
-    # is plain text, and declaring Markdown means any stray underscore in
-    # it makes Telegram reject the whole send.
     return {"method": "sendMessage", "chat_id": chat_id, "text": reply}
 
-
-# ─── WhatsApp / Twilio ────────────────────────────────────────────────────
-
-
 def _twiml(reply: str) -> Response:
-    """Twilio's expected response shape.
-
-    The body is XML-escaped rather than interpolated. Replies are composed
-    from our own constants today, but one of them already interpolates a
-    channel name, and an unescaped ``&`` is enough to make Twilio treat
-    the whole document as malformed and deliver nothing.
-    """
     body = (
         '<?xml version="1.0" encoding="UTF-8"?>'
         f"<Response><Message>{escape(reply)}</Message></Response>"
     )
     return Response(content=body, media_type="application/xml")
-
 
 @router.post(
     "/whatsapp/webhook",
@@ -180,8 +117,6 @@ def _twiml(reply: str) -> Response:
 async def whatsapp_webhook(request: Request):
     enforce(BOT_WEBHOOK_IP, f"{CHANNEL_WHATSAPP}:{client_ip(request)}")
 
-    # Twilio signs the decoded form pairs, so the body has to be parsed
-    # before verification rather than after it.
     form = await request.form()
     params = {key: str(value) for key, value in form.items()}
 
@@ -206,10 +141,6 @@ async def whatsapp_webhook(request: Request):
         user_id=user_id,
     )
     return _twiml(reply)
-
-
-# ─── Linking, from the app ────────────────────────────────────────────────
-
 
 @router.post(
     "/link-code",
@@ -239,23 +170,16 @@ async def create_link_code(
 
     user_id = current_user["id"]
 
-    # Per account, not per address. A code is a bearer credential for the
-    # account that asked for it, so the budget that matters is how many
-    # one account may have minted — a shared connection would otherwise
-    # let one noisy user exhaust everyone else's.
     enforce(BOT_LINK_CODE_ACCOUNT, user_id)
 
     if not verification_configured(channel):
-        # Not a refusal: local development has no secrets and still needs
-        # to be able to link. It is worth one line in the log that a code
-        # was minted for a channel whose deliveries nobody is checking.
+
         logger.bind(channel=channel).warning(
             "Issuing a chat link code for a channel with no webhook "
             "verification configured"
         )
 
     return issue_link_code(user_id, channel)
-
 
 @router.get(
     "/links",

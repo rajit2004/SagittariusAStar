@@ -1,17 +1,3 @@
-"""
-Shared score-computation service.
-
-This module provides two categories of output:
-
-1. **Factual cycle statistics** (average / shortest / longest cycle length,
-   average bleeding duration) computed directly from CycleLog history with
-   no model inference.  These are the primary stats surfaced to clients
-   since Issue #300.
-
-2. Legacy CVI/MHS scores (kept internally for the provider dashboard which
-   still depends on them).  They are *not* exposed through /dashboard or
-   /scores any longer.
-"""
 
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
@@ -20,32 +6,15 @@ from services.firestore_service import CycleService, UserService
 from models.cvi_model import predict_cvi, risk_level
 from models.mhs_model import predict_mhs
 
-# Default assumed cycle length (days) when there isn't enough history
-# to compute a real average.
 DEFAULT_CYCLE_LENGTH = 28
 
-# `none` is included because the Flutter quick-log sheet sends it
-# (`LogOptions.flow`). Without an entry it fell through to the "no value
-# logged" default below and scored as *medium* — so a user explicitly
-# recording no bleeding was fed to the model as an average period day.
-# Zero extends the existing ordinal scale in the only direction that makes
-# sense: none < light < medium < heavy.
 _FLOW_INTENSITY_TO_SCORE = {"none": 0, "spotting": 1, "light": 1, "medium": 2, "heavy": 3, "very_heavy": 4}
 
-# What to assume when a log carries no flow intensity at all. Distinct from
-# `none`, which is a value the user chose: this is the absence of an answer,
-# and the midpoint is the least-assuming stand-in for it.
 _FLOW_INTENSITY_WHEN_ABSENT = 2
 
-# Number of most-recent cycle logs fetched for scoring. Matches the
-# previous behavior of api/dashboard.py.
 _LOGS_LIMIT = 10
 
-
 def as_date(value: Any) -> Optional[date]:
-    """Firestore returns date/datetime fields as datetime (or its own
-    DatetimeWithNanoseconds subclass); normalize everything to a plain
-    `date` for day-math."""
     if value is None:
         return None
     if isinstance(value, datetime):
@@ -54,22 +23,8 @@ def as_date(value: Any) -> Optional[date]:
         return value
     return None
 
-
 def compute_cycle_stats(logs: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Compute factual cycle statistics directly from raw CycleLog history.
 
-    Returns a dict with:
-        average_cycle_length: mean days between consecutive period start dates.
-        shortest_cycle_length: minimum cycle length observed.
-        longest_cycle_length: maximum cycle length observed.
-        average_bleeding_duration: mean number of bleeding days (from
-            start_date to end_date, inclusive).
-
-    All values are ``None`` when there is insufficient data (fewer than
-    2 logs for cycle lengths, fewer than 1 log with an end_date for
-    bleeding duration).  Values are rounded to one decimal place.
-    """
-    # logs are newest-first
     cycle_lengths: List[int] = []
     bleeding_days: List[int] = []
 
@@ -97,10 +52,7 @@ def compute_cycle_stats(logs: List[Dict[str, Any]]) -> Dict[str, Any]:
         "average_bleeding_duration": avg_bleed,
     }
 
-
 def build_model_features(logs_newest_first: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Convert raw CycleLog documents into the feature shape the CVI/MHS
-    models expect (see models/cvi_model.py and models/mhs_model.py)."""
     features = []
     for i, log in enumerate(logs_newest_first):
         start = as_date(log.get("start_date"))
@@ -133,36 +85,7 @@ def build_model_features(logs_newest_first: List[Dict[str, Any]]) -> List[Dict[s
         })
     return features
 
-
 def get_user_scores(user_id: str) -> Dict[str, Any]:
-    """Fetch a user's recent cycle logs and compute their CVI/MHS scores.
-
-    This is the ONLY place in the codebase that should call
-    `predict_cvi` / `predict_mhs`. Any endpoint that needs a user's
-    scores (dashboard, insights, future SMS summaries, etc.) should
-    call this function rather than re-deriving features or calling the
-    models directly, so there is exactly one code path that can drift
-    from the models' expected input shape.
-
-    Returns:
-        A dict with:
-            logs: the raw, most-recent-first CycleLog list (so callers
-                that need more than scores, like the dashboard's cycle
-                day/history, don't have to fetch it again).
-            mhs: the Menstrual Health Score (0-100) or None if there's
-                insufficient history.
-            cvi: the raw Cycle Variability Index (0-100) or None.
-            cvi_risk: the capitalized risk tier for `cvi` ("Low" /
-                "Medium" / "High") or None.
-            has_enough_data_for_insights: whether there are enough logs
-                (>=3) for a meaningful CVI; lets clients distinguish
-                "no data yet" from "computed a low score".
-            logged_cycle_count: total number of logs fetched.
-            profile: the user's profile dict (or None), so callers that
-                need it for features beyond the two scores — e.g. the
-                dashboard's cycle prediction — don't fetch it a second
-                time.
-    """
     logs = CycleService.get_logs_for_user(user_id, limit=_LOGS_LIMIT)
     features = build_model_features(logs)
     profile = UserService.get_user_by_id(user_id)

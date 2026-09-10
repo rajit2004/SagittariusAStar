@@ -1,8 +1,6 @@
 import pytest
 
-
 from core.email_identity import normalize_email
-
 
 def test_provider_email_normalization_consistency():
     raw_email = "  Doctor.Jane@Hospital.COM  "

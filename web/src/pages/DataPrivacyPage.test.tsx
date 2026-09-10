@@ -2,12 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-// The bug this screen exists for is not "there is no export button". It
-// is that the previous Delete flow logged the user out whether or not the
-// deletion succeeded, so a failure was indistinguishable from a success —
-// she would believe her health records were gone when they were not.
-// `does not sign the user out when the deletion fails` is the test that
-// matters most here; the rest describe the surface around it.
 vi.mock('../api/endpoints', () => ({
   fetchDataSummary: vi.fn(),
   fetchDataExport: vi.fn(),
@@ -90,7 +84,6 @@ function previewFixture(overrides: Record<string, unknown> = {}) {
   };
 }
 
-/** Get to the confirmation step, which every deletion test needs. */
 async function openConfirmation(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('button', { name: /delete my account/i }));
   await screen.findByRole('button', { name: /delete everything/i });
@@ -160,8 +153,7 @@ describe('export', () => {
     expect(
       await screen.findByText(/rhythma-data-export-2026-08-10\.json/),
     ).toBeInTheDocument();
-    // Not revoking would keep the whole export in memory for the life of
-    // the tab, which on a long history is not a small amount.
+    
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:fake');
 
     vi.unstubAllGlobals();
@@ -271,9 +263,7 @@ describe('deletion', () => {
   });
 
   it('does not sign the user out when the deletion fails', async () => {
-    // The whole point. Signing her out here would put her on the login
-    // page — the same screen a successful deletion produces — so she
-    // would have no way to know her records are still there.
+    
     mockConfirmDeletion.mockRejectedValue(axiosError(500, 'Deletion failed.'));
     const user = userEvent.setup();
     renderWithProviders(<DataPrivacyPage />);

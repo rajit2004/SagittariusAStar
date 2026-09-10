@@ -61,8 +61,6 @@ describe('RegisterPage password requirements', () => {
   it('shows the requirements before anything is typed', async () => {
     renderWithProviders(<RegisterPage />, { route: '/register' });
 
-    // A requirement discovered by failing is a requirement worked around,
-    // not met — so it has to be on screen from the start.
     expect(rule('too_short')).toBeInTheDocument();
     expect(rule('too_common')).toBeInTheDocument();
     expect(rule('too_short').dataset.met).toBe('false');
@@ -151,9 +149,6 @@ describe('RegisterPage password requirements', () => {
     await user.type(fields().password, 'kolkata-monsoon-77');
     await user.click(screen.getByRole('button'));
 
-    // The server decides, and it may enforce rules this build doesn't know
-    // about — so its messages are shown verbatim rather than being mapped
-    // back onto the local rule list.
     expect(await screen.findByText('Use at least 8 characters.')).toBeInTheDocument();
     expect(screen.getByText('That password is too common.')).toBeInTheDocument();
   });
@@ -206,9 +201,7 @@ describe('RegisterPage password requirements', () => {
   });
 
   it('states each requirement in words, not only in colour', () => {
-    // Colour alone would carry the met/unmet state for nobody using a
-    // screen reader and for anyone with a red-green colour vision
-    // deficiency.
+    
     renderWithProviders(<RegisterPage />, { route: '/register' });
 
     expect(rule('too_short').textContent).toMatch(/8/);

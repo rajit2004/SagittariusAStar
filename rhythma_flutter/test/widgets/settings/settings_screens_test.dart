@@ -42,7 +42,7 @@ void main() {
         providers: [
           ChangeNotifierProvider(create: (_) => localeProvider ?? LocaleProvider()),
           ChangeNotifierProvider(create: (_) => themeProvider ?? ThemeProvider()),
-          ChangeNotifierProvider(create: (_) => ProfileProvider()), // <-- added
+          ChangeNotifierProvider(create: (_) => ProfileProvider()), 
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -80,7 +80,6 @@ void main() {
       final localeProvider = LocaleProvider();
       await pumpScreen(tester, const LanguageScreen(), localeProvider: localeProvider);
 
-      // Tap inside runAsync so mergeProfileWithSync (which calls Dio) completes
       await tester.runAsync(() async {
         await tester.tap(find.text('हिन्दी'));
         await Future.delayed(const Duration(seconds: 1));

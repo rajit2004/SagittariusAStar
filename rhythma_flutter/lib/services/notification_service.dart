@@ -16,7 +16,6 @@ class NotificationService {
 
   bool _isInitialized = false;
 
-  // Notification IDs
   static const int _periodPredictionId = 2001;
   static const int _loggingReminderId = 2002;
 
@@ -44,7 +43,7 @@ class NotificationService {
     await _notificationsPlugin.initialize(
       settings: initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
-        // Handle notification tap
+        
       },
     );
 
@@ -117,12 +116,6 @@ class NotificationService {
     );
   }
 
-  /// Schedule a notification before the predicted next period date.
-  ///
-  /// Fetches the prediction from the backend `GET /cycle/predictions` so the
-  /// reminder uses the server's outlier-rejected cycle-length estimate
-  /// instead of naive `lastPeriod + cycleLength` math.  Falls back to the
-  /// local profile when the network is unavailable.
   Future<void> schedulePeriodPredictionReminder({int daysBefore = 2}) async {
     DateTime? predictedDate;
     int? confidence;
@@ -137,10 +130,9 @@ class NotificationService {
         confidence = _confidenceToLevel(prediction['confidence'] as String?);
       }
     } catch (_) {
-      // Backend unreachable — fall through to local profile.
+      
     }
 
-    // Fallback: derive prediction from the local profile.
     predictedDate ??= _localPrediction();
 
     if (predictedDate == null) return;
@@ -185,7 +177,6 @@ class NotificationService {
     }
   }
 
-  /// Local fallback when the backend is unreachable.
   DateTime? _localPrediction() {
     final profile = LocalStorageService.getProfile();
     if (profile == null) return null;
@@ -222,8 +213,6 @@ class NotificationService {
     return null;
   }
 
-  /// Schedule a daily reminder to log cycle data if the user has not logged
-  /// anything for today. The notification fires at [hour]:[minute] (default 7 PM).
   Future<void> scheduleLoggingReminder({int hour = 19, int minute = 0}) async {
     final now = DateTime.now();
     final todayLog = LocalStorageService.getCycleLogForDate(now);
@@ -262,13 +251,11 @@ class NotificationService {
     }
   }
 
-  /// Cancel all automatic notifications (period prediction and logging reminders).
   Future<void> cancelAutomaticNotifications() async {
     await cancelNotification(_periodPredictionId);
     await cancelNotification(_loggingReminderId);
   }
 
-  /// Reschedule all automatic notifications based on current settings.
   Future<void> scheduleAllAutomaticNotifications() async {
     if (!LocalStorageService.periodPredictionReminders &&
         !LocalStorageService.loggingReminders) {

@@ -1,9 +1,4 @@
-/// Mirrors the backend's `CycleLog` Pydantic model (see
-/// `backend/api/cycle.py`). Used both for a full Cycle-screen "Save"
-/// submission (most fields set) and a partial Home-tile quick-log
-/// submission (only the one field being tapped set) — `toJson()` omits
-/// null fields either way, and the backend's `POST /cycle/log` upserts
-/// only the fields it receives into that day's log document.
+
 class CycleLog {
   final DateTime startDate;
   final DateTime? endDate;
@@ -63,9 +58,6 @@ class CycleLog {
             : null,
       );
 
-  /// A copy with one field overridden — handy for building up a day's log
-  /// incrementally (e.g. merging a newly-tapped field into what's already
-  /// locally saved for that day) without repeating every field.
   CycleLog copyWith({
     String? flowIntensity,
     String? mood,

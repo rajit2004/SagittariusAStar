@@ -33,7 +33,6 @@ beforeEach(() => {
   fetchProfile.mockResolvedValue({ id: 'u1', full_name: 'Asha', age: 27 });
 });
 
-/** The rendered value of the mini-stat whose label matches `label`. */
 async function statValue(label: string): Promise<string> {
   const labelNode = await screen.findByText(label);
   const tile = labelNode.closest('.mini-stat');
@@ -52,12 +51,6 @@ function withHistory(lengths: number[]) {
   });
 }
 
-// Issue #383. The tile showed a variance in days², rendered as `±N`, and
-// measured against `dashboard.cycle.total` — a rounded average from a
-// different calculation which falls back to 28 when the user has almost
-// no history. It never crashed and it never looked obviously wrong, so
-// these assert the exact rendered string rather than that the tile exists.
-
 describe('ProfilePage — cycle variability tile', () => {
   it('reports the spread in days, not days squared', async () => {
     fetchDashboard.mockResolvedValue(withHistory([26, 30]));
@@ -70,8 +63,7 @@ describe('ProfilePage — cycle variability tile', () => {
   });
 
   it('does not inflate a wider spread quadratically', async () => {
-    // Previously rendered as ±25 — the difference between "your cycles
-    // are steady" and "something is wrong with me".
+    
     fetchDashboard.mockResolvedValue(withHistory([23, 33]));
 
     renderWithProviders(<ProfilePage />);
@@ -82,8 +74,7 @@ describe('ProfilePage — cycle variability tile', () => {
   });
 
   it('measures against the user\'s own average, not the 28-day default', async () => {
-    // `cycle.total` stays at 28 while every logged cycle is around 35.
-    // The old arithmetic measured the distance to 28 and reported ~49.
+    
     fetchDashboard.mockResolvedValue({
       ...withHistory([34, 35, 36]),
       cycle: { day: 12, total: 28, nextPeriodDays: 16 },
@@ -97,8 +88,7 @@ describe('ProfilePage — cycle variability tile', () => {
   });
 
   it('shows a dash for a single logged cycle rather than a number', async () => {
-    // One cycle has no spread. The old code reported one anyway, by
-    // measuring it against a default the user never entered.
+    
     fetchDashboard.mockResolvedValue(withHistory([35]));
 
     renderWithProviders(<ProfilePage />);
@@ -143,8 +133,7 @@ describe('ProfilePage — cycle variability tile', () => {
   });
 
   it('renders a dash when the dashboard cannot be loaded', async () => {
-    // The page already tolerates a failed dashboard — the stat must not
-    // be the thing that turns that into a broken tile.
+    
     fetchDashboard.mockRejectedValue(new Error('offline'));
 
     renderWithProviders(<ProfilePage />);
@@ -167,8 +156,7 @@ describe('ProfilePage — the neighbouring stats are unchanged', () => {
   });
 
   it('still shows the most recent cycle length', async () => {
-    // `cycleHistory` arrives oldest-first from the backend, so the last
-    // entry is the most recent cycle.
+    
     fetchDashboard.mockResolvedValue(withHistory([26, 30]));
 
     renderWithProviders(<ProfilePage />);

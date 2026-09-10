@@ -12,35 +12,6 @@ import {
   type ExportFormat,
 } from '../api/endpoints';
 
-/**
- * See what is stored, download it, and delete the account (issue #418).
- *
- * The backend has had `/privacy/summary`, `/privacy/export` and the
- * two-step `/privacy/delete-account` since #270 and no client called any
- * of them. What Settings offered instead was a single `window.confirm`
- * over the legacy `DELETE /auth/me`, with an empty `catch` and a `finally`
- * that logged the user out either way — so a failed deletion looked
- * exactly like a successful one. On a menstrual-health app that is the
- * single worst thing to be wrong about.
- *
- * Three rules shape this screen:
- *
- * **Nothing is claimed that the server did not say.** Counts come from
- * the summary, the warning text comes from the deletion preview, and the
- * receipt at the end is the server's own per-collection counts.
- *
- * **Deletion is two steps, and the second one is deliberate.** The
- * preview is fetched first, so the confirmation names what will actually
- * be destroyed, and the confirm button stays disabled until the user
- * types the word. That is not friction for its own sake — this is
- * irreversible and destroys history a user may have spent years building.
- *
- * **A failure is reported.** If the delete call fails the user stays on
- * this page and is told, rather than being signed out into a screen that
- * implies it worked.
- */
-
-/** What the user must type to arm the confirm button. */
 const CONFIRMATION_WORD = 'DELETE';
 
 type Stage = 'idle' | 'previewing' | 'confirming';
@@ -52,14 +23,6 @@ function formatDate(value: string | null | undefined, locale: string): string {
   return parsed.toLocaleDateString(locale);
 }
 
-/**
- * A message for the user, given whatever the API layer threw.
- *
- * Prefers the server's `detail` — a 409 saying no phone number is saved
- * is more useful than "something went wrong" — and separately names the
- * case where the request never reached the server at all, because
- * "offline" and "the server refused" call for different next steps.
- */
 function friendlyError(error: unknown, fallback: string): string {
   if (error && typeof error === 'object' && 'isAxiosError' in error) {
     const axiosErr = error as {
@@ -113,8 +76,6 @@ export function DataPrivacyPage() {
     try {
       const { blob, filename } = await fetchDataExport(format);
 
-      // Saving is done here rather than in the API layer so that layer
-      // stays testable without stubbing URL.createObjectURL.
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
@@ -122,9 +83,7 @@ export function DataPrivacyPage() {
       document.body.appendChild(anchor);
       anchor.click();
       document.body.removeChild(anchor);
-      // Revoked immediately: the browser has already read the blob by the
-      // time click() returns, and an object URL that is never revoked
-      // keeps the whole export alive in memory for the life of the tab.
+      
       URL.revokeObjectURL(url);
 
       setExportedName(filename);
@@ -161,18 +120,12 @@ export function DataPrivacyPage() {
     try {
       await confirmAccountDeletion(preview.confirmationToken);
     } catch (err) {
-      // Deliberately *not* logging out. The previous implementation
-      // signed the user out in a `finally`, so a failed deletion put her
-      // on the login screen — indistinguishable from success, and she
-      // would believe her health records were gone when they were not.
+      
       setDeleteError(friendlyError(err, t('privacy.deleteError')));
       setDeleting(false);
       return;
     }
 
-    // Only past a successful call. The server has already cleared the
-    // auth cookies; `logout()` clears the client's own state and sends
-    // her somewhere that exists.
     await logout('/login');
     navigate('/login', { replace: true });
   };
@@ -281,9 +234,7 @@ export function DataPrivacyPage() {
           </>
         ) : (
           <>
-            {/* The server's own warning, not one written here. If the
-                deletion cascade ever covers more, this sentence follows
-                it without a client change. */}
+            {}
             <p className="warning-text">{preview?.warning}</p>
 
             {impact ? (

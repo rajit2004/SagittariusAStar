@@ -1,23 +1,3 @@
-"""Platform-agnostic chatbot engine.
-
-Turns one inbound message into one reply. Everything about *who* sent it
-has already been settled by the time this runs: ``api/bot.py`` verifies
-the delivery against the platform's shared secret and resolves the chat
-to an account through ``services/chat_link_service``, then passes the
-result in as ``user_id``.
-
-That split is the point. The previous version took the chat id straight
-out of the webhook body and handed it to ``get_user_scores``, so the
-value deciding whose health data came back was a value the caller typed.
-Here ``user_id`` is either an account this chat has proven it owns, or
-``None`` — and ``None`` gets the public help text, never a number about
-anybody.
-
-Replies are plain-language and short. They are read on a feature phone
-over SMS as often as in a chat app, so nothing here depends on rich
-formatting, and the personal replies stay inside one SMS segment where
-they can.
-"""
 
 from __future__ import annotations
 
@@ -32,7 +12,6 @@ from services.chat_link_service import (
 from services.scoring_service import get_user_scores
 from utils.logger import logger
 
-#: What a channel is called when we say it back to the user.
 CHANNEL_LABELS: Dict[str, str] = {
     "telegram": "Telegram",
     "whatsapp": "WhatsApp",
@@ -88,28 +67,17 @@ STATUS_UNAVAILABLE = (
 
 DISCLAIMER = "Estimate only, not medical or contraceptive advice."
 
-
 def _channel_label(channel: str) -> str:
     return CHANNEL_LABELS.get(channel, channel.capitalize() if channel else "chat")
 
-
 def _split_command(text: str) -> tuple[str, str]:
-    """Leading word (lowercased, ``/`` stripped) and the rest, untouched.
-
-    The argument keeps its original case because it is a link code, and
-    codes are upper case. Lowercasing the whole message — which the
-    previous version did — silently broke every code before it was even
-    looked up.
-    """
     stripped = (text or "").strip()
     if not stripped:
         return "", ""
     head, _, tail = stripped.partition(" ")
     return head.lstrip("/").lower(), tail.strip()
 
-
 class ChatbotService:
-    """Message in, reply out. No I/O beyond the two services it calls."""
 
     @staticmethod
     def process_incoming_message(
@@ -118,11 +86,6 @@ class ChatbotService:
         chat_id: str = "",
         user_id: Optional[str] = None,
     ) -> str:
-        """Compose the reply to one inbound message.
-
-        ``user_id`` is the account this chat is linked to, or ``None``.
-        It is a resolved value, never anything from the payload.
-        """
         command, argument = _split_command(text)
 
         if not command:
@@ -132,10 +95,6 @@ class ChatbotService:
         if handler is not None:
             return handler(channel, chat_id, user_id, argument)
 
-        # Anything unrecognised. Older builds answered a health question
-        # with a sentence that mentioned the question back — which is how
-        # an unauthenticated caller got the service to echo arbitrary text
-        # on the project's own bot account. It says nothing back now.
         if user_id is None:
             return LINK_PROMPT
         return (
@@ -143,8 +102,6 @@ class ChatbotService:
             f"{_channel_label(channel)} yet. Open the app to ask the "
             "assistant, or send 'status' for your cycle day."
         )
-
-    # ─── Commands ─────────────────────────────────────────────────────
 
     @staticmethod
     def _help(channel: str, chat_id: str, user_id: Optional[str], argument: str) -> str:
@@ -160,8 +117,7 @@ class ChatbotService:
         try:
             score_data = get_user_scores(user_id)
         except Exception as exc:
-            # Logged without the user id: an error line is operational
-            # data, not a place to put an account identifier.
+
             logger.bind(channel=channel).warning(
                 f"Chatbot could not load cycle status: {exc}"
             )
@@ -222,12 +178,8 @@ class ChatbotService:
     def _unlink(channel: str, chat_id: str, user_id: Optional[str], argument: str) -> str:
         return UNLINK_OK if unlink(channel, chat_id) else UNLINK_NONE
 
-
 _Handler = Callable[[str, str, Optional[str], str], str]
 
-#: ``start`` is Telegram's opening command and ``stop`` is what a user
-#: sends to a WhatsApp number to be left alone; both are mapped so neither
-#: falls through to the unrecognised branch.
 _COMMANDS: Dict[str, _Handler] = {
     "help": ChatbotService._help,
     "commands": ChatbotService._help,
@@ -241,6 +193,5 @@ _COMMANDS: Dict[str, _Handler] = {
     "stop": ChatbotService._unlink,
     "disconnect": ChatbotService._unlink,
 }
-
 
 __all__ = ["ChatbotService", "DISCLAIMER", "HELP_TEXT", "LINK_PROMPT"]

@@ -6,13 +6,12 @@ from datetime import datetime, timedelta, timezone
 import firebase_admin.auth
 import pytest
 
+from test_auth import client, mock_auth_dependencies
 
-from test_auth import client, mock_auth_dependencies  # noqa: F401,E402
-
-import services.chat_link_service as chat_link_service  # noqa: E402
-import services.firestore_service as fs  # noqa: E402
-from core import webhook_auth  # noqa: E402
-from services.rate_limit_service import RateLimitService  # noqa: E402
+import services.chat_link_service as chat_link_service
+import services.firestore_service as fs
+from core import webhook_auth
+from services.rate_limit_service import RateLimitService
 
 TELEGRAM_URL = "/api/v1/bot/telegram/webhook"
 WHATSAPP_URL = "/api/v1/bot/whatsapp/webhook"
@@ -21,19 +20,10 @@ LINKS_URL = "/api/v1/bot/links"
 
 SECRET = "telegram-webhook-secret-for-tests"
 
-#: The id ``mock_auth_dependencies`` signs tokens for.
 USER_ID = "test-user-id-123"
-
 
 @pytest.fixture(autouse=True)
 def _clean_state(monkeypatch):
-    """A fresh store and no configured secrets for every test.
-
-    Secrets are set per test rather than globally: half these cases are
-    about what happens when verification *is* configured and half about
-    the unconfigured local-development path, and a leaked environment
-    variable would silently turn one into the other.
-    """
 
     def _reset():
         client.cookies.clear()
@@ -51,7 +41,6 @@ def _clean_state(monkeypatch):
     yield
     _reset()
 
-
 @pytest.fixture
 def auth_headers(mock_auth_dependencies):
     firebase_admin.auth.verify_id_token.return_value = {
@@ -63,19 +52,14 @@ def auth_headers(mock_auth_dependencies):
         json={"id_token": "valid_token"},
         headers={"X-Client-Platform": "mobile"},
     )
-    # Registering cost one attempt against the login limiter; clearing it
-    # keeps a test that asserts on a *different* limiter from tripping
-    # over this one.
+
     RateLimitService.clear_all()
     return {"Authorization": f"Bearer {token_response.json()['access_token']}"}
-
 
 def _telegram_update(chat_id, text):
     return {"update_id": 1, "message": {"chat": {"id": chat_id}, "text": text}}
 
-
 def _seed_user_with_logs(user_id=USER_ID):
-    """An account with cycle history, so there is something to leak."""
     fs.db.collection("users").document(user_id).set(
         {"username": "webhooktester", "email": "webhook@example.com"}
     )
@@ -92,17 +76,12 @@ def _seed_user_with_logs(user_id=USER_ID):
         )
     return user_id
 
-
-# ─── Verification ─────────────────────────────────────────────────────────
-
-
 def test_telegram_delivery_without_the_secret_is_refused(monkeypatch):
     monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", SECRET)
 
     response = client.post(TELEGRAM_URL, json=_telegram_update(4242, "help"))
 
     assert response.status_code == 401
-
 
 def test_telegram_delivery_with_the_wrong_secret_is_refused(monkeypatch):
     monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", SECRET)
@@ -114,7 +93,6 @@ def test_telegram_delivery_with_the_wrong_secret_is_refused(monkeypatch):
     )
 
     assert response.status_code == 401
-
 
 def test_telegram_delivery_with_the_right_secret_is_answered(monkeypatch):
     monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", SECRET)
@@ -131,9 +109,7 @@ def test_telegram_delivery_with_the_right_secret_is_answered(monkeypatch):
     assert body["chat_id"] == "4242"
     assert "status" in body["text"]
 
-
 def test_the_rejection_says_nothing_about_which_check_failed(monkeypatch):
-    """A caller who cannot authenticate is not owed a reason."""
     monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", SECRET)
 
     missing = client.post(TELEGRAM_URL, json=_telegram_update(1, "help"))
@@ -145,37 +121,19 @@ def test_the_rejection_says_nothing_about_which_check_failed(monkeypatch):
 
     assert missing.json()["detail"] == wrong.json()["detail"]
 
-
 def test_an_unconfigured_channel_still_serves_local_development():
-    """No secret set — the delivery is processed rather than refused.
-
-    Hard-failing here would make a local ``uvicorn`` run impossible and
-    would turn "the bot was never configured" into an outage. What must
-    not happen is that it passes *silently*, which is what
-    ``verification_configured`` is for.
-    """
     assert webhook_auth.verification_configured("telegram") is False
 
     response = client.post(TELEGRAM_URL, json=_telegram_update(99, "help"))
 
     assert response.status_code == 200
 
-
-# ─── Twilio's signature ───────────────────────────────────────────────────
-
-
 def _sign(auth_token, url, params):
-    """Twilio's algorithm, written out independently of the module.
-
-    Signing with the function under test would prove only that it agrees
-    with itself.
-    """
     payload = url + "".join(name + params[name] for name in sorted(params))
     digest = hmac.new(
         auth_token.encode("utf-8"), payload.encode("utf-8"), hashlib.sha1
     ).digest()
     return base64.b64encode(digest).decode("utf-8")
-
 
 def test_twilio_signature_matches_an_independent_implementation():
     params = {"Body": "status", "From": "whatsapp:+919876543210", "To": "whatsapp:+14155238886"}
@@ -183,14 +141,12 @@ def test_twilio_signature_matches_an_independent_implementation():
 
     assert webhook_auth.twilio_signature("token", url, params) == _sign("token", url, params)
 
-
 def test_whatsapp_delivery_without_a_signature_is_refused(monkeypatch):
     monkeypatch.setenv("TWILIO_AUTH_TOKEN", "twilio-token")
 
     response = client.post(WHATSAPP_URL, data={"From": "whatsapp:+91", "Body": "help"})
 
     assert response.status_code == 401
-
 
 def test_whatsapp_delivery_with_a_valid_signature_is_answered(monkeypatch):
     monkeypatch.setenv("TWILIO_AUTH_TOKEN", "twilio-token")
@@ -209,9 +165,7 @@ def test_whatsapp_delivery_with_a_valid_signature_is_answered(monkeypatch):
     assert response.headers["content-type"].startswith("application/xml")
     assert "<Response><Message>" in response.text
 
-
 def test_a_signature_for_a_different_body_does_not_verify(monkeypatch):
-    """The signature covers the parameters, not just the URL."""
     monkeypatch.setenv("TWILIO_AUTH_TOKEN", "twilio-token")
     monkeypatch.setenv("WEBHOOK_PUBLIC_BASE_URL", "http://testserver")
 
@@ -226,17 +180,7 @@ def test_a_signature_for_a_different_body_does_not_verify(monkeypatch):
 
     assert response.status_code == 401
 
-
-# ─── The identity in the payload is not an identity ───────────────────────
-
-
 def test_a_user_id_in_the_payload_reads_nobody(monkeypatch):
-    """The regression this issue was filed for.
-
-    Posting a real Rhythma user id as the chat id used to return that
-    user's logged cycle count and health scores to an unauthenticated
-    caller. It now resolves to no link, so the reply is the public prompt.
-    """
     monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", SECRET)
     user_id = _seed_user_with_logs()
 
@@ -251,7 +195,6 @@ def test_a_user_id_in_the_payload_reads_nobody(monkeypatch):
     assert "not connected to a Rhythma account" in text
     assert "cycle day" not in text.lower()
 
-
 def test_an_unlinked_chat_asking_for_status_gets_no_numbers(monkeypatch):
     monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", SECRET)
     _seed_user_with_logs()
@@ -265,13 +208,8 @@ def test_an_unlinked_chat_asking_for_status_gets_no_numbers(monkeypatch):
     text = response.json()["text"]
     assert not any(char.isdigit() for char in text.replace("ABCD2345", ""))
 
-
-# ─── Linking ──────────────────────────────────────────────────────────────
-
-
 def test_link_code_requires_authentication():
     assert client.post(LINK_CODE_URL, json={"channel": "telegram"}).status_code == 401
-
 
 def test_a_code_links_the_chat_and_then_status_works(monkeypatch, auth_headers):
     monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", SECRET)
@@ -293,10 +231,8 @@ def test_a_code_links_the_chat_and_then_status_works(monkeypatch, auth_headers):
         headers={webhook_auth.TELEGRAM_SECRET_HEADER: SECRET},
     )
     text = status_reply.json()["text"]
-    # Either a cycle summary or the "nothing logged yet" line, but never
-    # the unlinked prompt.
-    assert "not connected to a Rhythma account" not in text
 
+    assert "not connected to a Rhythma account" not in text
 
 def test_a_code_cannot_be_used_twice(monkeypatch, auth_headers):
     monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", SECRET)
@@ -312,7 +248,6 @@ def test_a_code_cannot_be_used_twice(monkeypatch, auth_headers):
 
     assert "did not work" in second.json()["text"]
 
-
 def test_issuing_a_new_code_invalidates_the_previous_one(auth_headers):
     first = client.post(
         LINK_CODE_URL, json={"channel": "telegram"}, headers=auth_headers
@@ -321,15 +256,12 @@ def test_issuing_a_new_code_invalidates_the_previous_one(auth_headers):
 
     assert chat_link_service.redeem_link_code("telegram", "2001", first) is None
 
-
 def test_an_expired_code_is_refused(monkeypatch, auth_headers):
     monkeypatch.setenv("CHAT_LINK_CODE_TTL_SECONDS", "1")
     code = client.post(
         LINK_CODE_URL, json={"channel": "telegram"}, headers=auth_headers
     ).json()["code"]
 
-    # Rewriting the stored expiry beats sleeping: the behaviour under test
-    # is "the window has closed", not "one second has elapsed".
     import services.chat_link_service as links
 
     doc_id = links._hash_code(code)
@@ -339,7 +271,6 @@ def test_an_expired_code_is_refused(monkeypatch, auth_headers):
 
     assert links.redeem_link_code("telegram", "3001", code) is None
 
-
 def test_a_code_issued_for_one_channel_does_not_link_another(auth_headers):
     code = client.post(
         LINK_CODE_URL, json={"channel": "telegram"}, headers=auth_headers
@@ -347,9 +278,7 @@ def test_a_code_issued_for_one_channel_does_not_link_another(auth_headers):
 
     assert chat_link_service.redeem_link_code("whatsapp", "whatsapp:+91", code) is None
 
-
 def test_codes_are_stored_hashed(auth_headers):
-    """A dump of the collection must not be a list of working codes."""
     code = client.post(
         LINK_CODE_URL, json={"channel": "telegram"}, headers=auth_headers
     ).json()["code"]
@@ -358,7 +287,6 @@ def test_codes_are_stored_hashed(auth_headers):
     assert code not in stored_ids
     assert chat_link_service._hash_code(code) in stored_ids
 
-
 def test_a_typed_code_is_forgiven_its_formatting(auth_headers):
     code = client.post(
         LINK_CODE_URL, json={"channel": "telegram"}, headers=auth_headers
@@ -366,7 +294,6 @@ def test_a_typed_code_is_forgiven_its_formatting(auth_headers):
     typed = f" {code[:4].lower()}-{code[4:].lower()} "
 
     assert chat_link_service.redeem_link_code("telegram", "4001", typed) is not None
-
 
 def test_unlink_stops_the_chat_reading_the_account(monkeypatch, auth_headers):
     monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", SECRET)
@@ -380,7 +307,6 @@ def test_unlink_stops_the_chat_reading_the_account(monkeypatch, auth_headers):
     after = client.post(TELEGRAM_URL, json=_telegram_update(5001, "status"), headers=secret_header)
 
     assert "not connected to a Rhythma account" in after.json()["text"]
-
 
 def test_links_are_listed_for_the_owning_account(monkeypatch, auth_headers):
     monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", SECRET)
@@ -398,17 +324,12 @@ def test_links_are_listed_for_the_owning_account(monkeypatch, auth_headers):
     assert listed.status_code == 200
     assert [link["chatId"] for link in listed.json()["links"]] == ["6001"]
 
-
 def test_an_unsupported_channel_is_rejected(auth_headers):
     response = client.post(
         LINK_CODE_URL, json={"channel": "signal"}, headers=auth_headers
     )
 
     assert response.status_code == 400
-
-
-# ─── Rate limiting ────────────────────────────────────────────────────────
-
 
 def test_the_webhook_is_rate_limited_per_address(monkeypatch):
     monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", SECRET)
@@ -427,13 +348,7 @@ def test_the_webhook_is_rate_limited_per_address(monkeypatch):
     assert statuses[:3] == [200, 200, 200]
     assert statuses[3] == 429
 
-
 def test_the_rate_limit_applies_before_verification(monkeypatch):
-    """An unverified flood is the traffic most worth shedding early.
-
-    Checking a signature is the most expensive thing these routes do, so
-    doing it for every request in a flood is exactly backwards.
-    """
     monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", SECRET)
     monkeypatch.setenv("RATE_LIMIT_BOT_WEBHOOK_IP_MAX", "2")
     RateLimitService.clear_all()
@@ -445,7 +360,6 @@ def test_the_rate_limit_applies_before_verification(monkeypatch):
 
     assert statuses[:2] == [401, 401]
     assert statuses[2] == 429
-
 
 def test_link_codes_are_rate_limited_per_account(monkeypatch, auth_headers):
     monkeypatch.setenv("RATE_LIMIT_BOT_LINK_CODE_ACCOUNT_MAX", "2")
@@ -460,16 +374,7 @@ def test_link_codes_are_rate_limited_per_account(monkeypatch, auth_headers):
 
     assert statuses == [200, 200, 429]
 
-
-# ─── Payloads that are not messages ───────────────────────────────────────
-
-
 def test_an_update_with_no_message_is_acknowledged(monkeypatch):
-    """Telegram redelivers anything that is not a 2xx.
-
-    Answering an update type we do not handle with an error would have it
-    retried forever.
-    """
     monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", SECRET)
 
     response = client.post(
@@ -480,7 +385,6 @@ def test_an_update_with_no_message_is_acknowledged(monkeypatch):
 
     assert response.status_code == 200
     assert response.json() == {"ok": True}
-
 
 def test_an_edited_message_is_handled_like_a_new_one(monkeypatch):
     monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", SECRET)
@@ -493,7 +397,6 @@ def test_an_edited_message_is_handled_like_a_new_one(monkeypatch):
 
     assert "status" in response.json()["text"]
 
-
 def test_an_empty_message_gets_a_pointer_to_help(monkeypatch):
     monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", SECRET)
 
@@ -505,9 +408,7 @@ def test_an_empty_message_gets_a_pointer_to_help(monkeypatch):
 
     assert "help" in response.json()["text"]
 
-
 def test_the_twiml_reply_escapes_its_body(monkeypatch):
-    """An unescaped ``&`` makes Twilio discard the whole document."""
     monkeypatch.setenv("WEBHOOK_PUBLIC_BASE_URL", "http://testserver")
 
     from api.bot import _twiml

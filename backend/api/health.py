@@ -1,20 +1,3 @@
-"""Health endpoints (issue #348).
-
-Three routes, because "is the process alive?", "should this instance take
-traffic?" and "what exactly is wrong?" are three questions and collapsing
-them into one always-200 endpoint answers at most one of them correctly.
-
-``GET /health/`` keeps its original ``{"status", "service"}`` keys and
-its 200, and gains ``ready``, ``build`` and ``components``.
-
-One deliberate behaviour change, called out because it is the only one:
-``status`` is now the *worst component's* status rather than the constant
-``"ok"``. So a deployment with Twilio unconfigured reports ``degraded``
-where it used to report ``ok``. That is the point of the issue — the old
-value was a constant and carried no information — but it does mean a
-caller asserting ``status == "ok"`` sees a change, which is why
-``ready`` exists as the boolean a caller should branch on instead.
-"""
 
 from typing import Any, Dict, List, Optional
 
@@ -29,7 +12,6 @@ from services.health_check_service import (
 )
 
 router = APIRouter(tags=["Health"])
-
 
 class ComponentModel(BaseModel):
     name: str = Field(..., description="Dependency identifier, e.g. `firestore`.")
@@ -51,7 +33,6 @@ class ComponentModel(BaseModel):
     )
     durationMs: float = Field(..., description="How long this check took.")
 
-
 class BuildModel(BaseModel):
     version: str
     commit: str = Field(
@@ -60,13 +41,7 @@ class BuildModel(BaseModel):
     builtAt: str
     environment: str
 
-
 class HealthResponse(BaseModel):
-    """The detailed view.
-
-    ``status`` and ``service`` are the two keys the original endpoint
-    returned and are unchanged, so existing clients keep working.
-    """
 
     status: str = Field(..., description="Worst component status: ok, degraded or down.")
     service: str = "Rhythma API"
@@ -77,12 +52,10 @@ class HealthResponse(BaseModel):
     build: BuildModel
     components: List[ComponentModel]
 
-
 class LivenessResponse(BaseModel):
     status: str
     service: str
     checkedAt: str
-
 
 class ReadinessResponse(BaseModel):
     status: str
@@ -90,10 +63,8 @@ class ReadinessResponse(BaseModel):
     checkedAt: str
     components: List[ComponentModel]
 
-
 def _checked_at() -> str:
     return liveness()["checkedAt"]
-
 
 @router.get(
     "/",
@@ -119,7 +90,6 @@ async def health_check() -> Dict[str, Any]:
         "build": build_info(),
     }
 
-
 @router.get(
     "/live",
     response_model=LivenessResponse,
@@ -134,7 +104,6 @@ async def health_check() -> Dict[str, Any]:
 )
 async def health_live() -> Dict[str, Any]:
     return liveness()
-
 
 @router.get(
     "/ready",

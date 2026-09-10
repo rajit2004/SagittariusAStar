@@ -196,11 +196,9 @@ void main() {
         ),
       );
 
-      // Open the sheet
       await tester.tap(find.text('Open Sheet'));
       await tester.pumpAndSettle();
 
-      // Tap delete icon to open confirmation dialog
       await tester.tap(find.byIcon(Icons.delete_outline_rounded));
       await tester.pumpAndSettle();
 
@@ -212,7 +210,6 @@ void main() {
         findsOneWidget,
       );
 
-      // Cancel the deletion
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
     });

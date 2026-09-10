@@ -3,7 +3,6 @@ import axios from 'axios';
 import { apiClient, friendlyAuthError, setUnauthorizedHandler } from './client';
 import { axiosError } from '../test/utils';
 
-// Mock axios so the refresh helper does not hit the network.
 vi.mock('axios', async (importOriginal) => {
   const actual = await importOriginal<typeof import('axios')>();
   return {
@@ -70,11 +69,6 @@ describe('401 interceptor — auto-refresh', () => {
       config: { url: '/dashboard', headers: {} },
     };
 
-    // The interceptor retries through `apiClient.request`, which is what
-    // this spy stands in for. It had been failing with "expected 1, got 0":
-    // the source called `apiClient(retryConfig)`, and an axios instance is
-    // a *bound* `request` function, so invoking it never touches the
-    // `request` property the spy replaced.
     const apiSpy = vi.spyOn(apiClient, 'request').mockResolvedValueOnce({
       data: { user: { name: 'Asha' } },
       status: 200,
@@ -96,11 +90,7 @@ describe('401 interceptor — auto-refresh', () => {
   });
 
   it('marks the retry so a second 401 cannot loop', async () => {
-    // The marker is what breaks the retry loop, and nothing was checking
-    // it reached the retried request — the assertion above only counted
-    // the call. Reading it back off the header object also confirms the
-    // `AxiosHeaders` the interceptor now builds behaves like the plain
-    // object the loop guard indexes into.
+    
     mockedAxiosPost.mockResolvedValueOnce({ status: 200 });
     setUnauthorizedHandler(vi.fn());
 
@@ -207,13 +197,11 @@ describe('401 interceptor — auto-refresh', () => {
     ).handlers.filter(Boolean);
     const rejected = handlers[handlers.length - 1].rejected;
 
-    // Fire two concurrent 401s
     const p1 = rejected(error1).catch(() => {});
     const p2 = rejected(error2).catch(() => {});
 
     await Promise.all([p1, p2]);
 
-    // Only ONE refresh call despite two concurrent 401s
     expect(mockedAxiosPost).toHaveBeenCalledTimes(1);
   });
 

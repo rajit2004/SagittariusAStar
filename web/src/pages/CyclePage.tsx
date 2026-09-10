@@ -71,15 +71,6 @@ const SYMPTOM_OPTIONS: OptionDef[] = [
 
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
-/**
- * The single-value fields this screen renders.
- *
- * `notes` and `end_date` are deliberately absent. Both exist on a log and
- * neither has a control here, so including them would let a screen that
- * cannot show a note delete one — and a note is in the provider view, the
- * PDF report and the privacy export. `symptoms` is handled separately
- * because comparing and clearing a list is not the same operation.
- */
 const EDITABLE_FIELDS = ['flow_intensity', 'mood', 'sleep_hours', 'stress_level'] as const;
 
 function phaseLabel(t: (k: string) => string, phase: CyclePhase): string {
@@ -112,33 +103,17 @@ export function CyclePage() {
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState('');
 
-  // Draft for the selected day, re-seeded from the server log whenever the
-  // selected date (or the fetched history) changes.
   const [draft, setDraft] = useState<CycleLogInput | null>(null);
 
-  // The window of history currently loaded. Keyed off the displayed month
-  // rather than a fixed count: the calendar renders one month at a time,
-  // and this page used to ask for `limit=365`, which the endpoint refuses
-  // outright (its ceiling is 100). The 422 was caught below and turned
-  // into an empty Map, so the calendar rendered as if the user had never
-  // logged anything (#349).
   const loadedWindow = useMemo(() => monthWindow(displayedMonth), [displayedMonth]);
 
-  // Depended on by `load`, and deliberately the id rather than the whole
-  // `user` object. A context that hands back a fresh object on each render
-  // would otherwise make `load` a new function every render, so the effect
-  // below would re-fire, set state, and render again — an unbounded fetch
-  // loop that only shows up under a re-rendering provider.
   const userId = user?.id;
 
   const load = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
     try {
-      // Predictions are fetched alongside the history and allowed to fail
-      // on their own. The calendar is this page's job; the outlook card is
-      // an addition to it, and losing the addition must not blank the
-      // month (#419).
+      
       const [history, profile, forecast] = await Promise.all([
         fetchCycleHistoryRange(userId, loadedWindow.start, loadedWindow.end),
         fetchProfile().catch(() => null),
@@ -155,9 +130,7 @@ export function CyclePage() {
       setLastPeriod(profile?.last_period ?? null);
       setLoadError(false);
     } catch {
-      // Distinguished from "no logs yet". Clearing to an empty Map without
-      // saying so is what made the original bug invisible — an empty
-      // calendar looks exactly like a new account.
+      
       setLogs(new Map());
       setLoadError(true);
     } finally {
@@ -165,9 +138,6 @@ export function CyclePage() {
     }
   }, [userId, loadedWindow.start, loadedWindow.end]);
 
-  // Re-runs when the displayed month changes, because `loadedWindow`
-  // changes with it. Before this the whole history was fetched once and
-  // any month outside it would have been blank regardless.
   useEffect(() => {
     void load();
   }, [load]);
@@ -207,41 +177,21 @@ export function CyclePage() {
     setSaveError('');
   };
 
-  /**
-   * What the day looks like now, as this screen would send it.
-   *
-   * Every field the screen renders is included, `null` where the user has
-   * cleared it, because the chips are toggles and a deselection is an
-   * answer. The previous version added a key only when it was truthy, so a
-   * cleared field vanished from the payload and the request became
-   * indistinguishable from one where nothing was touched — the screen said
-   * "Saved to your account", reloaded, and lit the chip back up (#549).
-   */
   const buildPayload = (d: CycleLogInput): CycleLogInput => ({
     start_date: selectedIso,
     flow_intensity: d.flow_intensity ?? null,
     mood: d.mood ?? null,
     sleep_hours: d.sleep_hours ?? null,
     stress_level: d.stress_level ?? null,
-    // `[]` rather than `null`: unticking every symptom is an empty list, and
-    // the server stores it as one.
+    
     symptoms: d.symptoms ?? [],
   });
 
-  /**
-   * Whether saving would change anything on the server.
-   *
-   * This replaces a "has the user selected anything?" check, which had the
-   * same shape as the payload bug: clearing the last chip left nothing
-   * selected, so the Save button went *disabled* and the user could not
-   * send the correction she had just made.
-   */
   const isDirty = (d: CycleLogInput | null): boolean => {
     if (!d) return false;
     const stored = logs.get(selectedIso);
     if (!stored) {
-      // Nothing saved for this day: there is something to send only if she
-      // has chosen something.
+      
       return (
         EDITABLE_FIELDS.some((field) => d[field] != null) ||
         (d.symptoms?.length ?? 0) > 0
@@ -277,7 +227,7 @@ export function CyclePage() {
     try {
       await deleteCycleLog(existing.id);
     } catch {
-      // Best-effort delete: the local view still clears.
+      
     }
     const next = new Map(logs);
     next.delete(selectedIso);
@@ -288,14 +238,8 @@ export function CyclePage() {
 
   const shiftMonth = (delta: number) => setDisplayedMonth((m) => addMonths(m, delta));
 
-  // The server's estimate, not a hardcoded 28. Falls through to the
-  // library default when there is no prediction, which is what the
-  // calendar did unconditionally before.
   const estimatedCycleLength = prediction?.cycleLength?.days;
 
-  // `lastPeriodStart` from the prediction beats `last_period` from the
-  // profile: the profile field is what the user typed at onboarding and
-  // is never updated again, so once she has logged a period it is stale.
   const anchorPeriod = prediction?.lastPeriodStart ?? lastPeriod;
 
   const selectedPhase = phaseFor(selectedDate, anchorPeriod, estimatedCycleLength);
@@ -331,9 +275,7 @@ export function CyclePage() {
         </p>
       ) : null}
 
-      {/* The outlook, from `GET /cycle/predictions` — an endpoint no
-          client had ever called (#419). Everything in it is computed
-          server-side from the same logs the calendar below renders. */}
+      {}
       {prediction ? (
         <section className="glass-card outlook-card">
           <div className="trend-heading">
@@ -395,8 +337,7 @@ export function CyclePage() {
             </p>
           ) : null}
 
-          {/* The server's own wording. It is the sentence that has to be
-              right, so it is not paraphrased here. */}
+          {}
           <p className="fertile-window-disclaimer">{prediction.disclaimer}</p>
         </section>
       ) : null}

@@ -3,8 +3,6 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
 
-// Drive the gate directly through a stubbed useAuth: the point here is the
-// control flow, not the session bootstrap (covered in AuthContext.test.tsx).
 const authState = { user: null as { id: string } | null, loading: false };
 
 vi.mock('./useAuth', () => ({
@@ -50,8 +48,7 @@ describe('ProtectedRoute', () => {
   });
 
   it('waits while the session is still being validated', () => {
-    // Redirecting during validation would flash the login page at every
-    // already-signed-in user on every full page load.
+    
     authState.user = null;
     authState.loading = true;
 

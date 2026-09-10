@@ -3,14 +3,13 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from test_auth import client
 
-from test_auth import client  # noqa: E402
-
-from main import app  # noqa: E402
-from core.auth import get_current_user, get_password_hash  # noqa: E402
-from services import firestore_service as fs  # noqa: E402
-from services.provider_service import ConsentService  # noqa: E402
-from services.rate_limit_service import RateLimitService  # noqa: E402
+from main import app
+from core.auth import get_current_user, get_password_hash
+from services import firestore_service as fs
+from services.provider_service import ConsentService
+from services.rate_limit_service import RateLimitService
 
 PATIENT_ID = "patient-123"
 OTHER_PATIENT_ID = "other-patient-456"
@@ -19,7 +18,6 @@ PROVIDER_ID = "provider-789"
 PROVIDER_EMAIL = "doctor@clinic.in"
 
 _pw_hash = get_password_hash("SecurePass123")
-
 
 def _identity(user_id: str, role: str, email: str, username: str) -> dict:
     return {
@@ -30,7 +28,6 @@ def _identity(user_id: str, role: str, email: str, username: str) -> dict:
         "email": email,
     }
 
-
 def _reset_collections():
     collections = getattr(fs.db, "_collections", None)
     if collections is not None:
@@ -38,7 +35,6 @@ def _reset_collections():
     counters = getattr(fs.db, "_counters", None)
     if counters is not None:
         counters.clear()
-
 
 def _seed_users():
     fs.db.collection("users").document(PATIENT_ID).set(
@@ -77,7 +73,6 @@ def _seed_users():
         }
     )
 
-
 def _seed_cycle_logs():
     for index, day in enumerate((1, 29, 57)):
         fs.db.collection("cycle_logs").document(f"log-{index}").set(
@@ -93,7 +88,6 @@ def _seed_cycle_logs():
                 "notes": "mild cramps",
             }
         )
-
 
 @pytest.fixture(autouse=True)
 def _clean_state():
@@ -111,13 +105,8 @@ def _clean_state():
     app.dependency_overrides.clear()
     _reset_collections()
 
-
 def _act_as(identity: dict):
     app.dependency_overrides[get_current_user] = lambda: identity
-
-
-# ─── Provider account ────────────────────────────────────────────────────
-
 
 def test_register_provider_creates_provider_account():
     response = client.post(
@@ -137,14 +126,12 @@ def test_register_provider_creates_provider_account():
     assert created.to_dict()["role"] == "provider"
     assert created.to_dict()["specialty"] == "Gynecology"
 
-
 def test_register_provider_rejects_duplicate_email():
     response = client.post(
         "/api/v1/provider/register",
         json={"email": PROVIDER_EMAIL, "password": "SecurePass123"},
     )
     assert response.status_code == 409
-
 
 def test_provider_login_success():
     response = client.post(
@@ -156,7 +143,6 @@ def test_provider_login_success():
     assert body["role"] == "provider"
     assert "access_token" in body
 
-
 def test_provider_login_rejects_patient_account():
     response = client.post(
         "/api/v1/provider/login",
@@ -164,17 +150,12 @@ def test_provider_login_rejects_patient_account():
     )
     assert response.status_code == 403
 
-
 def test_provider_login_rejects_wrong_password():
     response = client.post(
         "/api/v1/provider/login",
         json={"email": PROVIDER_EMAIL, "password": "wrong-password"},
     )
     assert response.status_code == 401
-
-
-# ─── Consent (patient side) ──────────────────────────────────────────────
-
 
 def test_patient_can_grant_consent():
     _act_as(_identity(PATIENT_ID, "patient", "asha@example.com", "asha"))
@@ -189,7 +170,6 @@ def test_patient_can_grant_consent():
     consent = fs.db.collection("consents").document(body["id"]).get()
     assert consent.to_dict()["provider_id"] == PROVIDER_ID
 
-
 def test_provider_account_cannot_grant_consent():
     _act_as(_identity(PROVIDER_ID, "provider", PROVIDER_EMAIL, "doctor_sharma"))
     response = client.post(
@@ -197,14 +177,12 @@ def test_provider_account_cannot_grant_consent():
     )
     assert response.status_code == 403
 
-
 def test_grant_consent_unknown_provider_returns_404():
     _act_as(_identity(PATIENT_ID, "patient", "asha@example.com", "asha"))
     response = client.post(
         "/api/v1/provider/consents", json={"provider_email": "nobody@nowhere.in"}
     )
     assert response.status_code == 404
-
 
 def test_patient_lists_their_consents():
     ConsentService.grant(PATIENT_ID, PROVIDER_EMAIL)
@@ -215,7 +193,6 @@ def test_patient_lists_their_consents():
     assert len(consents) == 1
     assert consents[0]["provider_id"] == PROVIDER_ID
 
-
 def test_patient_can_revoke_consent():
     consent = ConsentService.grant(PATIENT_ID, PROVIDER_EMAIL)
     _act_as(_identity(PATIENT_ID, "patient", "asha@example.com", "asha"))
@@ -223,16 +200,11 @@ def test_patient_can_revoke_consent():
     assert response.status_code == 200
     assert response.json()["status"] == "revoked"
 
-
 def test_patient_cannot_revoke_another_patients_consent():
     consent = ConsentService.grant(PATIENT_ID, PROVIDER_EMAIL)
     _act_as(_identity(OTHER_PATIENT_ID, "patient", "priya@example.com", "priya"))
     response = client.delete(f"/api/v1/provider/consents/{consent['id']}")
     assert response.status_code == 404
-
-
-# ─── Provider view ───────────────────────────────────────────────────────
-
 
 def test_provider_sees_only_consented_patients():
     ConsentService.grant(PATIENT_ID, PROVIDER_EMAIL)
@@ -243,25 +215,21 @@ def test_provider_sees_only_consented_patients():
     assert [p["patient_id"] for p in patients] == [PATIENT_ID]
     assert patients[0]["loggedCycleCount"] == 3
 
-
 def test_provider_sees_no_patients_without_any_consent():
     _act_as(_identity(PROVIDER_ID, "provider", PROVIDER_EMAIL, "doctor_sharma"))
     response = client.get("/api/v1/provider/patients")
     assert response.status_code == 200
     assert response.json()["patients"] == []
 
-
 def test_patient_cannot_use_provider_patients_endpoint():
     _act_as(_identity(PATIENT_ID, "patient", "asha@example.com", "asha"))
     response = client.get("/api/v1/provider/patients")
     assert response.status_code == 403
 
-
 def test_provider_patient_detail_requires_consent():
     _act_as(_identity(PROVIDER_ID, "provider", PROVIDER_EMAIL, "doctor_sharma"))
     response = client.get(f"/api/v1/provider/patients/{PATIENT_ID}")
     assert response.status_code == 403
-
 
 def test_provider_patient_detail_returns_shared_data_only():
     ConsentService.grant(PATIENT_ID, PROVIDER_EMAIL)
@@ -276,11 +244,9 @@ def test_provider_patient_detail_returns_shared_data_only():
     assert body["summary"]["loggedCycleCount"] == 3
     assert body["summary"]["hasEnoughDataForInsights"] is True
 
-    # Consent gates out identity/contact fields a patient was not asked about.
     assert "phone" not in body["patient"]
     assert "email" not in body["patient"]
     assert "password" not in json.dumps(body)
-
 
 def test_revoked_consent_blocks_provider_access():
     ConsentService.grant(PATIENT_ID, PROVIDER_EMAIL)
@@ -290,26 +256,17 @@ def test_revoked_consent_blocks_provider_access():
     assert response.status_code == 403
     assert client.get("/api/v1/provider/patients").json()["patients"] == []
 
-
-# ─── Privacy integration ─────────────────────────────────────────────────
-
-
 def test_purge_removes_consents_regardless_of_side():
     from services.data_privacy_service import purge_user_data
 
     ConsentService.grant(PATIENT_ID, PROVIDER_EMAIL)
     ConsentService.grant(OTHER_PATIENT_ID, PROVIDER_EMAIL)
 
-    # Purging a patient removes her own consents but leaves the provider's
-    # relationship with the other patient intact.
     counts = purge_user_data(PATIENT_ID)
     assert counts["consents"] == 1
 
-    # Purging the provider removes every consent where they were the
-    # provider side.
     counts = purge_user_data(PROVIDER_ID)
     assert counts["consents"] == 1
-
 
 def test_summary_reports_consents():
     from services.data_privacy_service import build_data_summary

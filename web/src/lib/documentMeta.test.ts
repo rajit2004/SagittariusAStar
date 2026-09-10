@@ -25,10 +25,7 @@ describe('toDocumentLang', () => {
   });
 
   it('keeps the region tag', () => {
-    // Unlike `toAssistantLanguage`, which must reduce to a bare code
-    // because the backend only accepts those. `hi-IN` is valid BCP 47 and
-    // a screen reader handles it, so truncating it would throw away a
-    // regional pronunciation hint for no reason.
+    
     expect(toDocumentLang('hi-IN')).toBe('hi-IN');
   });
 
@@ -50,9 +47,7 @@ describe('directionFor', () => {
   );
 
   it('is rtl for a right-to-left script', () => {
-    // None shipped yet. #117 and #122 are both about adding languages and
-    // Urdu is plausible for this audience, so the branch exists now rather
-    // than being a rewrite later.
+    
     expect(directionFor('ur')).toBe('rtl');
     expect(directionFor('ur-PK')).toBe('rtl');
   });
@@ -104,9 +99,7 @@ describe('applyMetaTag', () => {
   });
 
   it('updates in place instead of appending a second one', () => {
-    // The bug this prevents: one tag per navigation leaves a stack of
-    // stale descriptions in the head, and a crawler reads the first — so
-    // the description freezes on whichever page loaded first.
+    
     applyMetaTag('description', 'First');
     applyMetaTag('description', 'Second');
 

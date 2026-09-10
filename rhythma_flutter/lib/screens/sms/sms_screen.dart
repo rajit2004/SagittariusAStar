@@ -5,9 +5,6 @@ import '../../config/theme.dart';
 import '../../components/shared.dart';
 import '../../services/sms_service.dart';
 
-/// SMS Health Summary screen.
-/// Users configure a phone number to receive summaries via SMS, useful in
-/// low-data areas, and can trigger an on-demand summary right now.
 class SmsScreen extends StatefulWidget {
   const SmsScreen({super.key});
 
@@ -25,9 +22,6 @@ class _SmsScreenState extends State<SmsScreen> {
   String _loadError = '';
   bool _initialized = false;
 
-  // E.164: a leading '+', then 1-15 digits, first digit 1-9. This is a
-  // basic client-side check to catch obvious typos before hitting the
-  // backend — the backend remains the source of truth for validation.
   static final _e164 = RegExp(r'^\+[1-9]\d{1,14}$');
 
   @override
@@ -45,10 +39,6 @@ class _SmsScreenState extends State<SmsScreen> {
     super.dispose();
   }
 
-  // The backend now exposes the user's canonical profile phone through
-  // /sms/settings while maintaining backward compatibility with older
-  // SMS-only phone numbers. This screen therefore uses the same phone
-  // number as the user's profile, avoiding duplicate phone management.
   Future<void> _loadSettings() async {
     final l10n = AppLocalizations.of(context)!;
     setState(() {
@@ -62,10 +52,7 @@ class _SmsScreenState extends State<SmsScreen> {
         _smsEnabled = settings['enabled'] as bool? ?? false;
       });
     } on DioException catch (e) {
-      // A 404 here just means the user has no saved settings yet, which
-      // is a normal first-run state, not an error to surface. Anything
-      // else (network failure, auth failure, server error) is a real
-      // problem and should be shown, not swallowed silently.
+      
       if (e.response?.statusCode != 404) {
         setState(() => _loadError = _friendlyError(e, l10n));
       }
@@ -122,11 +109,6 @@ class _SmsScreenState extends State<SmsScreen> {
     }
   }
 
-  /// Covers the feedback cases issue #26 asks for: success (handled at the
-  /// call sites above), network failures, authentication failures, and
-  /// backend rate limiting, falling back to the backend's own error detail
-  /// (e.g. an invalid phone format, or a Twilio-side error) when it's none
-  /// of those.
   String _friendlyError(Object e, AppLocalizations l10n) {
     if (e is DioException) {
       final status = e.response?.statusCode;
@@ -167,11 +149,6 @@ class _SmsScreenState extends State<SmsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final hasPhone = _phoneCtrl.text.trim().isNotEmpty;
 
-    // Matches the same Container(gradient) + Scaffold(transparent) + AppBar
-    // wrapper every other pushed settings sub-screen uses (see
-    // theme_screen.dart / language_screen.dart). Without it, this screen
-    // rendered on a bare black canvas with no back button and no Material
-    // text styling, since it was built to be a tab body, not a pushed route.
     return Container(
       decoration: BoxDecoration(gradient: RhythmaGradients.bg),
       child: Scaffold(
@@ -217,7 +194,6 @@ class _SmsScreenState extends State<SmsScreen> {
                           ),
                         ),
 
-                      // Info card
                       GlassCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,7 +223,6 @@ class _SmsScreenState extends State<SmsScreen> {
 
                       const SizedBox(height: 16),
 
-                      // Config card
                       GlassCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,8 +279,6 @@ class _SmsScreenState extends State<SmsScreen> {
 
                       const SizedBox(height: 12),
 
-                      // On-demand summary, a real action wired to the backend,
-                      // replacing the previous static "Sample SMS" placeholder.
                       GlassCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

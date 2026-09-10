@@ -1,4 +1,3 @@
-// ignore_for_file: depend_on_referenced_packages
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -40,13 +39,6 @@ class FakeLocalNotificationsPlatform extends FlutterLocalNotificationsPlatform
   }) async {}
 }
 
-/// Sets up a mock [FlutterLocalNotificationsPlatform] and mocks the method
-/// channels for `permission_handler` and `flutter_local_notifications`.
-///
-/// When [initTimezones] is `true` (default), also initializes timezone
-/// data (needed by `zonedSchedule` / `scheduleMedicineAlert`). Tests that
-/// only call `cancelNotification` can pass `false` to skip the slow
-/// timezone database load.
 void mockNotificationPlatformChannels({
   bool permissionGranted = true,
   bool initTimezones = true,

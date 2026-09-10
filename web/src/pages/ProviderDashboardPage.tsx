@@ -8,7 +8,6 @@ import {
 } from '../api/endpoints';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
 
-/** Matches the server default in `provider_service.DEFAULT_PATIENTS_PAGE`. */
 const PAGE_SIZE = 20;
 
 function formatDate(value: string | null | undefined): string {
@@ -57,10 +56,7 @@ export function ProviderDashboardPage() {
     setLoadingMore(true);
     try {
       const page = await fetchProviderPatientPage(PAGE_SIZE, nextOffset);
-      // Appended rather than replaced, and `nextOffset` comes from the
-      // server's envelope rather than being computed here — the server is
-      // the only party that knows whether the page it just sent was short
-      // because the roster ended or because a consent was revoked mid-scroll.
+      
       setPatients((current) => [...current, ...page.patients]);
       setNextOffset(page.page?.hasMore ? page.page.nextOffset : null);
     } catch {

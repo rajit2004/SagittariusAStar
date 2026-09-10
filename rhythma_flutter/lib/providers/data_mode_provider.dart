@@ -1,20 +1,13 @@
 import 'package:flutter/foundation.dart';
 import '../config/app_config.dart';
 
-/// Represents the current data source mode.
 enum DataMode {
-  /// Connected to the production backend.
+  
   live,
 
-  /// Connected to a local/development/staging backend.
   dev,
 }
 
-/// Single source of truth for the active data mode.
-///
-/// Detects the mode at construction by inspecting the compile-time API base
-/// URL.  This provider never changes state at runtime — the mode is fixed
-/// once the app starts.
 class DataModeProvider extends ChangeNotifier {
   DataModeProvider() : _mode = _detectMode();
 
@@ -30,13 +23,10 @@ class DataModeProvider extends ChangeNotifier {
 
   DataMode get mode => _mode;
 
-  /// Convenience getter for widget use.
   bool get isLive => _mode == DataMode.live;
 
-  /// Convenience getter for widget use.
   bool get isDev => _mode == DataMode.dev;
 
-  /// Human-readable label for display in the debug indicator.
   String get label {
     switch (_mode) {
       case DataMode.live:
@@ -46,6 +36,5 @@ class DataModeProvider extends ChangeNotifier {
     }
   }
 
-  /// Compile-time API base URL, exposed so the indicator can show it.
   String get apiUrl => AppConfig.apiBaseUrl;
 }

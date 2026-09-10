@@ -41,8 +41,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   fetchCycleHistoryRange.mockResolvedValue([]);
   fetchProfile.mockResolvedValue({ last_period: null });
-  // Null by default: the outlook card is an addition, and every test
-  // written before it should still describe a page without one.
+  
   fetchPredictions.mockResolvedValue(null);
 });
 
@@ -268,8 +267,7 @@ describe('CyclePage save and delete', () => {
     await userEvent.click(screen.getByRole('button', { name: /save log/i }));
 
     await waitFor(() => expect(submitCycleLog).toHaveBeenCalled());
-    // The success message appears and then may be cleared by reload;
-    // just verify the save was submitted and history re-fetched.
+    
     await waitFor(() => expect(fetchCycleHistoryRange).toHaveBeenCalledTimes(2));
   });
 
@@ -283,8 +281,7 @@ describe('CyclePage save and delete', () => {
     await userEvent.click(screen.getByRole('button', { name: /save log/i }));
 
     await waitFor(() => expect(submitCycleLog).toHaveBeenCalled());
-    // The error is set in state; it may persist or be cleared by reload.
-    // Just verify the API was called and rejected.
+    
     expect(submitCycleLog).toHaveBeenCalledTimes(1);
   });
 
@@ -299,7 +296,7 @@ describe('CyclePage save and delete', () => {
     renderWithProviders(<CyclePage />);
 
     await waitFor(() => expect(fetchCycleHistoryRange).toHaveBeenCalled());
-    // Today is auto-selected and has a log, so delete button should appear.
+    
     expect(screen.getByRole('button', { name: /delete log/i })).toBeInTheDocument();
   });
 
@@ -364,7 +361,7 @@ describe('cycle outlook (issue #419)', () => {
 
     const outlook = (await screen.findByText(/cycle outlook/i)).closest('section');
     expect(outlook).not.toBeNull();
-    // Scoped to the card: the calendar below renders day numbers too.
+    
     expect(within(outlook!).getByText('13')).toBeInTheDocument();
     expect(within(outlook!).getByText('30')).toBeInTheDocument();
   });
@@ -379,8 +376,7 @@ describe('cycle outlook (issue #419)', () => {
   });
 
   it("uses the server's own disclaimer wording", async () => {
-    // It is the sentence that has to be right, so it is not paraphrased
-    // in the client.
+    
     fetchPredictions.mockResolvedValue(forecast());
 
     renderWithProviders(<CyclePage />);
@@ -402,7 +398,7 @@ describe('cycle outlook (issue #419)', () => {
   });
 
   it('still renders the calendar when the prediction call fails', async () => {
-    // The calendar is this page's job; the outlook is an addition to it.
+    
     fetchPredictions.mockRejectedValue(new Error('offline'));
 
     renderWithProviders(<CyclePage />);
@@ -413,21 +409,6 @@ describe('cycle outlook (issue #419)', () => {
   });
 });
 
-// ─── Taking a logged value back (issue #549) ────────────────────────────
-//
-// The chips are toggles: `toggleSingle` deselects to `null` and the chip
-// visibly un-highlights. But `save()` built its payload with a truthiness
-// check per field, so a cleared field was never added to the request —
-// which made it indistinguishable from a request where the user touched
-// nothing. The page then said "Saved to your account", reloaded the month,
-// re-seeded the draft from the unchanged server copy, and lit the chip
-// back up.
-//
-// These tests assert on **the payload**, not on what the page renders
-// afterwards. What the page renders after a save is whatever the mocked
-// reload returns, so a render assertion would pass against the broken
-// version too. The request is where the bug was.
-
 const TODAY_ISO = (() => {
   const now = new Date();
   const m = String(now.getMonth() + 1).padStart(2, '0');
@@ -435,7 +416,6 @@ const TODAY_ISO = (() => {
   return `${now.getFullYear()}-${m}-${d}`;
 })();
 
-/** A log already stored for today, as `fetchCycleHistoryRange` returns it. */
 function storedLog(overrides: Record<string, unknown> = {}) {
   return [{ id: 'log-1', start_date: TODAY_ISO, flow_intensity: 'heavy', ...overrides }];
 }
@@ -448,7 +428,6 @@ describe('CyclePage clearing a logged value', () => {
     renderWithProviders(<CyclePage />);
     await waitFor(() => expect(fetchCycleHistoryRange).toHaveBeenCalled());
 
-    // The stored value, tapped a second time to clear it.
     await userEvent.click(screen.getByRole('button', { name: /heavy/i }));
     await userEvent.click(screen.getByRole('button', { name: /save log/i }));
 
@@ -464,8 +443,6 @@ describe('CyclePage clearing a logged value', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /heavy/i }));
 
-    // The old `hasSelections` check disabled the button here, so the
-    // correction could not be sent at all.
     expect(screen.getByRole('button', { name: /save log/i })).not.toBeDisabled();
   });
 
@@ -473,9 +450,7 @@ describe('CyclePage clearing a logged value', () => {
     fetchCycleHistoryRange.mockResolvedValue(storedLog());
 
     renderWithProviders(<CyclePage />);
-    // The stored value reaching the chip is what says the draft has been
-    // seeded from it; asserting on the button before that would be reading
-    // the frame between the history arriving and the draft catching up.
+    
     await waitFor(() =>
       expect(screen.getByRole('button', { name: /heavy/i })).toHaveClass('active'),
     );
@@ -533,9 +508,7 @@ describe('CyclePage clearing a logged value', () => {
   });
 
   it('never sends notes, which this screen cannot show', async () => {
-    // A note is on the log, in the provider view, in the PDF report and in
-    // the privacy export. A screen with no notes control must not be able
-    // to delete one by describing the day without it.
+    
     fetchCycleHistoryRange.mockResolvedValue(
       storedLog({ notes: 'mentioned it to Dr Rao' }),
     );

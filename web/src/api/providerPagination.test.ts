@@ -1,9 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// Same approach as endpoints.test.ts: mock the client, not the network.
-// These tests are about which URL and query parameters go out, which is the
-// class of bug (#259, #349) that type-checks, lints, builds, and then fails
-// against a real backend.
 vi.mock('./client', () => ({
   apiClient: {
     get: vi.fn(),
@@ -80,9 +76,7 @@ describe('fetchProviderPatientPage', () => {
   });
 
   it('defaults to the server page size rather than leaving it unset', async () => {
-    // #349: the client assumed a limit the server did not agree with, and
-    // the calendar silently rendered empty. Sending it explicitly means a
-    // mismatch is visible in the request, not inferred from an empty list.
+    
     mockClient.get.mockResolvedValue({
       data: { patients: [], page: page() },
     });
@@ -112,9 +106,7 @@ describe('fetchProviderPatientPage', () => {
 
 describe('fetchProviderPatients', () => {
   it('returns the first page only, and does not walk to the end', async () => {
-    // Deliberate: each row costs the backend a profile read, a scoring
-    // pass and an access-log write, so fetching every page would restore
-    // exactly the cost #406 bounded. The dashboard offers "load more".
+    
     mockClient.get.mockResolvedValue({
       data: {
         patients: [patient('a')],
@@ -145,8 +137,7 @@ describe('fetchConsentPage', () => {
 
 describe('fetchConsents', () => {
   it('follows every page', async () => {
-    // The Sharing screen answers "who can see my data". A truncated answer
-    // to that question is a wrong answer, so this one does walk.
+    
     mockClient.get
       .mockResolvedValueOnce({
         data: {
@@ -187,7 +178,7 @@ describe('fetchConsents', () => {
   });
 
   it('stops when hasMore is true but nextOffset is null', async () => {
-    // An inconsistent envelope must not become an infinite loop.
+    
     mockClient.get.mockResolvedValue({
       data: {
         consents: [consent('a')],
@@ -202,8 +193,7 @@ describe('fetchConsents', () => {
   });
 
   it('stops at the page cap if the server always reports more', async () => {
-    // A server stuck reporting hasMore would otherwise spin here forever,
-    // hanging the Sharing screen with no error and no way out.
+    
     mockClient.get.mockResolvedValue({
       data: {
         consents: [consent('x')],
@@ -218,7 +208,7 @@ describe('fetchConsents', () => {
   });
 
   it('survives a response with no page envelope at all', async () => {
-    // An older backend, or a proxy that trimmed the body.
+    
     mockClient.get.mockResolvedValue({
       data: { consents: [consent('a')] },
     });

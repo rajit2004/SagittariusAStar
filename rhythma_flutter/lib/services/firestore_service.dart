@@ -6,14 +6,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'local_storage_service.dart';
 import '../providers/sync_status_provider.dart';
 
-/// Handles offline-first Firestore synchronization.
-///
-/// Architecture:
-/// - Hive (local) is always the source of truth for reads
-/// - Firestore syncs when online + cloudSyncEnabled == true
-/// - Pending writes queued in Hive under 'pending_cycle_sync' box
-/// - Automatic retry on connectivity restore
-/// - Last-write-wins conflict resolution (server timestamp wins)
 class FirestoreService {
   static FirebaseFirestore? _db;
   static StreamSubscription<List<ConnectivityResult>>?
@@ -22,7 +14,6 @@ class FirestoreService {
   static bool _initialized = false;
   static bool _isSyncing = false;
 
-  /// Safe wrappers: only call SyncStatusProvider if the provider exists.
   static void _updateStatus(SyncStatus status, String type, {String? error}) {
     if (SyncStatusProvider.hasInstance) {
       SyncStatusProvider.instance.updateStatus(status, type, error: error);
@@ -41,11 +32,6 @@ class FirestoreService {
     }
   }
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // INITIALIZATION
-  // ────────────────────────────────────────────────────────────────────────────
-
-  /// Initialize Firestore and start connectivity listener
   static Future<void> init() async {
     if (_initialized) return;
 
@@ -55,12 +41,10 @@ class FirestoreService {
       cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
     );
 
-    // Listen for connectivity changes
     _connectivitySubscription = _connectivity.onConnectivityChanged.listen(
       _onConnectivityChanged,
     );
 
-    // Initial connectivity check
     final results = await _connectivity.checkConnectivity();
     _onConnectivityChanged(results);
 
@@ -73,7 +57,7 @@ class FirestoreService {
 
     if (isOnline) {
       _setOnline();
-      // Trigger sync for current user
+      
       final uid = LocalStorageService.currentUserId;
       if (uid != null && LocalStorageService.cloudSyncEnabled) {
         flushPendingQueue(uid);
@@ -85,11 +69,6 @@ class FirestoreService {
     }
   }
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // CYCLE LOGS SYNC
-  // ────────────────────────────────────────────────────────────────────────────
-
-  /// Push local cycle logs to Firestore (last-write-wins via server timestamp)
   static Future<void> syncCycleLogs({required String userId}) async {
     if (!LocalStorageService.cloudSyncEnabled) {
       debugPrint('FirestoreService: cloud sync disabled, skipping cycle sync');
@@ -116,7 +95,7 @@ class FirestoreService {
         final docRef =
             userRef.collection('cycle_logs').doc(log['start_date'] as String);
         final data = Map<String, dynamic>.from(log);
-        // Add server timestamp for conflict resolution
+        
         data['synced_at'] = FieldValue.serverTimestamp();
         data['user_id'] = LocalStorageService.currentUserId;
         batch.set(docRef, data, SetOptions(merge: true));
@@ -126,7 +105,6 @@ class FirestoreService {
       debugPrint(
           'FirestoreService: synced ${logs.length} cycle logs for $userId');
 
-      // Read back resolved server timestamps and update Hive
       for (final log in logs) {
         final docRef =
             userRef.collection('cycle_logs').doc(log['start_date'] as String);
@@ -142,14 +120,13 @@ class FirestoreService {
     } catch (e) {
       debugPrint('FirestoreService: cycle sync failed: $e');
       _updateStatus(SyncStatus.error, 'cycle', error: e.toString());
-      // Queue for retry
+      
       await _queuePendingCycleLogs(userId, logs);
     } finally {
       _isSyncing = false;
     }
   }
 
-  /// Fetch cycle logs from Firestore and merge into local Hive (last-write-wins)
   static Future<void> pullCycleLogs(
       {required String userId, int limit = 50}) async {
     if (!LocalStorageService.cloudSyncEnabled) return;
@@ -169,14 +146,13 @@ class FirestoreService {
         final localLog =
             LocalStorageService.getCycleLogForDate(DateTime.parse(doc.id));
 
-        // Last-write-wins: compare server timestamp
         final serverTime = data['synced_at'] as Timestamp?;
         final localTime = localLog?['synced_at'] as Timestamp?;
 
         if (serverTime != null &&
             (localTime == null || serverTime.compareTo(localTime) >= 0)) {
-          // Server version is newer or equal - overwrite local
-          data['start_date'] = doc.id; // Ensure start_date is present
+          
+          data['start_date'] = doc.id; 
           await LocalStorageService.saveCycleLog(data);
         }
       }
@@ -189,7 +165,6 @@ class FirestoreService {
     }
   }
 
-  /// Queue cycle logs for retry when offline
   static Future<void> _queuePendingCycleLogs(
       String userId, List<Map<String, dynamic>> logs) async {
     final pendingBox = Hive.box<Map>('pending_cycle_sync');
@@ -205,7 +180,6 @@ class FirestoreService {
     _updateStatus(SyncStatus.pending, 'cycle');
   }
 
-  /// Queue a failed profile sync for retry when connectivity is restored
   static Future<void> _queuePendingProfile(
       String userId, Map<String, dynamic> profile) async {
     final pendingBox = Hive.box<Map>('pending_cycle_sync');
@@ -219,7 +193,6 @@ class FirestoreService {
     _updateStatus(SyncStatus.pending, 'profile');
   }
 
-  /// Flush pending cycle logs and profile queue to Firestore
   static Future<void> flushPendingQueue(String userId) async {
     if (!LocalStorageService.cloudSyncEnabled) return;
     if (_db == null) return;
@@ -234,8 +207,6 @@ class FirestoreService {
     debugPrint(
         'FirestoreService: flushing ${keys.length} pending items for $userId');
 
-    // Process cycle log entries (new keys start with 'cycle::',
-    // old keys from before generalization have no prefix)
     final cycleKeys = keys.where((k) => !k.startsWith('profile::')).toList();
     if (cycleKeys.isNotEmpty) {
       _updateStatus(SyncStatus.syncing, 'cycle');
@@ -272,7 +243,6 @@ class FirestoreService {
       }
     }
 
-    // Process profile entry
     final profileKey = 'profile::$userId';
     if (keys.contains(profileKey)) {
       _updateStatus(SyncStatus.syncing, 'profile');
@@ -299,11 +269,6 @@ class FirestoreService {
     }
   }
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // PROFILE SYNC
-  // ────────────────────────────────────────────────────────────────────────────
-
-  /// Push local profile to Firestore
   static Future<void> syncProfile({required String userId}) async {
     if (!LocalStorageService.cloudSyncEnabled) return;
     if (_db == null) return;
@@ -322,7 +287,6 @@ class FirestoreService {
       await userRef.set(data, SetOptions(merge: true));
       debugPrint('FirestoreService: synced profile for $userId');
 
-      // Read back resolved server timestamp and update Hive
       final resolvedDoc = await userRef.get();
       if (resolvedDoc.exists) {
         final resolved = resolvedDoc.data()!;
@@ -338,7 +302,6 @@ class FirestoreService {
     }
   }
 
-  /// Fetch profile from Firestore and merge into local Hive
   static Future<void> pullProfile({required String userId}) async {
     if (!LocalStorageService.cloudSyncEnabled) return;
     if (_db == null) return;
@@ -350,13 +313,12 @@ class FirestoreService {
       final data = doc.data()!;
       final localProfile = LocalStorageService.getProfile() ?? {};
 
-      // Last-write-wins based on synced_at timestamp
       final serverTime = data['synced_at'] as Timestamp?;
       final localTime = localProfile['synced_at'] as Timestamp?;
 
       if (serverTime != null &&
           (localTime == null || serverTime.compareTo(localTime) >= 0)) {
-        // Server is newer - merge server data into local (preserve local-only fields)
+        
         final merged = {...localProfile, ...data};
         await LocalStorageService.saveProfile(merged);
       }
@@ -369,11 +331,6 @@ class FirestoreService {
     }
   }
 
-  // ────────────────────────────────────────────────────────────────────────────
-  // REAL-TIME LISTENERS (optional - for live sync indicator)
-  // ────────────────────────────────────────────────────────────────────────────
-
-  /// Stream of cycle logs from Firestore for real-time updates
   static Stream<QuerySnapshot<Map<String, dynamic>>> cycleLogsStream(
       String userId) {
     if (_db == null) return Stream.empty();
@@ -386,16 +343,11 @@ class FirestoreService {
         .snapshots();
   }
 
-  /// Stream of profile from Firestore
   static Stream<DocumentSnapshot<Map<String, dynamic>>> profileStream(
       String userId) {
     if (_db == null) return Stream.empty();
     return _db!.collection('client_sync').doc(userId).snapshots();
   }
-
-  // ────────────────────────────────────────────────────────────────────────────
-  // CLEANUP
-  // ────────────────────────────────────────────────────────────────────────────
 
   static void dispose() {
     _connectivitySubscription?.cancel();

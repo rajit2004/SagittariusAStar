@@ -1,47 +1,39 @@
 import 'package:flutter/material.dart';
 
-/// Rhythma design tokens — mirrors the web CSS :root variables exactly.
 class RhythmaColors {
-  // Primary
+  
   static Color primary = const Color(0xFF9B72CF);
   static Color primaryFg = const Color(0xFFFCFAFF);
   static Color lavender = const Color(0xFFD8C8F0);
 
-  // Rose Pink  (oklch 0.72 0.14 350 ≈)
   static const Color rose = Color(0xFFE07AAD);
   static const Color roseFg = Color(0xFFFCFAFF);
 
-  // Teal  (oklch 0.68 0.10 195)
   static const Color teal = Color(0xFF52B3B0);
   static const Color tealFg = Color(0xFFFCFAFF);
 
-  // Warm Coral  (oklch 0.74 0.13 35)
   static const Color coral = Color(0xFFE8946A);
   static const Color coralFg = Color(0xFFFCFAFF);
 
-  // Backgrounds
   static Color background = const Color(0xFFFDF8FF);
   static Color backgroundEnd = const Color(0xFFF8EEF8);
   static Color surface = const Color(0xFFFFFFFF);
   static Color surfaceMuted = const Color(0xFFF5F0FA);
 
-  // Foreground
   static Color foreground = const Color(0xFF2D1F47);
   static Color mutedFg = const Color(0xFF7A6E8A);
 
-  // Border
   static Color border = const Color(0xFFE8DFF5);
 
   static bool isDark = false;
 
-  // Glass card helper — used many places
   static Color get glassCard => surface.withValues(alpha: 0.75);
   static Color get glassBorder => lavender.withValues(alpha: 0.4);
 
   static void updateTheme(bool isDarkMode, Color selectedPrimary) {
     isDark = isDarkMode;
     if (isDarkMode) {
-      // In dark mode, keep the background dark but use the selected primary color
+      
       primary = selectedPrimary;
       primaryFg = const Color(0xFFFCFAFF);
       lavender = selectedPrimary.withValues(alpha: 0.3);
@@ -54,14 +46,13 @@ class RhythmaColors {
       mutedFg = const Color(0xFFAAA4B0);
       border = const Color(0xFF333333);
     } else {
-      // In light mode, apply the custom primary color
+      
       primary = selectedPrimary;
       primaryFg = selectedPrimary.computeLuminance() > 0.5
           ? const Color(0xFF2D1F47)
           : const Color(0xFFFCFAFF);
       lavender = selectedPrimary.withValues(alpha: 0.3);
 
-      // Adapt the background to the chosen color
 background = Color.alphaBlend(
   selectedPrimary.withValues(alpha: 0.04),
   const Color(0xFFFFFFFF),

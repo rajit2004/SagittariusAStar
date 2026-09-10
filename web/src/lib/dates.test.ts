@@ -15,18 +15,13 @@ import {
   toISODate,
 } from './dates';
 
-// These are local-time helpers with no library behind them, so the failure
-// modes are the classic ones: UTC drift, month rollover, and leap days.
-// All fixtures are fixed dates — nothing here reads the clock.
-
 describe('toISODate', () => {
   it('pads month and day', () => {
     expect(toISODate(new Date(2026, 0, 5))).toBe('2026-01-05');
   });
 
   it('uses local components, not UTC', () => {
-    // `toISOString()` would report the previous day for anywhere west of
-    // Greenwich late in the evening — the bug this helper exists to avoid.
+    
     const lateEvening = new Date(2026, 4, 1, 23, 30);
     expect(toISODate(lateEvening)).toBe('2026-05-01');
   });
@@ -79,8 +74,7 @@ describe('addMonths', () => {
   });
 
   it('does not overflow from a 31-day month into the wrong month', () => {
-    // Normalising to the 1st is what makes this safe; a naive
-    // setMonth(+1) on Jan 31 lands in March.
+    
     expect(toISODate(addMonths(new Date(2026, 0, 31), 1))).toBe('2026-02-01');
   });
 });
@@ -121,8 +115,7 @@ describe('daysBetween', () => {
   });
 
   it('survives a DST transition', () => {
-    // A naive (b - a) / 86400000 without rounding returns 30.958… across a
-    // spring-forward, which floors to the wrong day count.
+    
     expect(daysBetween(new Date(2026, 2, 1), new Date(2026, 3, 1))).toBe(31);
   });
 });
@@ -147,12 +140,7 @@ describe('cycleDayFor', () => {
 });
 
 describe('phaseFor', () => {
-  // Boundaries are now derived the way `prediction_service.phase_for`
-  // derives them: ovulation sits at `cycleLength - lutealLength`, and the
-  // ovulation phase spans one day either side of it. For a 28-day cycle
-  // that is day 14, so days 13–15. The previous fixed 5/13/16 ladder did
-  // not vary with cycle length at all, which put ovulation a day late on
-  // a 28-day cycle and about a week early on a 35-day one.
+  
   it.each([
     ['2026-05-01', 'period'],
     ['2026-05-05', 'period'],
@@ -174,24 +162,18 @@ describe('phaseFor', () => {
   });
 
   it('says a cycle is running long instead of reporting luteal forever', () => {
-    // This used to return 'luteal', and the test that asserted it said so
-    // outright — "documents current behaviour rather than endorsing it".
-    // A stale last period pinned the user in a phase that had stopped
-    // being true weeks earlier. "Running long" is both honest and
-    // actionable, because the action is to log the period.
+    
     expect(phaseFor(parseISODate('2026-07-15'), '2026-05-01')).toBe('late');
   });
 
   it('moves ovulation later on a longer cycle', () => {
-    // Day 21 of a 35-day cycle: 35 − 14 = 21. On the old fixed ladder
-    // that day was already deep into the luteal phase.
+    
     expect(phaseFor(parseISODate('2026-05-21'), '2026-05-01', 35)).toBe('ovulation');
     expect(phaseFor(parseISODate('2026-05-14'), '2026-05-01', 35)).toBe('follicular');
   });
 
   it('shortens the luteal phase rather than ovulating on day 7', () => {
-    // A flat 14-day luteal phase on a 21-day cycle would place ovulation
-    // on day 7, which is not plausible. The floor is 10, so day 11.
+    
     expect(lutealLengthFor(21)).toBe(10);
     expect(phaseFor(parseISODate('2026-05-11'), '2026-05-01', 21)).toBe('ovulation');
   });
@@ -205,8 +187,6 @@ describe('phaseFor', () => {
   });
 });
 
-// Added with #349: the Cycle calendar now loads a date window per month
-// instead of asking for a fixed number of the most recent entries.
 describe('month windows', () => {
   it('finds the last day of a 31-day month', () => {
     expect(toISODate(endOfMonth(parseISODate('2026-01-10')))).toBe('2026-01-31');
@@ -217,7 +197,7 @@ describe('month windows', () => {
   });
 
   it('gets February right in a leap year', () => {
-    // The reason this is `day 0 of next month` rather than a lookup table.
+    
     expect(toISODate(endOfMonth(parseISODate('2028-02-10')))).toBe('2028-02-29');
     expect(toISODate(endOfMonth(parseISODate('2026-02-10')))).toBe('2026-02-28');
   });
@@ -247,8 +227,7 @@ describe('month windows', () => {
   });
 
   it('stays inside a single server page', () => {
-    // A window wider than MAX_HISTORY_PAGE entries would need paging on
-    // every month change, which is the cost this design avoids.
+    
     const { start, end } = monthWindow(parseISODate('2026-01-15'));
     expect(daysBetween(parseISODate(start), parseISODate(end))).toBeLessThan(100);
   });

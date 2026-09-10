@@ -4,20 +4,16 @@ from unittest.mock import MagicMock
 import pytest
 from fastapi.testclient import TestClient
 
-
-from main import app  # noqa: E402
-from core.auth import get_current_user  # noqa: E402
-from core.cycle_validation import (  # noqa: E402
+from main import app
+from core.auth import get_current_user
+from core.cycle_validation import (
     MAX_NOTES_CHARS,
     MAX_SYMPTOMS,
 )
-import services.firestore_service as fs  # noqa: E402
-from services.firestore_service import CycleService, MockFirestoreClient  # noqa: E402
-from services.scoring_service import build_model_features  # noqa: E402
+import services.firestore_service as fs
+from services.firestore_service import CycleService, MockFirestoreClient
+from services.scoring_service import build_model_features
 
-# Same reasoning as test_cycle_history.py: reuse whichever mock client is
-# already installed rather than swapping in a fresh one, or earlier test
-# modules end up holding a reference to a client nothing writes to.
 if not isinstance(fs.db, MockFirestoreClient):
     fs.db = MockFirestoreClient()
 db = fs.db
@@ -31,7 +27,6 @@ VALUES_URL = "/api/v1/cycle/loggable-values"
 TODAY = date.today()
 YESTERDAY = TODAY - timedelta(days=1)
 
-
 @pytest.fixture(autouse=True)
 def _override_auth():
     app.dependency_overrides[get_current_user] = lambda: {
@@ -41,7 +36,6 @@ def _override_auth():
     yield
     app.dependency_overrides.clear()
 
-
 @pytest.fixture(autouse=True)
 def _clean_db():
     db._collections = {}
@@ -49,22 +43,14 @@ def _clean_db():
     yield
     db._collections = {}
 
-
 def stored_log(start=None):
-    """Read back what was actually written for a day."""
     doc_id = f"{USER_ID}_{(start or TODAY).isoformat()}"
     return db.collection("cycle_logs").document(doc_id).get().to_dict()
-
 
 def log_count():
     return len(db._collections.get("cycle_logs", {}))
 
-
-# ─── The route refuses what the schema refuses ─────────────────────────────
-
-
 def test_the_payload_from_the_issue_is_rejected_by_the_route():
-    """This exact request returned 200 on main."""
     response = client.post(
         LOG_URL,
         json={
@@ -81,7 +67,6 @@ def test_the_payload_from_the_issue_is_rejected_by_the_route():
     assert response.status_code == 422
     assert response.json()["error"]["code"] == "validation_error"
     assert log_count() == 0, "a rejected log must not be stored"
-
 
 @pytest.mark.parametrize(
     "field,value",
@@ -103,7 +88,6 @@ def test_each_bad_field_is_refused_on_its_own(field, value):
     assert response.status_code == 422
     assert log_count() == 0
 
-
 def test_too_many_symptoms_are_refused():
     response = client.post(
         LOG_URL,
@@ -115,7 +99,6 @@ def test_too_many_symptoms_are_refused():
 
     assert response.status_code == 422
 
-
 def test_a_future_start_date_is_refused():
     response = client.post(
         LOG_URL, json={"start_date": (TODAY + timedelta(days=1)).isoformat()}
@@ -123,7 +106,6 @@ def test_a_future_start_date_is_refused():
 
     assert response.status_code == 422
     assert "future" in response.text
-
 
 def test_an_inverted_date_range_is_refused():
     response = client.post(
@@ -135,10 +117,6 @@ def test_an_inverted_date_range_is_refused():
     )
 
     assert response.status_code == 422
-
-
-# ─── The route stores the normalised value ─────────────────────────────────
-
 
 def test_a_good_log_is_still_accepted_and_stored():
     response = client.post(
@@ -160,20 +138,12 @@ def test_a_good_log_is_still_accepted_and_stored():
     assert saved["sleep_hours"] == 7.5
     assert saved["symptoms"] == ["cramps"]
 
-
 def test_the_stored_flow_intensity_is_canonical():
-    """`scoring_service` matches against lowercase keys.
-
-    Storing `"Heavy"` would make the entry invisible to the flow rules
-    rather than merely untidy — it would fall through to the "no value
-    logged" default.
-    """
     client.post(
         LOG_URL, json={"start_date": TODAY.isoformat(), "flow_intensity": "  HEAVY  "}
     )
 
     assert stored_log()["flow_intensity"] == "heavy"
-
 
 def test_stored_symptoms_are_normalised_and_deduplicated():
     client.post(
@@ -186,7 +156,6 @@ def test_stored_symptoms_are_normalised_and_deduplicated():
 
     assert stored_log()["symptoms"] == ["cramps", "back pain"]
 
-
 def test_stored_notes_are_trimmed():
     client.post(
         LOG_URL,
@@ -195,9 +164,7 @@ def test_stored_notes_are_trimmed():
 
     assert stored_log()["notes"] == "cramps all day"
 
-
 def test_a_quick_log_tile_still_writes_one_field():
-    """The Home screen sends a single field; partial payloads must survive."""
     response = client.post(
         LOG_URL, json={"start_date": TODAY.isoformat(), "flow_intensity": "light"}
     )
@@ -207,7 +174,6 @@ def test_a_quick_log_tile_still_writes_one_field():
     assert saved["flow_intensity"] == "light"
     assert "mood" not in saved or saved.get("mood") is None
 
-
 def test_flutters_none_flow_round_trips():
     response = client.post(
         LOG_URL, json={"start_date": TODAY.isoformat(), "flow_intensity": "none"}
@@ -216,14 +182,9 @@ def test_flutters_none_flow_round_trips():
     assert response.status_code == 200
     assert stored_log()["flow_intensity"] == "none"
 
-
-# ─── The PUT route has the same rules ──────────────────────────────────────
-
-
 def _existing_log_id(start=None):
     start = start or YESTERDAY
     return CycleService.upsert_log(USER_ID, start, {"flow_intensity": "medium"})
-
 
 @pytest.mark.parametrize(
     "payload",
@@ -242,7 +203,6 @@ def test_the_update_route_refuses_the_same_values(payload):
 
     assert response.status_code == 422
 
-
 def test_an_update_normalises_before_storing():
     log_id = _existing_log_id()
 
@@ -251,13 +211,7 @@ def test_an_update_normalises_before_storing():
     assert response.status_code == 200
     assert stored_log(YESTERDAY)["flow_intensity"] == "heavy"
 
-
 def test_an_update_cannot_set_an_end_date_before_the_stored_start():
-    """The payload has no `start_date`, so this needs the stored document.
-
-    Without the read-back, `PUT` could produce a log the `POST` route
-    would have refused to create.
-    """
     start = TODAY - timedelta(days=2)
     log_id = _existing_log_id(start)
 
@@ -268,7 +222,6 @@ def test_an_update_cannot_set_an_end_date_before_the_stored_start():
 
     assert response.status_code == 422
     assert "before start_date" in response.text
-
 
 def test_an_update_accepts_a_valid_end_date():
     start = TODAY - timedelta(days=4)
@@ -281,9 +234,7 @@ def test_an_update_accepts_a_valid_end_date():
 
     assert response.status_code == 200
 
-
 def test_an_update_to_someone_elses_log_is_still_refused():
-    """The new read-back must not become a way to probe other users' logs."""
     other_id = CycleService.upsert_log("another-user", TODAY, {"flow_intensity": "light"})
 
     response = client.put(
@@ -292,7 +243,6 @@ def test_an_update_to_someone_elses_log_is_still_refused():
 
     assert response.status_code == 403
 
-
 def test_an_update_to_a_missing_log_is_a_404():
     response = client.put(
         "/api/v1/cycle/no-such-log", json={"end_date": TODAY.isoformat()}
@@ -300,26 +250,12 @@ def test_an_update_to_a_missing_log_is_a_404():
 
     assert response.status_code == 404
 
-
 def test_an_empty_update_is_still_a_400():
-    """Pre-existing behaviour; the new validators must not change it."""
     log_id = _existing_log_id()
 
     assert client.put(f"/api/v1/cycle/{log_id}", json={}).status_code == 400
 
-
-# ─── Downstream effect: the reason this matters ────────────────────────────
-
-
 def test_an_unknown_flow_intensity_can_no_longer_reach_the_scorer():
-    """The harm the issue describes, asserted end to end.
-
-    `build_model_features` buckets flow with `.get(value, default)`, so
-    `"banana"` scored as medium — indistinguishable from a real medium
-    entry, and MHS moved because of it. The fix is that the value can no
-    longer be stored, so this asserts on what is *in the database* after a
-    rejected write rather than on the mapping in isolation.
-    """
     client.post(
         LOG_URL, json={"start_date": TODAY.isoformat(), "flow_intensity": "banana"}
     )
@@ -328,23 +264,14 @@ def test_an_unknown_flow_intensity_can_no_longer_reach_the_scorer():
     assert logs == []
     assert build_model_features(logs) == []
 
-
 def test_explicit_none_flow_no_longer_scores_as_medium():
-    """`none` had no entry in the map and fell through to the medium default.
-
-    A user recording no bleeding was fed to the model as an average period
-    day. It now scores zero, extending the ordinal scale in the only
-    direction that makes sense.
-    """
     features = build_model_features([{"start_date": TODAY, "flow_intensity": "none"}])
     assert features[0]["flow_intensity"] == 0
 
     absent = build_model_features([{"start_date": TODAY}])
     assert absent[0]["flow_intensity"] == 2, "absence is still the midpoint"
 
-
 def test_a_rejected_sleep_value_cannot_skew_a_provider_average():
-    """`provider_service` means `sleep_hours` with no re-validation."""
     client.post(
         LOG_URL, json={"start_date": TODAY.isoformat(), "sleep_hours": -5000.0}
     )
@@ -360,10 +287,6 @@ def test_a_rejected_sleep_value_cannot_skew_a_provider_average():
     ]
     assert values == [7.0]
 
-
-# ─── The description endpoint ──────────────────────────────────────────────
-
-
 def test_loggable_values_is_served():
     response = client.get(VALUES_URL)
 
@@ -374,14 +297,7 @@ def test_loggable_values_is_served():
     assert body["symptomsAreOpenEnded"] is True
     assert body["limits"]["stressLevel"]["max"] == 5
 
-
 def test_every_advertised_value_is_accepted_by_the_route():
-    """The described vocabulary and the enforced one must not drift.
-
-    Driven through HTTP rather than the schema, because "the endpoint says
-    a client may send this" and "the write route accepts it" are the two
-    things that have to agree.
-    """
     described = client.get(VALUES_URL).json()
 
     for value in described["flowIntensities"]:
@@ -401,7 +317,6 @@ def test_every_advertised_value_is_accepted_by_the_route():
             LOG_URL, json={"start_date": TODAY.isoformat(), "symptoms": [value]}
         )
         assert response.status_code == 200, f"advertised symptom {value!r} was refused"
-
 
 def test_loggable_values_requires_authentication():
     app.dependency_overrides.clear()

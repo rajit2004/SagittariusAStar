@@ -50,11 +50,9 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Tap day 1 of the displayed month – always safe.
     await tester.tap(find.text('1').first);
     await tester.pump();
 
-    // Verify the calendar still renders.
     expect(find.text('1'), findsWidgets);
   });
 
@@ -70,12 +68,10 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    // Swipe left (next month)
     pageController.nextPage(
         duration: const Duration(milliseconds: 100), curve: Curves.linear);
     await tester.pumpAndSettle();
 
-    // Ensure the calendar still renders.
     expect(find.text('1'), findsWidgets);
   });
 

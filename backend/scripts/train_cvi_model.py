@@ -1,12 +1,3 @@
-"""
-Train the XGBoost model for Cycle Variability Index (CVI).
-
-Generates synthetic training data based on realistic cycle patterns,
-trains an XGBoost regressor, and exports the model as cvi_model.joblib.
-
-Run from the backend directory:
-    python scripts/train_cvi_model.py
-"""
 
 import os
 import sys
@@ -16,34 +7,26 @@ import xgboost as xgb
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-
 def generate_synthetic_data(n_samples: int = 10000, seed: int = 42) -> tuple:
     rng = np.random.default_rng(seed)
 
-    # Number of logged cycles per sample (3 to 6)
     n_cycles = rng.integers(3, 7, size=n_samples)
 
-    # Each sample needs aggregated features. We generate per-cycle data
-    # within each sample and then aggregate.
     features = []
 
     for i in range(n_samples):
         nc = n_cycles[i]
 
-        # Cycle lengths: base 28 days with varying irregularity
         base_length = rng.normal(28, 3, size=nc)
         irregularity = rng.exponential(1.5, size=nc)
         lengths = base_length + irregularity * rng.choice([-1, 1], size=nc) * rng.uniform(0.5, 2)
         lengths = np.clip(lengths, 18, 55)
 
-        # Flow durations
         flows = rng.normal(5, 1.5, size=nc)
         flows = np.clip(flows, 1, 10)
 
-        # Stress levels (1-5)
         stresses = rng.uniform(1, 5, size=nc)
 
-        # Sleep hours (4-10)
         sleeps = rng.uniform(4, 10, size=nc)
 
         agg = [
@@ -60,7 +43,6 @@ def generate_synthetic_data(n_samples: int = 10000, seed: int = 42) -> tuple:
 
     features = np.array(features)
 
-    # Target CVI score (0-100) based on the feature relationships
     std_len = features[:, 1]
     range_len = features[:, 4]
     std_flow = features[:, 3]
@@ -78,7 +60,6 @@ def generate_synthetic_data(n_samples: int = 10000, seed: int = 42) -> tuple:
     targets = np.round(targets, 1)
 
     return features, targets
-
 
 def main():
     print("Generating synthetic training data...")
@@ -101,12 +82,10 @@ def main():
 
     model.fit(X, y)
 
-    # Evaluate
     preds = model.predict(X)
     mae = np.mean(np.abs(preds - y))
     print(f"Training MAE: {mae:.3f}")
 
-    # Save
     model_path = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
         "models",
@@ -116,7 +95,6 @@ def main():
     joblib.dump(model, model_path)
     print(f"Model saved to {model_path}")
 
-    # Verify loaded model produces sensible predictions
     model = joblib.load(model_path)
     sample = np.array([[28.0, 2.0, 5.0, 0.5, 6.0, 2.5, 7.0, 4.0]])
     pred = float(model.predict(sample)[0])
@@ -127,7 +105,6 @@ def main():
     print(f"Sample prediction (irregular cycles): {pred:.1f} (expected ~80+)")
 
     print("Training complete.")
-
 
 if __name__ == "__main__":
     main()

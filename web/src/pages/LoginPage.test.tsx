@@ -28,8 +28,7 @@ beforeEach(() => {
 });
 
 function fields() {
-  // The inputs are labelled by wrapping <label> text, and the password
-  // input is the only one of type="password".
+  
   const inputs = screen.getAllByRole('textbox');
   const password = document.querySelector(
     'input[type="password"]',
@@ -60,8 +59,7 @@ describe('LoginPage', () => {
   });
 
   it('navigates to the dashboard on success, replacing history', async () => {
-    // `replace: true` matters: without it, Back from the dashboard lands
-    // on the login page of an already-signed-in user.
+    
     login.mockResolvedValue(undefined);
     renderWithProviders(<LoginPage />, { route: '/login' });
 
@@ -74,8 +72,7 @@ describe('LoginPage', () => {
   });
 
   it('shows an unreachable-server message rather than blaming the password', async () => {
-    // The whole reason friendlyAuthError exists — a CORS failure or a
-    // stopped backend used to be reported as "invalid credentials".
+    
     login.mockRejectedValue(axiosError(undefined));
     renderWithProviders(<LoginPage />, { route: '/login' });
 

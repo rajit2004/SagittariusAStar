@@ -20,7 +20,7 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F8F5F2] via-[#FAF9F7] to-[#F5F2ED] dark:from-[#0F172A] dark:via-[#1E293B] dark:to-[#0F172A]">
-      {/* Navigation */}
+      {}
       <nav className="sticky top-0 z-50 backdrop-blur-sm bg-[#F8F5F2]/95 dark:bg-[#0F172A]/95 border-b border-[#E8DDD5] dark:border-[#334155]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -62,7 +62,7 @@ export default function Page() {
         </div>
       </nav>
 
-      {/* Hero Section */}
+      {}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
@@ -117,7 +117,7 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Features Section */}
+      {}
       <section id="features" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-[#2D5B6E] dark:text-[#7DD3FC] mb-4">Powerful Features Built for You</h2>
@@ -166,7 +166,7 @@ export default function Page() {
         </div>
       </section>
 
-      {/* AI Assistant Section */}
+      {}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="relative h-96 md:h-[450px]">
@@ -199,7 +199,7 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Screenshots Grid */}
+      {}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <h2 className="text-4xl font-bold text-center text-[#2D5B6E] dark:text-[#7DD3FC] mb-16">See It In Action</h2>
         <div className="grid md:grid-cols-2 gap-8">
@@ -238,7 +238,7 @@ export default function Page() {
         </div>
       </section>
 
-      {/* About Section */}
+      {}
       <section id="about" className="bg-[#6B3F7F] dark:bg-[#581C87] text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -277,7 +277,7 @@ export default function Page() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {}
       <section id="contact" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="bg-gradient-to-r from-[#E94B7B] to-[#D63A6A] dark:from-[#F472B6] dark:to-[#EC4899] rounded-3xl p-12 text-center text-white">
           <h2 className="text-4xl font-bold mb-4">Ready to Take Control?</h2>
@@ -306,7 +306,7 @@ export default function Page() {
         </div>
       </section>
 
-      {/* Footer */}
+      {}
       <footer className="bg-[#2D5B6E] dark:bg-[#0F172A] text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8 mb-8">

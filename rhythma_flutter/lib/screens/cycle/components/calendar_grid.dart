@@ -29,19 +29,18 @@ class _CalendarGridState extends State<CalendarGrid> {
   Widget build(BuildContext context) {
     final cycleProvider = context.watch<CycleProvider>();
 
-    // Calculate cell width based on screen size, similar to before
     final cellWidth = (MediaQuery.of(context).size.width - 40 - 32) / 7;
 
     return SizedBox(
-      height: 330, // Approximate fixed height to prevent PageView issues
+      height: 330, 
       child: PageView.builder(
         controller: widget.pageController,
         onPageChanged: (index) {
           final month = _monthForIndex(index);
-          // Only update if it's different to avoid loops
+          
           if (cycleProvider.displayedMonth.year != month.year ||
               cycleProvider.displayedMonth.month != month.month) {
-            // We use read to avoid calling setState during build/scroll
+            
             context.read<CycleProvider>().setDisplayedMonth(month);
           }
         },
@@ -56,12 +55,12 @@ class _CalendarGridState extends State<CalendarGrid> {
 
           return Wrap(
             children: [
-              // Empty cells for the leading gap
+              
               ...List.generate(
                 firstWeekday,
                 (_) => SizedBox(width: cellWidth, height: 46),
               ),
-              // Actual days
+              
               ...List.generate(monthDays, (i) {
                 final day = i + 1;
                 final currentDate =
@@ -125,7 +124,7 @@ class _CalendarGridState extends State<CalendarGrid> {
                                           : RhythmaColors.foreground,
                                 ),
                               ),
-                              // Marker for logged symptoms
+                              
                               if (hasLog)
                                 Container(
                                   margin: const EdgeInsets.only(top: 1),

@@ -38,7 +38,7 @@ export function SettingsPage() {
 
   const changeLanguage = async (code: string) => {
     await i18n.changeLanguage(code);
-    // Best-effort sync so the preference follows the user across devices.
+    
     patchProfile({ language: code }).catch(() => undefined);
   };
 
@@ -111,14 +111,7 @@ export function SettingsPage() {
           <span>{t('settings.logOut')}</span>
           <span className="chevron">›</span>
         </button>
-        {/* A link, not a button that deletes.
-            This used to call `DELETE /auth/me` behind a `window.confirm`
-            whose message was the button's own label, with the error
-            swallowed and a `finally` that logged the user out either way —
-            so a failed deletion was indistinguishable from a successful
-            one. Deleting now happens on its own screen, where the user is
-            shown what will be destroyed before she confirms it, and where
-            a failure is reported instead of hidden (issue #418). */}
+        {}
         <Link to="/settings/data" className="menu-item glass-card danger">
           <span>🗑️</span>
           <span>{t('settings.deleteAccount')}</span>

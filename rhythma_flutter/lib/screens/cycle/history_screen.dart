@@ -187,7 +187,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            // Timeline line
+                            
                             SizedBox(
                               width: 24,
                               child: Column(
@@ -214,7 +214,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             ),
                             const SizedBox(width: 16),
                             
-                            // Card
                             Expanded(
                               child: Padding(
                                 padding: const EdgeInsets.only(bottom: 16),

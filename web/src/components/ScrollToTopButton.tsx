@@ -23,10 +23,6 @@ export function ScrollToTopButton() {
 
   if (!isVisible) return null;
 
-  // The visible label is an arrow glyph, so the accessible name comes
-  // entirely from `aria-label`. It was hardcoded English on an app that
-  // ships nine locales (#409), and the glyph is hidden so a screen reader
-  // reads the name rather than announcing "up arrow" after it.
   return (
     <button
       type="button"

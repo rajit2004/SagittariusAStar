@@ -5,11 +5,6 @@ import { PredictionCard } from '../PredictionCard';
 import { predictionFixture, renderWithProviders } from '../../test/utils';
 import type { DashboardPrediction } from '../../api/endpoints';
 
-// The case worth the most here is `overdue`. The dashboard's legacy
-// `nextPeriodDays` is `max(avg - day, 0)`, so four days late and due today
-// were the same rendered number — the app could not say the one thing a
-// tracker exists to say.
-
 function render(prediction: unknown, fallbackDays: number | null = 16) {
   return renderWithProviders(
     <PredictionCard
@@ -64,7 +59,7 @@ describe('uncertainty', () => {
   });
 
   it('omits the range when both ends are the same day', () => {
-    // A "range" of one day is a point estimate wearing a range's clothes.
+    
     render(
       predictionFixture({
         predictedRange: { earliest: '2026-05-29', latest: '2026-05-29' },
@@ -81,8 +76,7 @@ describe('uncertainty', () => {
   });
 
   it('says when the estimate is just the population default', () => {
-    // A brand-new user is otherwise looking at 28 days with no way to
-    // tell it is an average and not anything about her.
+    
     render(predictionFixture({ estimateSource: 'population_default' }));
 
     expect(screen.getByText(/typical 28-day cycle/i)).toBeInTheDocument();
@@ -109,8 +103,7 @@ describe('phase and fertile window', () => {
   });
 
   it('gives the fertile window real dates', () => {
-    // Home previously showed the fixed string "Fertile window + High
-    // energy" on every cycle day, which is a claim rather than a reading.
+    
     render(predictionFixture());
 
     expect(screen.getByText(/Fertile window .* – .*/)).toBeInTheDocument();
@@ -136,7 +129,7 @@ describe('phase and fertile window', () => {
 
 describe('a backend without predictions', () => {
   it('falls back to the legacy number rather than showing nothing', () => {
-    // A backend from before #272 is still a working backend.
+    
     render(null, 9);
 
     expect(screen.getByText('9')).toBeInTheDocument();

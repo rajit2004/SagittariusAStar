@@ -25,7 +25,7 @@ beforeEach(async () => {
 
 describe('useDocumentMeta', () => {
   it('sets a page-specific title instead of the scaffold default', async () => {
-    // Before #407 every route's tab said the literal string "web".
+    
     withI18n(<Page titleKey="meta.cycle.title" />);
 
     await waitFor(() => expect(document.title).toBe('Cycle · Rhythma'));

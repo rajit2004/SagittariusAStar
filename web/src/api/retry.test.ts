@@ -37,11 +37,7 @@ describe('isRetryableMethod', () => {
   });
 
   it('POST is not', () => {
-    // The constraint the whole module is built around. A POST /cycle/log
-    // that timed out may already have been committed — the response was
-    // lost, not the write — so replaying it creates a duplicate cycle
-    // entry, which every prediction and insight downstream is computed
-    // from. A visible error beats quietly corrupt data.
+    
     expect(isRetryableMethod('post')).toBe(false);
   });
 
@@ -51,8 +47,7 @@ describe('isRetryableMethod', () => {
   });
 
   it('DELETE is not, despite being idempotent by spec', () => {
-    // This API answers 404 for a second delete, so a retry after a lost
-    // success turns a completed operation into an error the user sees.
+    
     expect(isRetryableMethod('delete')).toBe(false);
   });
 
@@ -71,7 +66,7 @@ describe('isNetworkError', () => {
   });
 
   it('is false for a request we cancelled ourselves', () => {
-    // Retrying an aborted request would defeat the abort.
+    
     expect(isNetworkError(error({ code: 'ERR_CANCELED' }))).toBe(false);
   });
 });
@@ -82,8 +77,7 @@ describe('shouldRetry', () => {
   });
 
   it.each([400, 401, 403, 404, 409, 422, 500])('does not retry a %i', (status) => {
-    // 500 is excluded on purpose: an unhandled exception is deterministic,
-    // so replaying it burns the budget to arrive at the same answer.
+    
     expect(shouldRetry(error({ status }), 0)).toBe(false);
   });
 
@@ -101,8 +95,7 @@ describe('shouldRetry', () => {
   });
 
   it('checks the ceiling before the reason, so the total is bounded', () => {
-    // Otherwise a flapping endpoint could spend the budget once per
-    // failure mode rather than once overall.
+    
     expect(shouldRetry(error({ status: 429 }), MAX_RETRY_ATTEMPTS + 5)).toBe(false);
     expect(shouldRetry(error(), MAX_RETRY_ATTEMPTS + 5)).toBe(false);
   });
@@ -110,7 +103,7 @@ describe('shouldRetry', () => {
 
 describe('parseRetryAfter', () => {
   it('reads delta-seconds', () => {
-    // The form #135 added to this API's 429 responses.
+    
     expect(parseRetryAfter('2')).toBe(2000);
   });
 
@@ -137,7 +130,7 @@ describe('parseRetryAfter', () => {
 
 describe('backoffDelay', () => {
   it('grows with the attempt number', () => {
-    // Compared at the ceiling, since the value itself is jittered.
+    
     const noJitter = () => 1;
     expect(backoffDelay(0, null, noJitter)).toBe(BASE_BACKOFF_MS);
     expect(backoffDelay(1, null, noJitter)).toBe(BASE_BACKOFF_MS * 2);
@@ -149,9 +142,7 @@ describe('backoffDelay', () => {
   });
 
   it('jitters across the whole window', () => {
-    // Without jitter every client that failed against the same restart
-    // retries at the same instant, and the storm is what keeps the server
-    // down. Spreading across the window is the point, not decoration.
+    
     expect(backoffDelay(2, null, () => 0)).toBe(0);
     expect(backoffDelay(2, null, () => 1)).toBe(BASE_BACKOFF_MS * 4);
   });
@@ -161,8 +152,7 @@ describe('backoffDelay', () => {
   });
 
   it('still caps an absurd Retry-After', () => {
-    // A misconfigured proxy saying "come back in an hour" should not hang
-    // the tab for an hour.
+    
     expect(backoffDelay(0, 3_600_000, () => 1)).toBe(MAX_BACKOFF_MS * 4);
   });
 });
@@ -173,8 +163,7 @@ describe('timeoutFor', () => {
   });
 
   it('gives the assistant a longer budget', () => {
-    // It waits on a model call. Applying the default would turn a working
-    // answer into a timeout.
+    
     expect(timeoutFor('/assistant/chat', DEFAULT_TIMEOUT_MS)).toBe(LONG_TIMEOUT_MS);
   });
 
@@ -191,15 +180,12 @@ describe('timeoutFor', () => {
 
 describe('the default timeout', () => {
   it('matches the Flutter client', () => {
-    // rhythma_flutter/lib/services/api_client.dart sets 10s connect and
-    // receive timeouts. The two clients talking to one backend should not
-    // disagree about how long is too long.
+    
     expect(DEFAULT_TIMEOUT_MS).toBe(10_000);
   });
 
   it('is not zero, which is what axios defaults to', () => {
-    // The bug: axios `timeout: 0` means wait forever, so a hung request
-    // never settled and the page's `finally` never cleared the spinner.
+    
     expect(DEFAULT_TIMEOUT_MS).toBeGreaterThan(0);
   });
 });

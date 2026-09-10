@@ -5,10 +5,7 @@ from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional
 
 from core.auth import get_current_user
-# `UserService` used to be imported here and was never referenced. The
-# profile this module needs comes back from `get_user_scores()` — which
-# fetches it once and hands it over precisely so the dashboard does not
-# read the user document a second time.
+
 from services.health_observations_service import (
     build_analysis,
     describe_consistency,
@@ -20,25 +17,15 @@ from services.prediction_service import dashboard_summary, predict
 from services.scoring_service import get_user_scores, compute_cycle_stats, as_date, DEFAULT_CYCLE_LENGTH
 from services.trend_service import build_trends
 
-#: How many day-documents the trends comparison reads.
-#:
-#: Two cycle windows is the target. At roughly one log per day a
-#: two-cycle span is ~60 documents for a typical cycle length, so 120
-#: leaves headroom for long cycles without letting the read grow without
-#: bound. The dashboard's own `_LOGS_LIMIT` of 10 stays where it is — it
-#: feeds the scoring models, which want the most recent handful.
 TRENDS_LOG_LIMIT = 120
-
 
 class DashboardUser(BaseModel):
     name: str
-
 
 class DashboardCycle(BaseModel):
     day: Optional[int] = None
     total: int
     nextPeriodDays: Optional[int] = None
-
 
 class DashboardInsights(BaseModel):
     averageCycleLength: Optional[float] = None
@@ -48,42 +35,23 @@ class DashboardInsights(BaseModel):
     sleepHours: Optional[str] = None
     waterAvg: Optional[float] = None
 
-
 class CycleHistoryEntry(BaseModel):
     start_date: str
     cycle_length: int
 
-
 class DashboardPredictionRange(BaseModel):
-    """How far either side of the predicted date the real one may fall."""
 
     earliest: Optional[str] = None
     latest: Optional[str] = None
 
-
 class DashboardFertileWindow(BaseModel):
-    """The estimated fertile window, and what it must not be used for.
-
-    ``notForContraception`` is a safety flag, not decoration: it is the
-    field that tells a client this window is a statistical estimate from
-    logged dates and cannot be relied on to avoid pregnancy. Declaring it
-    here — with a default — is what stops it going missing silently if
-    ``prediction_service`` ever stops emitting it.
-    """
 
     start: Optional[str] = None
     end: Optional[str] = None
     isEstimate: bool = True
     notForContraception: bool = True
 
-
 class DashboardObservation(BaseModel):
-    """The single highest-priority observation, for the Home screen.
-
-    Nullable: a brand-new user with no logs has nothing to say yet, and a
-    client written before this field existed must keep working, so it is
-    additive and optional rather than a required object.
-    """
 
     code: str
     severity: str
@@ -95,28 +63,7 @@ class DashboardObservation(BaseModel):
     isMedicalAdvice: bool = False
     disclaimerKey: str
 
-
 class DashboardPrediction(BaseModel):
-    """The compact prediction summary the Home screen renders.
-
-    Mirrors ``services/prediction_service.py::dashboard_summary``. Fields
-    are Optional because a new user with no logged period has no anchor
-    date; ``isOverdue`` defaults to False in that case.
-
-    Added alongside ``cycle``, not inside it: ``cycle.nextPeriodDays``
-    keeps its existing clamped-at-zero meaning so clients written before
-    this field existed are unaffected, while ``daysUntilNextPeriod`` here
-    is the honest signed value.
-
-    This class was declared twice in this module (issue #381), ~40 lines
-    apart. Python kept the second, so the typed ``predictedRange`` /
-    ``fertileWindow`` and the non-null ``confidence`` / ``estimateSource``
-    defaults below never reached ``DashboardResponse`` — they lived on the
-    copy that was silently discarded, and ``/docs`` published the two
-    nested objects as untyped dicts. The two docstrings are merged here;
-    ``test_dashboard_prediction_schema.py`` asserts the served schema so a
-    second declaration cannot quietly win again.
-    """
 
     nextPeriodDate: Optional[str] = None
     daysUntilNextPeriod: Optional[int] = Field(
@@ -125,9 +72,7 @@ class DashboardPrediction(BaseModel):
     isOverdue: bool = False
     daysOverdue: int = 0
     phase: str = "unknown"
-    #: Defaults are the most conservative value, not ``None``. A client
-    #: reading ``prediction.confidence`` to decide how firmly to present a
-    #: date should never be handed a null it has to guess about.
+
     confidence: str = "low"
     estimateSource: str = "population_default"
     predictedRange: DashboardPredictionRange = Field(
@@ -136,7 +81,6 @@ class DashboardPrediction(BaseModel):
     fertileWindow: DashboardFertileWindow = Field(
         default_factory=DashboardFertileWindow
     )
-
 
 class DashboardResponse(BaseModel):
     user: DashboardUser
@@ -147,50 +91,29 @@ class DashboardResponse(BaseModel):
     cycleHistory: list[CycleHistoryEntry]
     symptomFrequency: dict[str, float]
     recentStressLevel: Optional[int] = None
-    #: Highest-severity factual observation about the user's logged data,
-    #: computed from the logs already fetched above — so the Home screen
-    #: needs no second round trip. Full list lives at
-    #: GET /insights/{user_id}/observations.
-    topObservation: Optional[DashboardObservation] = None
-    #: Descriptive consistency label (consistent / slightly_variable /
-    #: variable / unknown), per menstrual_insights_guidelines.md's summary
-    #: card guidance — a word, not a score.
-    cycleConsistency: str = "unknown"
-    #: Plain-language description of cycle consistency derived from actual
-    #: variability data.  References cycle lengths and spread, not a
-    #: numeric score or risk label.
-    cycleConsistencyDescription: str = ""
-    #: "When is my next period?" — the overdue-aware prediction summary.
-    #: Additive and nullable so clients written before this field existed
-    #: keep working.
-    prediction: Optional[DashboardPrediction] = None
 
+    topObservation: Optional[DashboardObservation] = None
+
+    cycleConsistency: str = "unknown"
+
+    cycleConsistencyDescription: str = ""
+
+    prediction: Optional[DashboardPrediction] = None
 
 router = APIRouter(tags=["Dashboard"])
 
-
 class TrendWindow(BaseModel):
-    """One side of the comparison, so a client can show what was compared."""
 
     start: str
     end: str
     days: int
     loggedDays: int
 
-
 class TrendComparedWindows(BaseModel):
     previous: TrendWindow
     current: TrendWindow
 
-
 class TrendStatementModel(BaseModel):
-    """One comparison, as a key plus the numbers behind it.
-
-    ``text`` is an English fallback. Clients that have a translation
-    should render ``key`` and interpolate ``evidence`` themselves — the
-    same contract ``ObservationModel`` states for ``titleKey``/``bodyKey``,
-    which is why every number in the sentence is also in the dict.
-    """
 
     metric: str = Field(
         ..., description="sleep, stress, or a symptom name such as cramps."
@@ -200,11 +123,8 @@ class TrendStatementModel(BaseModel):
     text: str
     evidence: Dict[str, Any] = Field(default_factory=dict)
 
-
 class TrendsResponse(BaseModel):
-    #: The original four fields, unchanged in name, type and position, so
-    #: clients written against the previous shape keep working. Everything
-    #: below is additive.
+
     sleep: Optional[str] = None
     stress: Optional[str] = None
     symptoms: Dict[str, str] = Field(default_factory=dict)
@@ -236,7 +156,6 @@ class TrendsResponse(BaseModel):
     )
     disclaimer: str = ""
     disclaimerKey: str = ""
-
 
 @router.get(
     "/dashboard",
@@ -306,21 +225,12 @@ async def get_dashboard(current_user: dict = Depends(get_current_user)):
 
     recent_stress_level = logs[0].get("stress_level") if logs else None
 
-    # Observations reuse the logs already fetched above rather than
-    # re-querying Firestore, so the Home screen still costs one round trip
-    # and one read path. `build_analysis` is called separately from
-    # `evaluate` only because the consistency label needs the analysis
-    # object; both are pure functions over the same list.
     observations = evaluate(logs)
     highest = top_observation(observations)
     analysis = build_analysis(logs)
     consistency = describe_consistency(analysis)
     consistency_text = describe_consistency_text(analysis)
 
-    # The prediction summary reuses the same logs (and the profile already
-    # fetched for scoring) so the Home screen needs no extra read. It is the
-    # overdue-aware "when is my next period?" answer; the legacy clamped
-    # `cycle.nextPeriodDays` above is kept untouched for existing clients.
     prediction = dashboard_summary(
         predict(logs, profile=score_data.get("profile"), today=date.today())
     )
@@ -355,7 +265,6 @@ async def get_dashboard(current_user: dict = Depends(get_current_user)):
         "prediction": prediction,
     }
 
-
 @router.get(
     "/dashboard/trends",
     response_model=TrendsResponse,
@@ -382,23 +291,8 @@ async def get_dashboard(current_user: dict = Depends(get_current_user)):
     ),
 )
 async def get_trends(current_user: dict = Depends(get_current_user)):
-    """Trends for the authenticated user.
-
-    This route used to do the comparison itself, on ``logs[0]`` against
-    ``logs[1]`` — two adjacent *day* documents, since ``upsert_log`` keys
-    one document per calendar day — while describing the result as a
-    period-over-period average (issue #484). The arithmetic now lives in
-    ``services/trend_service.py``, where it operates on reconstructed
-    cycle windows and can be tested without a request.
-
-    ``get_logs_for_user``'s default limit is deliberately raised here:
-    the default of 10 documents cannot hold two cycle windows for anyone
-    who logs more than a handful of days per cycle, so the window
-    reconstruction would fall back to ``recent_logs`` for exactly the
-    users with the most data.
-    """
     user_id = current_user["id"]
-    # Reuse the same scoring_service-backed logs the dashboard uses.
+
     from services.scoring_service import CycleService
 
     logs = CycleService.get_logs_for_user(user_id, limit=TRENDS_LOG_LIMIT)

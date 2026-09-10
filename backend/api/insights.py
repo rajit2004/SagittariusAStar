@@ -11,16 +11,7 @@ from models.user import ScoresResponse
 
 router = APIRouter(tags=["Insights"])
 
-
 class ObservationModel(BaseModel):
-    """One factual statement derived from the user's own logged data.
-
-    ``title``/``body`` are English fallbacks. Clients that have a
-    translation should render ``titleKey``/``bodyKey`` and interpolate
-    ``evidence`` themselves — which is why the numbers behind every
-    statement are exposed structurally rather than only baked into the
-    sentence.
-    """
 
     code: str = Field(
         ..., description="Stable machine-readable identifier for the rule that fired."
@@ -43,7 +34,6 @@ class ObservationModel(BaseModel):
     )
     disclaimerKey: str
 
-
 class ObservationsResponse(BaseModel):
     observations: List[ObservationModel]
     topObservation: Optional[ObservationModel] = None
@@ -58,7 +48,6 @@ class ObservationsResponse(BaseModel):
     disclaimer: str
     disclaimerKey: str
 
-
 @router.get(
     "/{user_id}/scores",
     response_model=ScoresResponse,
@@ -69,11 +58,6 @@ async def get_scores(
     user_id: str,
     current_user: dict = Depends(get_current_user)
 ):
-    """Retrieve factual cycle statistics for the authenticated user.
-
-    Statistics are computed server-side directly from CycleLog data,
-    guaranteeing consistency with the dashboard endpoint.
-    """
     if user_id != current_user["id"]:
         raise HTTPException(status_code=403, detail="Not authorized")
 
@@ -88,7 +72,6 @@ async def get_scores(
         hasEnoughDataForInsights=score_data["has_enough_data_for_insights"],
         loggedCycleCount=score_data["logged_cycle_count"],
     )
-
 
 @router.get(
     "/{user_id}/observations",
@@ -109,16 +92,6 @@ async def get_observations(
     user_id: str,
     current_user: dict = Depends(get_current_user),
 ):
-    """Evidence-backed observations for the authenticated user.
-
-    Authorization matches ``/scores``: a user may only read her own data,
-    and a mismatched path id is a 403 rather than a silent fallback to the
-    caller's own records.
-
-    Reuses ``get_user_scores()`` for its already-fetched log list, so this
-    endpoint costs the same Firestore reads as the dashboard rather than
-    doubling them.
-    """
     if user_id != current_user["id"]:
         raise HTTPException(status_code=403, detail="Not authorized")
 

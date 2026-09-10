@@ -1,8 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// Mock the client module rather than the network. These tests are about
-// *which URL and payload* each function sends — the exact class of bug
-// (#259) that type-checks, lints, builds, and then fails at runtime.
 vi.mock('./client', () => ({
   apiClient: {
     get: vi.fn(),
@@ -109,10 +106,6 @@ describe('cycle tracking', () => {
   });
 });
 
-// The server bounds `limit` at 100 (`MAX_HISTORY_PAGE` in
-// backend/api/cycle.py) and answers 422 above it — not a truncated page, a
-// refused request. The Cycle page asked for 365 and rendered an empty
-// calendar for every user as a result (#349).
 describe('cycle history paging', () => {
   function pageResponse(entries: unknown[], page: Record<string, unknown> = {}) {
     return {
@@ -148,7 +141,7 @@ describe('cycle history paging', () => {
   });
 
   it('keeps the legacy helper inside the ceiling too', async () => {
-    // `fetchCycleHistory(id, 365)` was the exact call that broke.
+    
     mockClient.get.mockResolvedValue(pageResponse([]));
 
     await fetchCycleHistory('user-1', 365);
@@ -206,7 +199,7 @@ describe('cycle history paging', () => {
   });
 
   it('stops rather than spinning when hasMore never goes false', async () => {
-    // A server bug must not become an infinite client loop.
+    
     mockClient.get.mockResolvedValue(
       pageResponse([{ id: 'x' }], { hasMore: true, nextOffset: 100 }),
     );
@@ -217,8 +210,7 @@ describe('cycle history paging', () => {
   });
 
   it('stops when the offset stops advancing', async () => {
-    // `hasMore: true` with an unchanged `nextOffset` would otherwise
-    // re-fetch the same page until the ceiling.
+    
     mockClient.get.mockResolvedValue(
       pageResponse([{ id: 'x' }], { offset: 0, hasMore: true, nextOffset: 0 }),
     );
@@ -238,7 +230,7 @@ describe('cycle history paging', () => {
   });
 
   it('propagates a failure rather than returning a partial range', async () => {
-    // The page needs to be able to tell "no logs" from "could not load".
+    
     mockClient.get.mockRejectedValue(new Error('422'));
 
     await expect(
@@ -284,8 +276,7 @@ describe('sms', () => {
   });
 
   it('treats a 404 as "never configured" rather than an error', async () => {
-    // A first-run user has no settings document; surfacing that as an
-    // error would show a red banner on a perfectly normal screen.
+    
     mockClient.get.mockRejectedValue({ response: { status: 404 } });
 
     await expect(fetchSmsSettings()).resolves.toEqual({
@@ -314,8 +305,7 @@ describe('sms', () => {
   });
 
   it('POSTs a summary with snake_case keys the backend expects', async () => {
-    // The SMSRequest model uses phone_number; sending phoneNumber here
-    // would 422 at runtime while type-checking cleanly.
+    
     mockClient.post.mockResolvedValue({ data: { message: 'ok', sid: 'SM1' } });
 
     await sendSmsSummary('+919876543210', 'Your cycle summary');
@@ -337,8 +327,7 @@ describe('profile', () => {
   });
 
   it('PATCHes /auth/profile with only the changed fields', async () => {
-    // PATCH semantics matter: the backend writes only non-None fields, so
-    // sending a full object with nulls would clobber unrelated data.
+    
     mockClient.patch.mockResolvedValue({ data: { id: 'u1', age: 30 } });
 
     await patchProfile({ age: 30 });
@@ -374,9 +363,7 @@ describe('insights observations', () => {
 
 describe('endpoint paths as a contract', () => {
   it('never calls a path outside the routers the backend registers', async () => {
-    // main.py mounts auth, health, assistant, cycle, insights, sms and the
-    // dashboard. A call to anything else is a client/server mismatch, which
-    // is exactly how the /auth/token bug shipped.
+    
     const mounted = [
       '/auth',
       '/health',

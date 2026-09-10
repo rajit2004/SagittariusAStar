@@ -11,13 +11,6 @@ import {
   type StoredMessage,
 } from './chatHistory';
 
-// The single case this module exists for is the first one below: two
-// accounts on one browser must not see each other's conversation. On a
-// shared family laptop or a phone passed around — which is the ordinary
-// case for the people this app is built for — the previous fixed key
-// meant the next person to sign in was shown the last person's questions
-// about her body.
-
 const ASHA = 'user-asha';
 const BEGUM = 'user-begum';
 
@@ -46,8 +39,7 @@ describe('one browser, two accounts', () => {
   });
 
   it('returns nothing when there is no id to read for', () => {
-    // "We don't know who is asking" must never resolve to somebody's
-    // conversation.
+    
     saveHistory(ASHA, [message('private')]);
 
     expect(loadHistory(undefined)).toEqual([]);
@@ -78,8 +70,7 @@ describe('the shared key written before this change', () => {
   });
 
   it('is dropped even with nobody signed in', () => {
-    // There is no way to tell whose conversation it holds, which is the
-    // whole problem with it.
+    
     localStorage.setItem(LEGACY_KEY, JSON.stringify([message('unattributable')]));
 
     clearLegacyHistory();
@@ -98,9 +89,7 @@ describe('clearing', () => {
   });
 
   it('drops every transcript on the device', () => {
-    // What logout calls. Leaving a third account's conversation behind
-    // because it was not the one being signed out of would reproduce the
-    // bug one step removed.
+    
     saveHistory(ASHA, [message('a')]);
     saveHistory(BEGUM, [message('b')]);
 
@@ -120,8 +109,7 @@ describe('clearing', () => {
   });
 
   it('removes every key even though removal shifts the indices', () => {
-    // Removing during iteration skips every other key, which would leave
-    // half the transcripts behind.
+    
     for (const id of ['u1', 'u2', 'u3', 'u4', 'u5']) {
       saveHistory(id, [message(id)]);
     }
@@ -134,8 +122,7 @@ describe('clearing', () => {
 
 describe('what is kept', () => {
   it('bounds the stored transcript', () => {
-    // Only the last ten turns are ever sent, so the rest was being stored
-    // for nothing — on a shared browser, indefinitely.
+    
     const many = Array.from({ length: 60 }, (_, i) => message(`turn ${i}`));
 
     saveHistory(ASHA, many);
@@ -188,8 +175,6 @@ describe('storage that refuses to cooperate', () => {
       throw new DOMException('QuotaExceededError');
     });
 
-    // A transcript that cannot be cached is a degraded experience. A
-    // conversation that throws mid-send is a broken screen.
     expect(() => saveHistory(ASHA, [message('a')])).not.toThrow();
   });
 
