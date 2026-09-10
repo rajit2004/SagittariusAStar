@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/services.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
@@ -169,14 +171,18 @@ class NotificationService {
         : 'Your period is expected to start in $daysBefore days. '
             'Get your supplies ready!';
 
-    await _notificationsPlugin.zonedSchedule(
-      id: _periodPredictionId,
-      title: 'Period Expected Soon',
-      body: body,
-      scheduledDate: tzDate,
-      notificationDetails: platformChannelSpecifics,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-    );
+    try {
+      await _notificationsPlugin.zonedSchedule(
+        id: _periodPredictionId,
+        title: 'Period Expected Soon',
+        body: body,
+        scheduledDate: tzDate,
+        notificationDetails: platformChannelSpecifics,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
+    } on PlatformException catch (e) {
+      debugPrint('Failed to schedule period prediction: $e');
+    }
   }
 
   /// Local fallback when the backend is unreachable.
@@ -241,15 +247,19 @@ class NotificationService {
     const NotificationDetails platformChannelSpecifics =
         NotificationDetails(android: androidPlatformChannelSpecifics);
 
-    await _notificationsPlugin.zonedSchedule(
-      id: _loggingReminderId,
-      title: 'Time to Log Your Day',
-      body: 'You haven\'t logged any cycle data today. '
-          'Take a moment to track how you\'re feeling!',
-      scheduledDate: tzDate,
-      notificationDetails: platformChannelSpecifics,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-    );
+    try {
+      await _notificationsPlugin.zonedSchedule(
+        id: _loggingReminderId,
+        title: 'Time to Log Your Day',
+        body: 'You haven\'t logged any cycle data today. '
+            'Take a moment to track how you\'re feeling!',
+        scheduledDate: tzDate,
+        notificationDetails: platformChannelSpecifics,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
+    } on PlatformException catch (e) {
+      debugPrint('Failed to schedule logging reminder: $e');
+    }
   }
 
   /// Cancel all automatic notifications (period prediction and logging reminders).
