@@ -61,8 +61,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
   // Step 3 – Menstrual Profile
   DateTime? _lastPeriodDate;
-  bool _isLastPeriodApproximate = false;
-  String? _lastPeriodError;
+  final bool _isLastPeriodApproximate = false;
   // ignore: prefer_final_fields
   int _cycleLength = 28;
   // ignore: prefer_final_fields
@@ -173,7 +172,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       _weightError = null;
       _consentError = null;
       _phoneError = null;
-      _lastPeriodError = null;
     });
 
     if (_currentPage == 1) {
@@ -245,7 +243,6 @@ class _OnboardingScreenState extends State<OnboardingScreen>
 
     if (_currentPage == 2) {
       if (_lastPeriodDate == null) {
-        setState(() => _lastPeriodError = l.onboardingLastPeriodRequired);
         return false;
       }
       return true;
