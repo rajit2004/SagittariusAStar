@@ -1189,44 +1189,6 @@ Semantics(
     );
   }
 
-  Widget _buildApproximateChip(String label, int daysAgo, int index) {
-    final selected =
-        _isLastPeriodApproximate && _selectedApproximateIndex == index;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _lastPeriodDate = DateTime.now().subtract(Duration(days: daysAgo));
-          _isLastPeriodApproximate = true;
-          _selectedApproximateIndex = index;
-          _showExactDatePicker = false;
-          _lastPeriodError = null;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          color: selected
-              ? RhythmaColors.primary.withValues(alpha: 0.15)
-              : RhythmaColors.surface,
-          border: Border.all(
-            color: selected ? RhythmaColors.primary : RhythmaColors.border,
-            width: 1.5,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-            color: selected ? RhythmaColors.primary : RhythmaColors.foreground,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildSwitchTile({
     required String icon,
     required String title,
