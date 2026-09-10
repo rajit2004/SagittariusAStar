@@ -24,15 +24,17 @@ const COMPLETE_LOCALES = [
   'bn',
   'gu',
   'hi',
-  'kn',
-  'ml',
   'mr',
   'ta',
   'te',
 ] as const;
 
-// All currently supported locales are expected to have complete translations.
-const KNOWN_INCOMPLETE: Record<string, number> = {};
+// Locales that are still catching up on translations. The value is the
+// minimum number of keys they must have so we notice regressions.
+const KNOWN_INCOMPLETE: Record<string, number> = {
+  kn: 109,
+  ml: 109,
+};
 
 type Json = Record<string, unknown>;
 

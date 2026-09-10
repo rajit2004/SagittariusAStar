@@ -62,9 +62,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   // Step 3 – Menstrual Profile
   DateTime? _lastPeriodDate;
   bool _isLastPeriodApproximate = false;
-  bool _showExactDatePicker = true;
   String? _lastPeriodError;
-  int _selectedApproximateIndex = -1;
   // ignore: prefer_final_fields
   int _cycleLength = 28;
   // ignore: prefer_final_fields

@@ -21,7 +21,6 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   String _userName = 'Aarya';
   int _userAge = 28;
   int _cycleLength = 28;
-  final int _mhsAverage = 85;
   final int _cycleDay = 12;
 
   List<Map<String, String>> _emergencyContacts = [];

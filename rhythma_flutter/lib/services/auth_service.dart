@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import '../models/user.dart';
 import '../utils/secure_storage.dart';
 import 'api_client.dart';
 import 'firestore_service.dart';
