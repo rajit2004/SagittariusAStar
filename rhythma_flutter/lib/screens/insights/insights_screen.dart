@@ -8,11 +8,6 @@ import '../../providers/theme_provider.dart';
 import '../../services/api_client.dart';
 import '../../services/report_service.dart';
 
-/// All data on this screen comes from GET /dashboard — nothing here is
-/// computed locally from Hive. That endpoint already returns real,
-/// backend-computed CVI/MHS scores, cycle-length history, symptom
-/// frequency, and the most recent stress level, so this screen is a thin
-/// display layer over that one response.
 class InsightsScreen extends StatefulWidget {
   const InsightsScreen({Key? key}) : super(key: key);
 
@@ -41,6 +36,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
   }
 
   Future<void> _load() async {
+    if (!mounted) return;
     setState(() {
       _loading = true;
       _error = '';
@@ -54,6 +50,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
       final history = data['cycleHistory'] as List? ?? [];
       final symptomFreq = data['symptomFrequency'] as Map? ?? {};
 
+      if (!mounted) return;
       setState(() {
         _avgCycleLength = (insights['averageCycleLength'] as num?)?.toDouble();
         _shortestCycle = (insights['shortestCycleLength'] as num?)?.toInt();
@@ -71,6 +68,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
         _loading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString();
         _loading = false;
@@ -166,7 +164,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
+            
             Padding(
               padding: const EdgeInsets.fromLTRB(2, 8, 2, 20),
               child: Column(
@@ -224,7 +222,6 @@ class _InsightsScreenState extends State<InsightsScreen> {
                 ),
               ),
 
-            // MHS hero card
             GlassCard(
               child: Stack(
                 children: [
@@ -274,7 +271,6 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
             const SizedBox(height: 14),
 
-            // Mini stat grid
             Row(
               children: [
                 Expanded(
@@ -329,7 +325,6 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
             const SizedBox(height: 14),
 
-            // Trend chart
             GlassCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -402,7 +397,6 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
             const SizedBox(height: 14),
 
-            // Symptom patterns
             GlassCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -435,8 +429,6 @@ class _InsightsScreenState extends State<InsightsScreen> {
                 ],
               ),
             ),
-
-            
 
             const SizedBox(height: 14),
 
@@ -481,8 +473,6 @@ GlassCard(
 ),
 
 const SizedBox(height: 14),
-
-            // Wellness recommendations
 
         const SizedBox(height: 14),
             SectionHeader(title: l10n.insightsWellnessLabel),
