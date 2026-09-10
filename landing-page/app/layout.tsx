@@ -14,8 +14,6 @@ export const metadata: Metadata = {
   title: 'Rhythma - AI for Every Phase of Her Health',
   description:
     'Track your menstrual cycle, get personalized health insights, and access AI-powered guidance in your language.',
-  generator: 'v0.app',
-
   icons: {
     icon: '/favicon.ico',
     apple: '/favicon.ico',

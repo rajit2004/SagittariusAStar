@@ -72,11 +72,11 @@ export default function Page() {
               <span className="text-[#E94B7B] dark:text-[#F472B6]">of Her Health</span>
             </h1>
             <p className="text-lg text-[#666] dark:text-[#94A3B8] leading-relaxed">
-              Rhythma is an AI-powered  women&apos;s health companion designed specifically for India. Track your menstrual cycle, get personalized insights, and access health guidance in your own language—all with complete privacy.
+              Rhythma is an AI-powered women&apos;s health companion designed specifically for India. Track your menstrual cycle, get personalized insights, and access health guidance in your own language, all with complete privacy.
             </p>
              <div className="flex flex-wrap gap-4 pt-4">
   <a
-    href=""
+    href="#features"
     aria-label="Get Started"
     className="bg-[#E94B7B] dark:bg-[#F472B6] text-white px-8 py-3 rounded-full font-semibold hover:bg-[#D63A6A] dark:hover:bg-[#EC4899] hover:scale-105 hover:shadow-lg transition-all duration-200 inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-[#E94B7B] dark:focus:ring-[#F472B6]"
   >
