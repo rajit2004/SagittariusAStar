@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -42,20 +43,26 @@ final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } on Exception catch (e) {
+    if (!e.toString().contains('[core/duplicate-app]')) rethrow;
+  }
 
   // Initialize Firebase App Check to protect backend resources from abuse.
-  // This ensures only traffic from the genuine Rhythma app is accepted.
-  try {
-    await FirebaseAppCheck.instance.activate(
-      androidProvider: AndroidProvider.playIntegrity,
-      appleProvider: AppleProvider.deviceCheck,
-      // Web isn't officially supported in Rhythma right now, but if it was we would use ReCaptchaV3Provider here.
-    );
-  } catch (e) {
-    debugPrint('Firebase App Check initialization failed (e.g. offline): $e');
+  // Skip in debug builds — Play Integrity attestation fails for debug APKs
+  // and blocks phone auth reCAPTCHA verification.
+  if (!kDebugMode) {
+    try {
+      await FirebaseAppCheck.instance.activate(
+        androidProvider: AndroidProvider.playIntegrity,
+        appleProvider: AppleProvider.deviceCheck,
+      );
+    } catch (e) {
+      debugPrint('Firebase App Check initialization failed (e.g. offline): $e');
+    }
   }
 
   await LocalStorageService.init();
