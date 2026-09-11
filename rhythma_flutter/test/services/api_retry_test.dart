@@ -250,9 +250,20 @@ void main() {
         '/dashboard',
         '/cycle/log',
         '/assistant/languages',
-        '/auth/login',
       ]) {
         expect(policy.timeoutFor(path), kDefaultTimeout, reason: path);
+      }
+    });
+
+    test('cold-start auth endpoints get the long budget', () {
+      for (final path in [
+        '/auth/login',
+        '/auth/register',
+        '/auth/refresh',
+        '/auth/me',
+        '/auth/profile',
+      ]) {
+        expect(policy.timeoutFor(path), kLongTimeout, reason: path);
       }
     });
 

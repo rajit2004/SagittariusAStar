@@ -9,7 +9,14 @@ const Duration kDefaultTimeout = Duration(seconds: 10);
 
 const Duration kLongTimeout = Duration(seconds: 45);
 
-const List<String> kLongTimeoutPaths = ['/assistant/chat'];
+const List<String> kLongTimeoutPaths = [
+  '/assistant/chat',
+  '/auth/login',
+  '/auth/register',
+  '/auth/refresh',
+  '/auth/me',
+  '/auth/profile',
+];
 
 const Set<int> kRetryableStatuses = {429, 502, 503, 504};
 

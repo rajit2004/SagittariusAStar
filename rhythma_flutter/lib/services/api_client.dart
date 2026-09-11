@@ -26,6 +26,12 @@ bool _isPublicEndpoint(String path) {
   return false;
 }
 
+bool _isRetryableAuthPost(String? method, String path) {
+  if ((method ?? '').toLowerCase() != 'post') return false;
+  const retryable = {'/auth/login', '/auth/register', '/auth/refresh'};
+  return retryable.any((p) => path == p || path.endsWith(p));
+}
+
 const String kRetryCountKey = 'rhythma.retryCount';
 
 class ApiClient {
@@ -76,11 +82,23 @@ class ApiClient {
           final requestPath = error.requestOptions.path;
 
           if (statusCode != 401) {
-            
+
             final attempt =
                 (error.requestOptions.extra[kRetryCountKey] as int?) ?? 0;
 
-            if (retryPolicy.shouldRetry(error, attempt)) {
+            // Cold-start safety: the backend sleeps on Railway and the first
+            // request can exceed normal timeouts. Auth POSTs are safe to
+            // attempt once more when the failure was purely transport-level
+            // (no response was ever received).
+            final coldStartAuthRetry = attempt < 1 &&
+                retryPolicy.isNetworkError(error) &&
+                _isRetryableAuthPost(
+                  error.requestOptions.method,
+                  error.requestOptions.path,
+                );
+
+            if (retryPolicy.shouldRetry(error, attempt) ||
+                coldStartAuthRetry) {
               
               if (await retryPolicy.shouldSuppressForOffline()) {
                 return handler.next(error);
