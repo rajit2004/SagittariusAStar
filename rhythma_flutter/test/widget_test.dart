@@ -12,6 +12,7 @@ import 'package:rhythma/services/local_storage_service.dart';
 import 'package:rhythma/providers/locale_provider.dart';
 import 'package:rhythma/providers/theme_provider.dart';
 import 'package:rhythma/providers/profile_provider.dart';
+import 'package:rhythma/providers/cycle_provider.dart';
 import 'package:rhythma/screens/cycle/components/log_entry_sheet.dart';
 import 'test_helpers/platform_channel_mocks.dart';
 import 'test_helpers/local_storage_fixture.dart';
@@ -290,6 +291,7 @@ void main() {
         providers: [
           ChangeNotifierProvider(create: (_) => LocaleProvider()),
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          ChangeNotifierProvider(create: (_) => CycleProvider()),
         ],
         child: MaterialApp(
           localizationsDelegates: const [
@@ -330,7 +332,7 @@ void main() {
     await tester.tap(find.text('Open Sheet'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Log your day'), findsOneWidget);
+    expect(find.text('Update Log'), findsOneWidget);
 
     expect(find.text('Medium'), findsWidgets);
 
@@ -348,7 +350,7 @@ void main() {
     });
     await tester.pumpAndSettle();
 
-    expect(find.text('Log your day'), findsNothing);
+    expect(find.text('Update Log'), findsNothing);
   });
 
   testWidgets(

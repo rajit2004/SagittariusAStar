@@ -763,7 +763,7 @@ void _showAddEditContactDialog(
               const Icon(Icons.water_drop, color: RhythmaColors.teal, size: 14),
               const SizedBox(width: 4),
               Text(
-                '${AppLocalizations.of(context)!.profileCycleDay} $_cycleDay  ${_getCyclePhase(_cycleDay)}',
+                '${AppLocalizations.of(context)!.profileCycleDay} $_cycleDay \u2022 ${_getCyclePhase(_cycleDay)}',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
