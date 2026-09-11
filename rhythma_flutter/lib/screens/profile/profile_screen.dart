@@ -21,7 +21,7 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProviderStateMixin {
+class _ProfileScreenState extends State<ProfileScreen> {
   String _userName = 'Aarya';
   int _userAge = 28;
   int _cycleLength = 28;
@@ -33,71 +33,12 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
   List<Map<String, String>> _emergencyContacts = [];
 
-  late final AnimationController _controller;
-  late final Animation<double> _headerFade;
-  late final Animation<Offset> _headerSlide;
-  late final Animation<double> _statsFade;
-  late final Animation<Offset> _statsSlide;
-  late final Animation<double> _menuFade;
-  late final Animation<Offset> _menuSlide;
-
   @override
   void initState() {
     super.initState();
     _loadProfile();
     _loadEmergencyContacts();
     _fetchDashboardInsights();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
-
-    _headerFade = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
-      ),
-    );
-    _headerSlide = Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeOutCubic),
-      ),
-    );
-
-    _statsFade = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.2, 0.7, curve: Curves.easeOut),
-      ),
-    );
-    _statsSlide = Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.2, 0.7, curve: Curves.easeOutCubic),
-      ),
-    );
-
-    _menuFade = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.4, 0.9, curve: Curves.easeOut),
-      ),
-    );
-    _menuSlide = Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.4, 0.9, curve: Curves.easeOutCubic),
-      ),
-    );
-
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   void _loadProfile() {
@@ -661,7 +602,6 @@ void _showAddEditContactDialog(
               ),
               title: const Text('Take Photo'),
               onTap: () async {
-                Navigator.pop(ctx);
                 try {
                   final picker = ImagePicker();
                   final picked = await picker.pickImage(
@@ -670,7 +610,8 @@ void _showAddEditContactDialog(
                     maxHeight: 512,
                     imageQuality: 85,
                   );
-                  if (picked != null && mounted) {
+                  if (picked != null && ctx.mounted) {
+                    Navigator.pop(ctx);
                     final appDir = await getApplicationDocumentsDirectory();
                     final ext = p.extension(picked.path);
                     final fileName = 'avatar_${DateTime.now().millisecondsSinceEpoch}$ext';
@@ -681,8 +622,12 @@ void _showAddEditContactDialog(
                       });
                       setState(() {});
                     }
+                  } else if (ctx.mounted) {
+                    Navigator.pop(ctx);
                   }
-                } catch (_) {}
+                } catch (_) {
+                  if (ctx.mounted) Navigator.pop(ctx);
+                }
               },
             ),
             if (hasAvatar) ...[
@@ -754,7 +699,7 @@ void _showAddEditContactDialog(
                 color: RhythmaColors.background,
               ),
               child: CircleAvatar(
-                radius: 48,
+                radius: 42,
                 backgroundColor: RhythmaColors.surfaceMuted,
                 backgroundImage: hasAvatar
                     ? (avatarPath.startsWith('/')
@@ -765,30 +710,47 @@ void _showAddEditContactDialog(
                 child: hasAvatar
                     ? null
                     : Icon(Icons.person_rounded,
-                        size: 48, color: RhythmaColors.mutedFg),
+                        size: 42, color: RhythmaColors.mutedFg),
               ),
             ),
           ),
         ),
-        const SizedBox(height: 8),
-        Icon(Icons.camera_alt_rounded, size: 16, color: RhythmaColors.mutedFg),
-        const SizedBox(height: 8),
-        Text(
-          _userName,
-          style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 24),
+        const SizedBox(height: 4),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.camera_alt_rounded, size: 12, color: RhythmaColors.mutedFg),
+            const SizedBox(width: 2),
+            Text(
+              'Tap to change',
+              style: TextStyle(fontSize: 10, color: RhythmaColors.mutedFg),
+            ),
+          ],
         ),
         const SizedBox(height: 4),
         Text(
-          '$_userAge ${AppLocalizations.of(context)!.profileYearsOld}',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: RhythmaColors.mutedFg,
-              ),
+          _userName,
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: RhythmaColors.foreground,
+          ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 2),
+        Text(
+          '$_userAge ${AppLocalizations.of(context)!.profileYearsOld}',
+          style: TextStyle(fontSize: 13, color: RhythmaColors.mutedFg),
+        ),
+        const SizedBox(height: 6),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
-            color: RhythmaColors.teal.withValues(alpha: 0.1),
+            gradient: LinearGradient(
+              colors: [
+                RhythmaColors.teal.withValues(alpha: 0.15),
+                RhythmaColors.teal.withValues(alpha: 0.08),
+              ],
+            ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: RhythmaColors.teal.withValues(alpha: 0.25),
@@ -798,18 +760,114 @@ void _showAddEditContactDialog(
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.water_drop, color: RhythmaColors.teal, size: 16),
+              const Icon(Icons.water_drop, color: RhythmaColors.teal, size: 14),
               const SizedBox(width: 4),
               Text(
-                '${AppLocalizations.of(context)!.profileCycleDay} $_cycleDay • ${_getCyclePhase(_cycleDay)}',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: RhythmaColors.teal,
-                    ),
+                '${AppLocalizations.of(context)!.profileCycleDay} $_cycleDay  ${_getCyclePhase(_cycleDay)}',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: RhythmaColors.teal,
+                ),
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildHealthSummary() {
+    final avgCycle = _avgCycleFromApi ?? _cycleLength.toDouble();
+    final bleeding = _avgBleeding;
+    final cycleDay = _cycleDay;
+
+    return GlassCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              TintedIcon(icon: Icons.monitor_heart_rounded, color: RhythmaColors.teal, size: 28),
+              const SizedBox(width: 8),
+              Text(
+                'Health Summary',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: RhythmaColors.foreground,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _buildMiniStat(
+                icon: Icons.calendar_today_rounded,
+                value: '${avgCycle.toStringAsFixed(avgCycle % 1 == 0 ? 0 : 1)}d',
+                label: 'Avg Cycle',
+                color: RhythmaColors.rose,
+              ),
+              const SizedBox(width: 12),
+              _buildMiniStat(
+                icon: Icons.water_drop_rounded,
+                value: bleeding != null ? '${bleeding.toStringAsFixed(bleeding % 1 == 0 ? 0 : 1)}d' : '--',
+                label: 'Avg Period',
+                color: RhythmaColors.coral,
+              ),
+              const SizedBox(width: 12),
+              _buildMiniStat(
+                icon: Icons.today_rounded,
+                value: '$cycleDay',
+                label: 'Cycle Day',
+                color: RhythmaColors.primary,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniStat({
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 18, color: color),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: RhythmaColors.foreground,
+              ),
+            ),
+            const SizedBox(height: 1),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w500,
+                color: RhythmaColors.mutedFg,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -999,64 +1057,49 @@ void _showAddEditContactDialog(
       _cycleLength = profile['cycle_length'] as int? ?? 28;
     }
     return Scaffold(
-      body: ListView(
-        padding: const EdgeInsets.all(20).copyWith(bottom: 100, top: 24),
-        children: [
-          FadeTransition(
-            opacity: _headerFade,
-            child: SlideTransition(
-              position: _headerSlide,
-              child: Column(
-                children: [
-                  Semantics(
-                    header: true,
-                    child: Text(
-                      AppLocalizations.of(context)!.profileTitle,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                          ),
-                      textAlign: TextAlign.center,
-                    ),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 240,
+            pinned: true,
+            backgroundColor: RhythmaColors.background,
+            surfaceTintColor: Colors.transparent,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      RhythmaColors.primary.withValues(alpha: 0.15),
+                      RhythmaColors.teal.withValues(alpha: 0.08),
+                      RhythmaColors.background,
+                    ],
                   ),
-                  const SizedBox(height: 32),
-                  _buildHeader(),
-                ],
+                ),
+                child: SafeArea(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 12),
+                      _buildHeader(),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 32),
-          FadeTransition(
-            opacity: _statsFade,
-            child: SlideTransition(
-              position: _statsSlide,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Semantics(
-                    header: true,
-                    child: SectionHeader(title: AppLocalizations.of(context)!.profileQuickStats),
-                  ),
-                  _buildStatsCards(),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 32),
-          FadeTransition(
-            opacity: _menuFade,
-            child: SlideTransition(
-              position: _menuSlide,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Semantics(
-                    header: true,
-                    child: SectionHeader(title: AppLocalizations.of(context)!.profileAccountSettings),
-                  ),
-                  _buildActionMenu(),
-                ],
-              ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                _buildHealthSummary(),
+                const SizedBox(height: 24),
+                SectionHeader(title: AppLocalizations.of(context)!.profileQuickStats),
+                _buildStatsCards(),
+                const SizedBox(height: 24),
+                SectionHeader(title: AppLocalizations.of(context)!.profileAccountSettings),
+                _buildActionMenu(),
+              ]),
             ),
           ),
         ],

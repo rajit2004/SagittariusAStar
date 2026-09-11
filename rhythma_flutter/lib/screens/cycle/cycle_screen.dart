@@ -275,6 +275,13 @@ class _CycleScreenState extends State<CycleScreen> {
         LocalStorageService.getCycleLogForDate(selectedDate) ?? {};
     final hasSelections = selectedLog.isNotEmpty;
 
+    final now = DateTime.now();
+    final isOnToday = displayedMonth.year == now.year &&
+        displayedMonth.month == now.month &&
+        selectedDate.year == now.year &&
+        selectedDate.month == now.month &&
+        selectedDate.day == now.day;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
       child: Column(
@@ -289,17 +296,18 @@ class _CycleScreenState extends State<CycleScreen> {
                   subtitle: DateFormat('MMMM yyyy').format(displayedMonth),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: TextButton.icon(
-                  onPressed: _jumpToToday,
-                  icon: const Icon(Icons.today_rounded, size: 16),
-                  label: Text(l10n.cycleToday),
-                  style: TextButton.styleFrom(
-                    foregroundColor: RhythmaColors.primary,
+              if (!isOnToday)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: TextButton.icon(
+                    onPressed: _jumpToToday,
+                    icon: const Icon(Icons.today_rounded, size: 16),
+                    label: Text(l10n.cycleToday),
+                    style: TextButton.styleFrom(
+                      foregroundColor: RhythmaColors.primary,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
           GlassCard(

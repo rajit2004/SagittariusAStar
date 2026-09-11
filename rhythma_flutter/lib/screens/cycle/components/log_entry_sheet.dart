@@ -3,8 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:rhythma/l10n/app_localizations.dart';
 import '../../../components/shared.dart';
 import '../../../config/theme.dart';
-import '../../../providers/cycle_provider.dart';
+import '../../../models/cycle_log.dart';
 import '../../../services/cycle_service.dart';
+import '../../../providers/cycle_provider.dart';
 import '../../../services/local_storage_service.dart';
 import '../../../utils/date_utils.dart';
 import '../../../utils/log_options.dart';
@@ -65,7 +66,7 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
     }
   }
 
-  void _saveLog() {
+  Future<void> _saveLog() async {
     final log = {
       if (widget.existingLog != null) ...widget.existingLog!,
       'start_date': RhythmaDateUtils.toDateKey(widget.date),
@@ -75,9 +76,23 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
       'stress_level': _stressLevel,
       'symptoms': _symptoms,
     };
-    LocalStorageService.saveCycleLog(log);
+    await LocalStorageService.saveCycleLog(log);
+
+    try {
+      await CycleService().submitLog(
+        CycleLog(
+          startDate: widget.date,
+          flowIntensity: log['flow_intensity'] as String?,
+          mood: log['mood'] as String?,
+          sleepHours: (log['sleep_hours'] as num?)?.toDouble(),
+          stressLevel: (log['stress_level'] as num?)?.toInt(),
+          symptoms: List<String>.from(log['symptoms'] as List? ?? []),
+        ),
+      );
+    } catch (_) {}
 
     if (mounted) {
+      context.read<CycleProvider>().refresh();
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -170,7 +185,7 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      l10n.logTitle,
+                      widget.existingLog != null ? 'Update Log' : l10n.logTitle,
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,

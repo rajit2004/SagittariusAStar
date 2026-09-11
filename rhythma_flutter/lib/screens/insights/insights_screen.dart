@@ -167,20 +167,41 @@ class _InsightsScreenState extends State<InsightsScreen> {
             
             Padding(
               padding: const EdgeInsets.fromLTRB(2, 8, 2, 20),
-              child: Column(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    l10n.insightsTitle,
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w700,
-                      color: RhythmaColors.foreground,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.insightsTitle,
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w700,
+                            color: RhythmaColors.foreground,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(l10n.insightsSubtitle,
+                            style: TextStyle(fontSize: 13, color: RhythmaColors.mutedFg)),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(l10n.insightsSubtitle,
-                      style: TextStyle(fontSize: 13, color: RhythmaColors.mutedFg)),
+                  GlassCard(
+                    padding: const EdgeInsets.all(4),
+                    borderRadius: 20,
+                    onTap: _load,
+                    child: SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: Icon(
+                        Icons.refresh_rounded,
+                        size: 20,
+                        color: RhythmaColors.primary,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

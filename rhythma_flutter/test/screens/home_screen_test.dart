@@ -75,6 +75,7 @@ void main() {
           'user': {'name': 'Aarya Test'},
           'cycle': {'nextPeriodDays': 12, 'day': 3, 'total': 28},
           'insights': {'averageCycleLength': 28, 'averageBleedingDuration': 5, 'sleepHours': '8.1h'},
+          'prediction': {'daysUntilNextPeriod': 12},
         });
       }
       return const MockDioResponse(200, {});

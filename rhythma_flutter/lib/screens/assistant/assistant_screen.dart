@@ -16,9 +16,10 @@ class _AssistantScreenState extends State<AssistantScreen> {
   final TextEditingController _ctrl = TextEditingController();
   final ScrollController _scroll = ScrollController();
   bool _isLoading = false;
+  bool _showScrollDown = false;
 
-  late List<String> _suggested;
-  late List<_Msg> _messages;
+  late List<String> _suggested = [];
+  List<_Msg> _messages = [];
   bool _initialized = false;
   bool _serverHistoryAttempted = false;
 
@@ -69,6 +70,21 @@ class _AssistantScreenState extends State<AssistantScreen> {
         ];
       }
       _initialized = true;
+      _scrollToBottom();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (!_scroll.hasClients) return;
+    final atBottom = _scroll.position.pixels >= _scroll.position.maxScrollExtent - 100;
+    if (_showScrollDown != !atBottom) {
+      setState(() => _showScrollDown = !atBottom);
     }
   }
 
@@ -92,7 +108,10 @@ class _AssistantScreenState extends State<AssistantScreen> {
               content: _personalizedWelcome(l10n)),
         ];
       }
-      if (mounted) setState(() {});
+      if (mounted) {
+        setState(() {});
+        _scrollToBottom();
+      }
     } catch (_) {
       if (mounted) setState(() {});
     }
@@ -129,7 +148,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
       _isLoading = true;
     });
     _ctrl.clear();
-    _scrollToBottom();
+    _scrollToBottomAnimated();
 
     try {
       final assistant = AssistantService();
@@ -149,11 +168,19 @@ class _AssistantScreenState extends State<AssistantScreen> {
             role: 'model', content: 'Error: ${e.toString()}', isError: true));
       });
     }
-    _scrollToBottom();
+    _scrollToBottomAnimated();
     await _persistHistory();
   }
 
   void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scroll.hasClients) {
+        _scroll.jumpTo(_scroll.position.maxScrollExtent);
+      }
+    });
+  }
+
+  void _scrollToBottomAnimated() {
     Future.delayed(const Duration(milliseconds: 80), () {
       if (_scroll.hasClients) {
         _scroll.animateTo(
@@ -167,6 +194,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
 
   @override
   void dispose() {
+    _scroll.removeListener(_onScroll);
     _ctrl.dispose();
     _scroll.dispose();
     super.dispose();
@@ -237,14 +265,52 @@ class _AssistantScreenState extends State<AssistantScreen> {
             const SizedBox(height: 8),
 
             Expanded(
-              child: ListView.builder(
-                controller: _scroll,
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-                itemCount: _messages.length + (_isLoading ? 1 : 0),
-                itemBuilder: (ctx, i) {
-                  if (_isLoading && i == _messages.length) return _TypingBubble();
-                  return _ChatBubble(msg: _messages[i]);
-                },
+              child: Stack(
+                children: [
+                  ListView.builder(
+                    controller: _scroll,
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+                    itemCount: _messages.length + (_isLoading ? 1 : 0),
+                    itemBuilder: (ctx, i) {
+                      if (_isLoading && i == _messages.length) return _TypingBubble();
+                      return _ChatBubble(msg: _messages[i]);
+                    },
+                  ),
+                  if (_showScrollDown)
+                    Positioned(
+                      right: 16,
+                      bottom: 8,
+                      child: GestureDetector(
+                        onTap: () {
+                          _scroll.animateTo(
+                            _scroll.position.maxScrollExtent + 200,
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeOut,
+                          );
+                        },
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            gradient: RhythmaGradients.primary,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: RhythmaColors.primary.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
 
