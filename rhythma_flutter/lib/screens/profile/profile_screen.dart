@@ -13,6 +13,7 @@ import 'package:rhythma/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/profile_provider.dart';
+import '../../main.dart' show performLogout;
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -37,9 +38,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _loadProfile();
+    _loadCachedInsights();
     _loadEmergencyContacts();
     _fetchDashboardInsights();
     _recoverLostAvatar();
+  }
+
+  void _loadCachedInsights() {
+    try {
+      final cached = LocalStorageService.getCachedDashboard();
+      final insights = cached?['insights'] as Map?;
+      if (insights != null) {
+        _avgCycleFromApi ??=
+            (insights['averageCycleLength'] as num?)?.toDouble();
+        _avgBleeding ??=
+            (insights['averageBleedingDuration'] as num?)?.toDouble();
+      }
+    } catch (_) {}
+    if (_cycleHistory.isEmpty) {
+      _cycleHistory = _computeLocalCycleHistory();
+    }
+  }
+
+  List<int> _computeLocalCycleHistory() {
+    try {
+      final logs = LocalStorageService.getCycleLogs();
+      final dates = <DateTime>[];
+      for (final log in logs) {
+        final parsed =
+            DateTime.tryParse(log['start_date'] as String? ?? '');
+        if (parsed != null) {
+          dates.add(DateTime(parsed.year, parsed.month, parsed.day));
+        }
+      }
+      final lengths = <int>[];
+      for (var i = 0; i + 1 < dates.length; i++) {
+        final delta = dates[i].difference(dates[i + 1]).inDays;
+        if (delta > 0) lengths.add(delta);
+      }
+      return lengths;
+    } catch (_) {
+      return [];
+    }
   }
 
   Future<void> _recoverLostAvatar() async {
@@ -96,14 +136,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final insights = data['insights'] as Map? ?? {};
       final history = data['cycleHistory'] as List? ?? [];
       if (!mounted) return;
+      final apiHistory = history
+          .map((e) => (e as Map)['cycle_length'])
+          .whereType<num>()
+          .map((n) => n.toInt())
+          .toList();
       setState(() {
-        _avgCycleFromApi = (insights['averageCycleLength'] as num?)?.toDouble();
-        _avgBleeding = (insights['averageBleedingDuration'] as num?)?.toDouble();
-        _cycleHistory = history
-            .map((e) => (e as Map)['cycle_length'])
-            .whereType<num>()
-            .map((n) => n.toInt())
-            .toList();
+        _avgCycleFromApi = (insights['averageCycleLength'] as num?)?.toDouble() ??
+            _avgCycleFromApi;
+        _avgBleeding =
+            (insights['averageBleedingDuration'] as num?)?.toDouble() ??
+                _avgBleeding;
+        _cycleHistory =
+            apiHistory.isNotEmpty ? apiHistory : _computeLocalCycleHistory();
       });
     } catch (_) {}
   }
@@ -1037,6 +1082,51 @@ void _showAddEditContactDialog(
     );
   }
 
+  void _showLogoutDialog() {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.3),
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(l10n.logOut, textAlign: TextAlign.center),
+        content: Text(
+          l10n.logoutConfirmation,
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: RhythmaColors.coral,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              performLogout(context);
+            },
+            child: Text(l10n.logOut),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String get _pinnedAvgCycleLabel {
+    final avgCycle = _avgCycleFromApi ?? _cycleLength.toDouble();
+    return '${avgCycle.toStringAsFixed(avgCycle % 1 == 0 ? 0 : 1)}d';
+  }
+
+  String get _pinnedBleedingLabel {
+    final bleeding = _avgBleeding;
+    if (bleeding == null) return '--';
+    return '${bleeding.toStringAsFixed(bleeding % 1 == 0 ? 0 : 1)}d';
+  }
+
   int _computeVariability(List<int> lengths) {
     if (lengths.length < 2) return 0;
     final mean = lengths.reduce((a, b) => a + b) / lengths.length;
@@ -1124,6 +1214,48 @@ void _showAddEditContactDialog(
             pinned: true,
             backgroundColor: RhythmaColors.background,
             surfaceTintColor: Colors.transparent,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.logout_rounded),
+                color: RhythmaColors.coral,
+                tooltip: AppLocalizations.of(context)!.logOut,
+                onPressed: _showLogoutDialog,
+              ),
+            ],
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(56),
+              child: Container(
+                color: RhythmaColors.background,
+                height: 56,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: RhythmaColors.surface,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: RhythmaColors.border),
+                  ),
+                  child: Row(
+                    children: [
+                      _PinnedStat(
+                          value: _pinnedAvgCycleLabel,
+                          label: 'Avg Cycle',
+                          color: RhythmaColors.rose),
+                      _PinnedStat(
+                          value: _pinnedBleedingLabel,
+                          label: 'Avg Period',
+                          color: RhythmaColors.coral),
+                      _PinnedStat(
+                          value: '$_cycleDay',
+                          label: 'Cycle Day',
+                          color: RhythmaColors.primary),
+                    ],
+                  ),
+                ),
+              ),
+            ),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: BoxDecoration(
@@ -1166,4 +1298,46 @@ void _showAddEditContactDialog(
       ),
     );
   }
+}
+
+class _PinnedStat extends StatelessWidget {
+  final String value;
+  final String label;
+  final Color color;
+
+  const _PinnedStat({
+    required this.value,
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: color,
+              height: 1.1,
+            ),
+          ),
+          const SizedBox(height: 1),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w500,
+              color: RhythmaColors.mutedFg,
+              height: 1.1,
+            ),
+          ),
+        ],
+      ),
+    );
   }
+}
