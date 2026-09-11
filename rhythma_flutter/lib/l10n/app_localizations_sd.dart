@@ -269,6 +269,9 @@ class AppLocalizationsSd extends AppLocalizations {
   String get logSympAcne => 'داڻا';
 
   @override
+  String get logSympHealthy => 'Healthy (none)';
+
+  @override
   String get logLabelEnergy => 'انرجي';
 
   @override
@@ -786,6 +789,12 @@ class AppLocalizationsSd extends AppLocalizations {
 
   @override
   String get assistantAccessibilityTyping => 'اسسٽنٽ ٽائپ ڪري رهيو آهي';
+
+  @override
+  String get photoCancelled => 'Photo selection cancelled';
+
+  @override
+  String get photoFailed => 'Failed to take photo';
 
   @override
   String get languageSelectionError =>

@@ -269,6 +269,9 @@ class AppLocalizationsTa extends AppLocalizations {
   String get logSympAcne => 'முகப்பரு';
 
   @override
+  String get logSympHealthy => 'Healthy (none)';
+
+  @override
   String get logLabelEnergy => 'ஆற்றல்';
 
   @override
@@ -785,6 +788,12 @@ class AppLocalizationsTa extends AppLocalizations {
 
   @override
   String get assistantAccessibilityTyping => 'Assistant is typing';
+
+  @override
+  String get photoCancelled => 'Photo selection cancelled';
+
+  @override
+  String get photoFailed => 'Failed to take photo';
 
   @override
   String get languageSelectionError => 'Failed to save language preference';

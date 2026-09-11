@@ -269,6 +269,9 @@ class AppLocalizationsMai extends AppLocalizations {
   String get logSympAcne => 'मुहाँसा';
 
   @override
+  String get logSympHealthy => 'Healthy (none)';
+
+  @override
   String get logLabelEnergy => 'ऊर्जा';
 
   @override
@@ -786,6 +789,12 @@ class AppLocalizationsMai extends AppLocalizations {
 
   @override
   String get assistantAccessibilityTyping => 'असिस्टेन्ट टाइप क रहल अछि';
+
+  @override
+  String get photoCancelled => 'Photo selection cancelled';
+
+  @override
+  String get photoFailed => 'Failed to take photo';
 
   @override
   String get languageSelectionError =>

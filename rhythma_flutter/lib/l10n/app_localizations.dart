@@ -620,6 +620,12 @@ abstract class AppLocalizations {
   /// **'Acne'**
   String get logSympAcne;
 
+  /// No description provided for @logSympHealthy.
+  ///
+  /// In en, this message translates to:
+  /// **'Healthy (none)'**
+  String get logSympHealthy;
+
   /// No description provided for @logLabelEnergy.
   ///
   /// In en, this message translates to:
@@ -1585,6 +1591,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Assistant is typing'**
   String get assistantAccessibilityTyping;
+
+  /// No description provided for @photoCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo selection cancelled'**
+  String get photoCancelled;
+
+  /// No description provided for @photoFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to take photo'**
+  String get photoFailed;
 
   /// No description provided for @languageSelectionError.
   ///

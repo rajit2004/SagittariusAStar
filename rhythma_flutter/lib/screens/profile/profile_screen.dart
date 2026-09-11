@@ -602,32 +602,8 @@ void _showAddEditContactDialog(
               ),
               title: const Text('Take Photo'),
               onTap: () async {
-                try {
-                  final picker = ImagePicker();
-                  final picked = await picker.pickImage(
-                    source: ImageSource.camera,
-                    maxWidth: 512,
-                    maxHeight: 512,
-                    imageQuality: 85,
-                  );
-                  if (picked != null && ctx.mounted) {
-                    Navigator.pop(ctx);
-                    final appDir = await getApplicationDocumentsDirectory();
-                    final ext = p.extension(picked.path);
-                    final fileName = 'avatar_${DateTime.now().millisecondsSinceEpoch}$ext';
-                    final savedFile = await File(picked.path).copy('${appDir.path}/$fileName');
-                    if (mounted) {
-                      await context.read<ProfileProvider>().mergeProfile({
-                        'avatar': savedFile.path,
-                      });
-                      setState(() {});
-                    }
-                  } else if (ctx.mounted) {
-                    Navigator.pop(ctx);
-                  }
-                } catch (_) {
-                  if (ctx.mounted) Navigator.pop(ctx);
-                }
+                Navigator.pop(ctx);
+                await _pickAvatarFromCamera();
               },
             ),
             if (hasAvatar) ...[
@@ -674,6 +650,60 @@ void _showAddEditContactDialog(
         ),
       ),
     );
+  }
+
+  Future<void> _pickAvatarFromCamera() async {
+    final picker = ImagePicker();
+    XFile? picked;
+
+    try {
+      picked = await picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+      );
+    } catch (_) {
+      picked = null;
+    }
+
+    // Handle case where app was killed by OS while camera was open (Xiaomi, etc.)
+    if (picked == null) {
+      try {
+        final lostData = await picker.retrieveLostData();
+        if (lostData.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(AppLocalizations.of(context)!.photoCancelled)),
+            );
+          }
+          return;
+        }
+        if (lostData.file != null) {
+          picked = XFile(lostData.file!.path);
+        }
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.photoFailed)),
+          );
+        }
+        return;
+      }
+    }
+
+    if (picked != null && mounted) {
+      final appDir = await getApplicationDocumentsDirectory();
+      final ext = p.extension(picked.path);
+      final fileName = 'avatar_${DateTime.now().millisecondsSinceEpoch}$ext';
+      final savedFile = await File(picked.path).copy('${appDir.path}/$fileName');
+      if (mounted) {
+        await context.read<ProfileProvider>().mergeProfile({
+          'avatar': savedFile.path,
+        });
+        setState(() {});
+      }
+    }
   }
 
   Widget _buildHeader() {

@@ -43,6 +43,13 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadCachedDashboard();
     _fetchDashboardData();
+    
+    // Ensure profile is loaded
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<ProfileProvider>().reloadProfile();
+      }
+    });
   }
 
   void _loadCachedDashboard() {
@@ -80,12 +87,16 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      if (_loading) {
-        setState(() {
-          _error = e.toString();
-          _loading = false;
-        });
+      // If we have cached data, keep showing it and just log the error
+      if (!_loading && _userData.isNotEmpty) {
+        debugPrint('Dashboard refresh failed, showing cached data: $e');
+        return;
       }
+      // No cached data - show error
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
     }
   }
 

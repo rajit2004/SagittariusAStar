@@ -557,60 +557,122 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
       {'id': 'fainting', 'label': l10n.logSympFainting, 'icon': Icons.air_rounded},
     ];
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: symptoms.map((s) {
-        final isSelected = _symptoms.contains(s['id']);
-        return GestureDetector(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Healthy (none) option
+        GestureDetector(
           onTap: () => setState(() {
-            if (isSelected) {
-              _symptoms.remove(s['id'] as String);
+            if (_symptoms.contains('healthy_none')) {
+              _symptoms.remove('healthy_none');
             } else {
-              _symptoms.add(s['id'] as String);
+              _symptoms
+                ..clear()
+                ..add('healthy_none');
             }
           }),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              gradient: isSelected
+              gradient: _symptoms.contains('healthy_none')
                   ? LinearGradient(
                       colors: [
-                        RhythmaColors.primary.withValues(alpha: 0.25),
-                        RhythmaColors.primary.withValues(alpha: 0.15),
+                        RhythmaColors.teal.withValues(alpha: 0.25),
+                        RhythmaColors.teal.withValues(alpha: 0.15),
                       ],
                     )
                   : null,
-              color: isSelected ? null : RhythmaColors.surfaceMuted,
+              color: _symptoms.contains('healthy_none') ? null : RhythmaColors.surfaceMuted,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isSelected ? RhythmaColors.primary : RhythmaColors.border,
-                width: isSelected ? 1.5 : 1,
+                color: _symptoms.contains('healthy_none') ? RhythmaColors.teal : RhythmaColors.border,
+                width: _symptoms.contains('healthy_none') ? 1.5 : 1,
               ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  s['icon'] as IconData,
+                  Icons.favorite_rounded,
                   size: 14,
-                  color: isSelected ? RhythmaColors.primary : RhythmaColors.mutedFg,
+                  color: _symptoms.contains('healthy_none') ? RhythmaColors.teal : RhythmaColors.mutedFg,
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  s['label'] as String,
+                  l10n.logSympHealthy,
                   style: TextStyle(
                     fontSize: 12,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                    color: isSelected ? RhythmaColors.primary : RhythmaColors.mutedFg,
+                    fontWeight: _symptoms.contains('healthy_none') ? FontWeight.w600 : FontWeight.w400,
+                    color: _symptoms.contains('healthy_none') ? RhythmaColors.teal : RhythmaColors.mutedFg,
                   ),
                 ),
               ],
             ),
           ),
-        );
-      }).toList(),
+        ),
+        const SizedBox(height: 8),
+        // Other symptoms
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: symptoms.map((s) {
+            final isSelected = _symptoms.contains(s['id']);
+            return GestureDetector(
+              onTap: () => setState(() {
+                // Clear 'healthy_none' if any other symptom is selected
+                if (_symptoms.contains('healthy_none')) {
+                  _symptoms.remove('healthy_none');
+                }
+                if (isSelected) {
+                  _symptoms.remove(s['id'] as String);
+                } else {
+                  _symptoms.add(s['id'] as String);
+                }
+              }),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  gradient: isSelected
+                      ? LinearGradient(
+                          colors: [
+                            RhythmaColors.primary.withValues(alpha: 0.25),
+                            RhythmaColors.primary.withValues(alpha: 0.15),
+                          ],
+                        )
+                      : null,
+                  color: isSelected ? null : RhythmaColors.surfaceMuted,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected ? RhythmaColors.primary : RhythmaColors.border,
+                    width: isSelected ? 1.5 : 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      s['icon'] as IconData,
+                      size: 14,
+                      color: isSelected ? RhythmaColors.primary : RhythmaColors.mutedFg,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      s['label'] as String,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                        color: isSelected ? RhythmaColors.primary : RhythmaColors.mutedFg,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 }

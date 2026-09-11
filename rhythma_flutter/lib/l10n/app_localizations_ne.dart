@@ -270,6 +270,9 @@ class AppLocalizationsNe extends AppLocalizations {
   String get logSympAcne => 'अनुहारमा दाग';
 
   @override
+  String get logSympHealthy => 'Healthy (none)';
+
+  @override
   String get logLabelEnergy => 'ऊर्जा';
 
   @override
@@ -793,6 +796,12 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get assistantAccessibilityTyping => 'सहायक टाइप गर्दैछ';
+
+  @override
+  String get photoCancelled => 'Photo selection cancelled';
+
+  @override
+  String get photoFailed => 'Failed to take photo';
 
   @override
   String get languageSelectionError =>
