@@ -329,7 +329,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         _cycleLength = cycleVal!;
                       });
                       
-                      await context.read<ProfileProvider>().mergeProfile({
+                      await context
+                          .read<ProfileProvider>()
+                          .mergeProfileWithSync({
                         'name': name,
                         'age': ageVal!,
                         'cycle_length': cycleVal!,
