@@ -120,6 +120,63 @@ void main() {
     expect(find.text('6.5h'), findsOneWidget);
   });
 
+  group('cold-start cache shape', () {
+    // Reproduces exactly what Hive hands back after a real cold-start
+    // deserialization: nested Map<dynamic, dynamic>. Assigning those to
+    // Map<String, dynamic> fields crashed Home on phones (grey screen)
+    // while widget tests stayed green, because Hive returns the identical
+    // in-memory object within one session.
+    Map<dynamic, dynamic> coldStartCache() {
+      return Map<dynamic, dynamic>.from({
+        'user': Map<dynamic, dynamic>.from({'name': 'Round Trip'}),
+        'cycle': Map<dynamic, dynamic>.from({
+          'nextPeriodDays': 7,
+          'day': 21,
+          'total': 28,
+        }),
+        'insights': Map<dynamic, dynamic>.from({
+          'averageCycleLength': 28,
+          'averageBleedingDuration': 5,
+          'sleepHours': '7.0h',
+        }),
+        'prediction': Map<dynamic, dynamic>.from({
+          'daysUntilNextPeriod': 7,
+          'isOverdue': false,
+        }),
+      });
+    }
+
+    test('deep-converts nested dynamic maps to String keys', () {
+      final converted =
+          LocalStorageService.deepStringKeyedMap(coldStartCache());
+
+      expect(converted['user'], isA<Map<String, dynamic>>());
+      expect(converted['cycle'], isA<Map<String, dynamic>>());
+      expect(converted['insights'], isA<Map<String, dynamic>>());
+      expect(converted['prediction'], isA<Map<String, dynamic>>());
+      expect(converted['user']?['name'], 'Round Trip');
+      expect(converted['cycle']?['day'], 21);
+      expect(converted['prediction']?['isOverdue'], isFalse);
+    });
+
+    test('converted cache assigns cleanly to Home state fields', () {
+      final converted =
+          LocalStorageService.deepStringKeyedMap(coldStartCache());
+
+      // Mirrors _HomeScreenState._loadCachedDashboard assignments: these
+      // implicit casts threw before the deep-conversion fix.
+      final Map<String, dynamic> userData = converted['user'] ?? {};
+      final Map<String, dynamic> cycleData = converted['cycle'] ?? {};
+      final Map<String, dynamic> insights = converted['insights'] ?? {};
+      final Map<String, dynamic> prediction = converted['prediction'] ?? {};
+
+      expect(userData['name'], 'Round Trip');
+      expect(cycleData['total'], 28);
+      expect(insights['sleepHours'], '7.0h');
+      expect(prediction['daysUntilNextPeriod'], 7);
+    });
+  });
+
   testWidgets('shows an error state with retry when loading fails',
       (WidgetTester tester) async {
     installMockDioAdapter((options) => const MockDioResponse(500, {

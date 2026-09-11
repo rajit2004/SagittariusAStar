@@ -355,7 +355,30 @@ class LocalStorageService {
 
   static Map<String, dynamic>? getCachedDashboard() {
     final raw = _settings.get(_scoped(_Keys.dashboardCache));
-    return raw != null ? Map<String, dynamic>.from(raw as Map) : null;
+    if (raw == null) return null;
+    // Hive deserializes nested maps as Map<dynamic, dynamic> on a cold
+    // start (within one session it may hand back the identical in-memory
+    // object, which is why widget tests never caught this). Deep-convert
+    // so every consumer can rely on String keys at every level.
+    return deepStringKeyedMap(raw);
+  }
+
+  static Map<String, dynamic> deepStringKeyedMap(dynamic value) {
+    if (value is Map) {
+      return {
+        for (final entry in value.entries)
+          entry.key.toString(): deepDynamicValue(entry.value),
+      };
+    }
+    return {};
+  }
+
+  static dynamic deepDynamicValue(dynamic value) {
+    if (value is Map) return deepStringKeyedMap(value);
+    if (value is List) {
+      return [for (final element in value) deepDynamicValue(element)];
+    }
+    return value;
   }
 
   static Future<void> saveCachedDashboard(Map<String, dynamic> data) async {

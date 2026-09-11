@@ -61,15 +61,27 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _loadCachedDashboard() {
-    final cached = LocalStorageService.getCachedDashboard();
-    if (cached != null) {
-      setState(() {
-        _userData = cached['user'] ?? {};
-        _cycleData = cached['cycle'] ?? {};
-        _insights = cached['insights'] ?? {};
-        _prediction = cached['prediction'] ?? {};
-        _loading = false;
-      });
+    try {
+      final cached = LocalStorageService.getCachedDashboard();
+      if (cached != null) {
+        final user = cached['user'];
+        final cycle = cached['cycle'];
+        final insights = cached['insights'];
+        final prediction = cached['prediction'];
+        setState(() {
+          _userData = user is Map ? Map<String, dynamic>.from(user) : {};
+          _cycleData = cycle is Map ? Map<String, dynamic>.from(cycle) : {};
+          _insights =
+              insights is Map ? Map<String, dynamic>.from(insights) : {};
+          _prediction =
+              prediction is Map ? Map<String, dynamic>.from(prediction) : {};
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      // A corrupt cache must never take down Home; the network fetch (with
+      // its local fallback) proceeds below.
+      debugPrint('Ignoring unreadable dashboard cache: $e');
     }
   }
 
