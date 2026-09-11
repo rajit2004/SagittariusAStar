@@ -629,24 +629,27 @@ void _showAddEditContactDialog(
               title: Text(AppLocalizations.of(context)!.onboardingAvatarLabel),
               onTap: () async {
                 Navigator.pop(ctx);
-                final picker = ImagePicker();
-                final picked = await picker.pickImage(
-                  source: ImageSource.gallery,
-                  maxWidth: 512,
-                  maxHeight: 512,
-                  imageQuality: 85,
-                );
-                if (picked != null) {
-                  final appDir = await getApplicationDocumentsDirectory();
-                  final fileName = 'avatar_${DateTime.now().millisecondsSinceEpoch}${p.extension(picked.path)}';
-                  final savedFile = await File(picked.path).copy('${appDir.path}/$fileName');
-                  if (mounted) {
-                    await context.read<ProfileProvider>().mergeProfile({
-                      'avatar': savedFile.path,
-                    });
-                    setState(() {});
+                try {
+                  final picker = ImagePicker();
+                  final picked = await picker.pickImage(
+                    source: ImageSource.gallery,
+                    maxWidth: 512,
+                    maxHeight: 512,
+                    imageQuality: 85,
+                  );
+                  if (picked != null && mounted) {
+                    final appDir = await getApplicationDocumentsDirectory();
+                    final ext = p.extension(picked.path);
+                    final fileName = 'avatar_${DateTime.now().millisecondsSinceEpoch}$ext';
+                    final savedFile = await File(picked.path).copy('${appDir.path}/$fileName');
+                    if (mounted) {
+                      await context.read<ProfileProvider>().mergeProfile({
+                        'avatar': savedFile.path,
+                      });
+                      setState(() {});
+                    }
                   }
-                }
+                } catch (_) {}
               },
             ),
             Divider(height: 1, color: RhythmaColors.border),
@@ -659,24 +662,27 @@ void _showAddEditContactDialog(
               title: const Text('Take Photo'),
               onTap: () async {
                 Navigator.pop(ctx);
-                final picker = ImagePicker();
-                final picked = await picker.pickImage(
-                  source: ImageSource.camera,
-                  maxWidth: 512,
-                  maxHeight: 512,
-                  imageQuality: 85,
-                );
-                if (picked != null) {
-                  final appDir = await getApplicationDocumentsDirectory();
-                  final fileName = 'avatar_${DateTime.now().millisecondsSinceEpoch}${p.extension(picked.path)}';
-                  final savedFile = await File(picked.path).copy('${appDir.path}/$fileName');
-                  if (mounted) {
-                    await context.read<ProfileProvider>().mergeProfile({
-                      'avatar': savedFile.path,
-                    });
-                    setState(() {});
+                try {
+                  final picker = ImagePicker();
+                  final picked = await picker.pickImage(
+                    source: ImageSource.camera,
+                    maxWidth: 512,
+                    maxHeight: 512,
+                    imageQuality: 85,
+                  );
+                  if (picked != null && mounted) {
+                    final appDir = await getApplicationDocumentsDirectory();
+                    final ext = p.extension(picked.path);
+                    final fileName = 'avatar_${DateTime.now().millisecondsSinceEpoch}$ext';
+                    final savedFile = await File(picked.path).copy('${appDir.path}/$fileName');
+                    if (mounted) {
+                      await context.read<ProfileProvider>().mergeProfile({
+                        'avatar': savedFile.path,
+                      });
+                      setState(() {});
+                    }
                   }
-                }
+                } catch (_) {}
               },
             ),
             if (hasAvatar) ...[

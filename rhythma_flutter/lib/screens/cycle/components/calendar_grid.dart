@@ -29,18 +29,15 @@ class _CalendarGridState extends State<CalendarGrid> {
   Widget build(BuildContext context) {
     final cycleProvider = context.watch<CycleProvider>();
 
-    final cellWidth = (MediaQuery.of(context).size.width - 40 - 32) / 7;
-
     return SizedBox(
-      height: 330, 
+      height: 330,
       child: PageView.builder(
         controller: widget.pageController,
         onPageChanged: (index) {
           final month = _monthForIndex(index);
-          
+
           if (cycleProvider.displayedMonth.year != month.year ||
               cycleProvider.displayedMonth.month != month.month) {
-            
             context.read<CycleProvider>().setDisplayedMonth(month);
           }
         },
@@ -53,98 +50,98 @@ class _CalendarGridState extends State<CalendarGrid> {
 
           final today = DateTime.now();
 
-          return Wrap(
-            children: [
-              
-              ...List.generate(
-                firstWeekday,
-                (_) => SizedBox(width: cellWidth, height: 46),
-              ),
-              
-              ...List.generate(monthDays, (i) {
-                final day = i + 1;
-                final currentDate =
-                    DateTime(monthDate.year, monthDate.month, day);
-                final phaseColor = cycleProvider.phaseColor(currentDate);
+          final totalCells = firstWeekday + monthDays;
 
-                final isSelected =
-                    cycleProvider.selectedDate.year == currentDate.year &&
-                        cycleProvider.selectedDate.month == currentDate.month &&
-                        cycleProvider.selectedDate.day == currentDate.day;
+          return GridView.count(
+            crossAxisCount: 7,
+            physics: const NeverScrollableScrollPhysics(),
+            childAspectRatio: 1.0,
+            children: List.generate(totalCells, (i) {
+              if (i < firstWeekday) {
+                return const SizedBox();
+              }
 
-                final isToday = today.year == currentDate.year &&
-                    today.month == currentDate.month &&
-                    today.day == currentDate.day;
+              final day = i - firstWeekday + 1;
+              final currentDate =
+                  DateTime(monthDate.year, monthDate.month, day);
+              final phaseColor = cycleProvider.phaseColor(currentDate);
 
-                final hasLog = cycleProvider.hasLogsForDate(currentDate);
+              final isSelected =
+                  cycleProvider.selectedDate.year == currentDate.year &&
+                      cycleProvider.selectedDate.month == currentDate.month &&
+                      cycleProvider.selectedDate.day == currentDate.day;
 
-                final isFuture = currentDate.isAfter(DateTime(today.year, today.month, today.day));
+              final isToday = today.year == currentDate.year &&
+                  today.month == currentDate.month &&
+                  today.day == currentDate.day;
 
-                return GestureDetector(
-                  onTap: isFuture
-                      ? null
-                      : () {
-                          context.read<CycleProvider>().selectDate(currentDate);
-                        },
-                  child: SizedBox(
-                    width: cellWidth,
-                    height: 46,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          width: 34,
-                          height: 34,
-                          decoration: BoxDecoration(
-                            color: isFuture
-                                ? Colors.transparent
-                                : isSelected
-                                    ? phaseColor
-                                    : phaseColor.withOpacity(0.14),
-                            borderRadius: BorderRadius.circular(10),
-                            border: isToday && !isSelected
-                                ? Border.all(color: phaseColor, width: 1.4)
-                                : null,
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                '$day',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: isToday && !isSelected
-                                      ? FontWeight.w800
-                                      : FontWeight.w600,
-                                  color: isFuture
-                                      ? RhythmaColors.mutedFg.withOpacity(0.4)
-                                      : isSelected
-                                          ? Colors.white
-                                          : RhythmaColors.foreground,
+              final hasLog = cycleProvider.hasLogsForDate(currentDate);
+
+              final isFuture = currentDate.isAfter(
+                  DateTime(today.year, today.month, today.day));
+
+              return GestureDetector(
+                onTap: isFuture
+                    ? null
+                    : () {
+                        context.read<CycleProvider>().selectDate(currentDate);
+                      },
+                child: Padding(
+                  padding: const EdgeInsets.all(2.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: isFuture
+                              ? Colors.transparent
+                              : isSelected
+                                  ? phaseColor
+                                  : phaseColor.withOpacity(0.14),
+                          borderRadius: BorderRadius.circular(10),
+                          border: isToday && !isSelected
+                              ? Border.all(color: phaseColor, width: 1.4)
+                              : null,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '$day',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: isToday && !isSelected
+                                    ? FontWeight.w800
+                                    : FontWeight.w600,
+                                color: isFuture
+                                    ? RhythmaColors.mutedFg.withOpacity(0.4)
+                                    : isSelected
+                                        ? Colors.white
+                                        : RhythmaColors.foreground,
+                              ),
+                            ),
+                            if (hasLog)
+                              Container(
+                                margin: const EdgeInsets.only(top: 1),
+                                width: 4,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color:
+                                      isSelected ? Colors.white : phaseColor,
                                 ),
                               ),
-                              
-                              if (hasLog)
-                                Container(
-                                  margin: const EdgeInsets.only(top: 1),
-                                  width: 4,
-                                  height: 4,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color:
-                                        isSelected ? Colors.white : phaseColor,
-                                  ),
-                                ),
-                            ],
-                          ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                );
-              }),
-            ],
+                ),
+              );
+            }),
           );
         },
       ),
