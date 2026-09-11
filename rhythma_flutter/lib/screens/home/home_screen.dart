@@ -92,12 +92,83 @@ class _HomeScreenState extends State<HomeScreen> {
         debugPrint('Dashboard refresh failed, showing cached data: $e');
         return;
       }
-      // No cached data - show error
+      // No cached data - fall back to locally computed dashboard so Home
+      // always renders; the error is kept for the retry banner.
+      debugPrint('Dashboard fetch failed, using local fallback: $e');
+      final fallback = _buildLocalDashboard();
       setState(() {
-        _error = e.toString();
+        _userData = fallback['user'] as Map<String, dynamic>;
+        _cycleData = fallback['cycle'] as Map<String, dynamic>;
+        _insights = fallback['insights'] as Map<String, dynamic>;
+        _prediction = <String, dynamic>{};
         _loading = false;
+        _error = e.toString();
       });
     }
+  }
+
+  Map<String, Map<String, dynamic>> _buildLocalDashboard() {
+    final profile = LocalStorageService.getProfile();
+    final logs = LocalStorageService.getCycleLogs();
+    final cycleLength = (profile?['cycle_length'] as num?)?.toInt() ?? 28;
+
+    int? day;
+    int? nextDays;
+    if (logs.isNotEmpty) {
+      final mostRecent = DateTime.tryParse(
+        logs.first['start_date'] as String? ?? '',
+      );
+      if (mostRecent != null) {
+        final now = DateTime.now();
+        final start =
+            DateTime(mostRecent.year, mostRecent.month, mostRecent.day);
+        final today = DateTime(now.year, now.month, now.day);
+        day = today.difference(start).inDays + 1;
+        if (day < 1) day = 1;
+        nextDays = (cycleLength - day).clamp(0, cycleLength);
+      }
+    }
+
+    double? avgCycle;
+    if (logs.length >= 2) {
+      final deltas = <int>[];
+      for (var i = 0; i + 1 < logs.length; i++) {
+        final newer =
+            DateTime.tryParse(logs[i]['start_date'] as String? ?? '');
+        final older =
+            DateTime.tryParse(logs[i + 1]['start_date'] as String? ?? '');
+        if (newer != null && older != null && newer.isAfter(older)) {
+          deltas.add(newer.difference(older).inDays);
+        }
+      }
+      if (deltas.isNotEmpty) {
+        avgCycle = deltas.reduce((a, b) => a + b) / deltas.length;
+      }
+    }
+
+    double? avgSleep;
+    final sleepValues = [
+      for (final log in logs)
+        if ((log['sleep_hours'] as num?) != null)
+          (log['sleep_hours'] as num).toDouble(),
+    ];
+    if (sleepValues.isNotEmpty) {
+      avgSleep = sleepValues.reduce((a, b) => a + b) / sleepValues.length;
+    }
+
+    return {
+      'user': {'name': profile?['name'] ?? 'User'},
+      'cycle': {
+        'day': day,
+        'total': cycleLength,
+        'nextPeriodDays': nextDays,
+      },
+      'insights': {
+        'averageCycleLength': avgCycle ?? cycleLength.toDouble(),
+        'averageBleedingDuration': null,
+        'sleepHours': avgSleep != null ? '${avgSleep.toStringAsFixed(1)}h' : null,
+      },
+    };
   }
 
   @override
@@ -109,29 +180,9 @@ class _HomeScreenState extends State<HomeScreen> {
       return const RhythmaLoadingIndicator();
     }
 
-    if (_error.isNotEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline,
-                size: 48, color: RhythmaColors.rose),
-            const SizedBox(height: 16),
-            Text(
-              l10n.homeFailedLoad,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            Text(_error, style: TextStyle(color: RhythmaColors.mutedFg)),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _fetchDashboardData,
-              child: Text(l10n.homeRetry),
-            ),
-          ],
-        ),
-      );
-    }
+    // Server data failed but local fallback is showing: offer a slim retry
+    // banner instead of replacing the whole screen.
+    final showRetryBanner = _error.isNotEmpty;
 
     final localProfile = context.watch<ProfileProvider>().profile;
     final localName = localProfile['name'] as String?;
@@ -154,7 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          
+          if (showRetryBanner) _buildRetryBanner(l10n),
           Padding(
             padding: const EdgeInsets.fromLTRB(2, 8, 2, 20),
             child: Row(
@@ -650,6 +701,55 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildRetryBanner(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 8, 0, 12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          color: RhythmaColors.coral.withValues(alpha: 0.1),
+          border:
+              Border.all(color: RhythmaColors.coral.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.cloud_off_rounded,
+                size: 18, color: RhythmaColors.coral),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                l10n.homeFailedLoad,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: RhythmaColors.foreground,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: _fetchDashboardData,
+              style: TextButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                l10n.homeRetry,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: RhythmaColors.coral,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -110,4 +110,59 @@ void main() {
       expect(cycleProvider.hasLogsForDate(unloggedDate), isFalse);
     }
   });
+
+  group('logSeverityForDate', () {
+    Future<void> seedLog(DateTime date, Map<String, dynamic> fields) {
+      return LocalStorageService.saveCycleLog({
+        'start_date':
+            '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+        ...fields,
+      });
+    }
+
+    test('returns 0 for unlogged dates', () {
+      final provider = CycleProvider();
+      expect(
+        provider.logSeverityForDate(DateTime(2023, 5, 5)),
+        0,
+      );
+    });
+
+    test('rates heavy flow and severe symptoms as serious', () async {
+      final provider = CycleProvider();
+      final heavyDay = DateTime(2024, 3, 10);
+      final severeDay = DateTime(2024, 3, 11);
+      await seedLog(heavyDay, {'flow_intensity': 'heavy'});
+      await seedLog(severeDay, {'symptoms': ['fainting']});
+
+      expect(provider.logSeverityForDate(heavyDay), 3);
+      expect(provider.logSeverityForDate(severeDay), 3);
+    });
+
+    test('rates medium flow, mild symptoms, high stress as moderate',
+        () async {
+      final provider = CycleProvider();
+      final mediumDay = DateTime(2024, 3, 12);
+      final crampDay = DateTime(2024, 3, 13);
+      final stressDay = DateTime(2024, 3, 14);
+      await seedLog(mediumDay, {'flow_intensity': 'medium'});
+      await seedLog(crampDay, {'symptoms': ['Cramps']});
+      await seedLog(stressDay, {'stress_level': 4});
+
+      expect(provider.logSeverityForDate(mediumDay), 2);
+      expect(provider.logSeverityForDate(crampDay), 2);
+      expect(provider.logSeverityForDate(stressDay), 2);
+    });
+
+    test('rates light logs and healthy days as light', () async {
+      final provider = CycleProvider();
+      final lightDay = DateTime(2024, 3, 15);
+      final healthyDay = DateTime(2024, 3, 16);
+      await seedLog(lightDay, {'flow_intensity': 'light'});
+      await seedLog(healthyDay, {'symptoms': ['healthy_none']});
+
+      expect(provider.logSeverityForDate(lightDay), 1);
+      expect(provider.logSeverityForDate(healthyDay), 1);
+    });
+  });
 }

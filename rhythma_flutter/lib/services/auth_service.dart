@@ -118,9 +118,17 @@ class AuthService {
         final profile = Map<String, dynamic>.from(profileResponse.data as Map);
         if (profile['cycle_length'] != null) {
           await LocalStorageService.setOnboardingCompleted(true);
+          // The avatar is device-local (a photo file path); the server never
+          // receives it, so a missing server avatar must not wipe the local
+          // photo on every cold start.
+          final serverAvatar = profile['avatar'] as String?;
+          final localAvatar =
+              LocalStorageService.getProfile()?['avatar'] as String?;
           final localProfile = <String, dynamic>{
             'name': profile['full_name'] ?? 'User',
-            'avatar': profile['avatar'] ?? 'assets/avatars/avatar_1.png',
+            'avatar': (serverAvatar != null && serverAvatar.isNotEmpty)
+                ? serverAvatar
+                : (localAvatar ?? 'assets/avatars/avatar_1.png'),
             'language': profile['language'] ?? 'en',
           };
           if (profile['age'] != null) localProfile['age'] = profile['age'];

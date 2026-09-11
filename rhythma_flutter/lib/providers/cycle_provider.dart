@@ -45,6 +45,29 @@ class CycleProvider extends ChangeNotifier {
     return LocalStorageService.getCycleLogForDate(date) != null;
   }
 
+  int logSeverityForDate(DateTime date) {
+    final log = LocalStorageService.getCycleLogForDate(date);
+    if (log == null) return 0;
+
+    const severeSymptoms = {'severe pain', 'fainting'};
+    final symptoms = <String>{
+      for (final s in (log['symptoms'] as List? ?? []))
+        s.toString().trim().toLowerCase(),
+    }..remove('healthy_none');
+
+    final flow = (log['flow_intensity'] as String?)?.trim().toLowerCase();
+    if (flow == 'heavy' ||
+        flow == 'very_heavy' ||
+        symptoms.intersection(severeSymptoms).isNotEmpty) {
+      return 3;
+    }
+
+    final stress = (log['stress_level'] as num?)?.toInt() ?? 1;
+    if (flow == 'medium' || symptoms.isNotEmpty || stress >= 4) return 2;
+
+    return 1;
+  }
+
   void refresh() => notifyListeners();
 
   void refreshLogs() {

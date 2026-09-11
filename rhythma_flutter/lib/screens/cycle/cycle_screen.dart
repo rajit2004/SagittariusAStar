@@ -371,6 +371,16 @@ class _CycleScreenState extends State<CycleScreen> {
                     _Legend(l10n.cyclePhaseLuteal, RhythmaColors.coral),
                   ],
                 ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 14,
+                  runSpacing: 6,
+                  children: [
+                    _Legend(l10n.logSeverityLight, RhythmaColors.teal),
+                    _Legend(l10n.logSeverityModerate, RhythmaColors.primary),
+                    _Legend(l10n.logSeveritySerious, RhythmaColors.coral),
+                  ],
+                ),
               ],
             ),
           ),

@@ -626,6 +626,24 @@ abstract class AppLocalizations {
   /// **'Healthy (none)'**
   String get logSympHealthy;
 
+  /// No description provided for @logSeverityLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get logSeverityLight;
+
+  /// No description provided for @logSeverityModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate'**
+  String get logSeverityModerate;
+
+  /// No description provided for @logSeveritySerious.
+  ///
+  /// In en, this message translates to:
+  /// **'Serious'**
+  String get logSeveritySerious;
+
   /// No description provided for @logLabelEnergy.
   ///
   /// In en, this message translates to:

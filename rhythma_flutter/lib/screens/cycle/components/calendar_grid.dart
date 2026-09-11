@@ -19,6 +19,17 @@ class CalendarGrid extends StatefulWidget {
   State<CalendarGrid> createState() => _CalendarGridState();
 }
 
+Color _severityDotColor(int severity) {
+  switch (severity) {
+    case 3:
+      return RhythmaColors.coral;
+    case 2:
+      return RhythmaColors.primary;
+    default:
+      return RhythmaColors.teal;
+  }
+}
+
 class _CalendarGridState extends State<CalendarGrid> {
   DateTime _monthForIndex(int index) {
     final now = DateTime.now();
@@ -75,7 +86,8 @@ class _CalendarGridState extends State<CalendarGrid> {
                   today.month == currentDate.month &&
                   today.day == currentDate.day;
 
-              final hasLog = cycleProvider.hasLogsForDate(currentDate);
+              final logSeverity =
+                  cycleProvider.logSeverityForDate(currentDate);
 
               final isFuture = currentDate.isAfter(
                   DateTime(today.year, today.month, today.day));
@@ -123,15 +135,16 @@ class _CalendarGridState extends State<CalendarGrid> {
                                         : RhythmaColors.foreground,
                               ),
                             ),
-                            if (hasLog)
+                            if (logSeverity > 0)
                               Container(
                                 margin: const EdgeInsets.only(top: 1),
                                 width: 4,
                                 height: 4,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color:
-                                      isSelected ? Colors.white : phaseColor,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : _severityDotColor(logSeverity),
                                 ),
                               ),
                           ],

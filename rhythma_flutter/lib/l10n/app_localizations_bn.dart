@@ -273,6 +273,15 @@ class AppLocalizationsBn extends AppLocalizations {
   String get logSympHealthy => 'Healthy (none)';
 
   @override
+  String get logSeverityLight => 'Light';
+
+  @override
+  String get logSeverityModerate => 'Moderate';
+
+  @override
+  String get logSeveritySerious => 'Serious';
+
+  @override
   String get logLabelEnergy => 'শক্তি';
 
   @override
