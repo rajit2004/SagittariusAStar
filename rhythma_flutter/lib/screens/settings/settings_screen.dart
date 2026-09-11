@@ -6,6 +6,7 @@ import '../../config/theme.dart';
 import '../../main.dart';
 import '../../services/auth_service.dart';
 import '../../services/export_service.dart';
+import '../../services/firestore_service.dart';
 import '../../services/local_storage_service.dart';
 import '../../services/notification_service.dart';
 import '../../providers/locale_provider.dart';
@@ -29,6 +30,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _medicineAlerts = true;
   bool _wellnessTips = false;
   bool _loggingReminders = LocalStorageService.loggingReminders;
+  bool _cloudSync = LocalStorageService.cloudSyncEnabled;
 
   void _showLogoutDialog(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -531,6 +533,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         MaterialPageRoute(
                             builder: (context) => const PrivacyScreen()),
                       );
+                    },
+                  ),
+                  Divider(height: 1, color: RhythmaColors.border),
+                  SwitchListTile(
+                    secondary: TintedIcon(
+                      icon: Icons.cloud_sync_rounded,
+                      color: RhythmaColors.primary,
+                      size: 36,
+                    ),
+                    title: const Text('Cloud Sync'),
+                    subtitle: const Text(
+                        'Back up cycle data to Firebase across devices'),
+                    value: _cloudSync,
+                    activeThumbColor: RhythmaColors.primary,
+                    onChanged: (bool value) async {
+                      bool confirm = await _showConfirmationDialog(
+                          'Cloud Sync', 'cloud sync', value);
+                      if (!confirm) return;
+
+                      setState(() {
+                        _cloudSync = value;
+                      });
+                      await LocalStorageService.setCloudSync(value);
+
+                      final uid = LocalStorageService.currentUserId;
+                      if (value && uid != null) {
+                        try {
+                          await FirestoreService.pullCycleLogs(userId: uid);
+                          await FirestoreService.pullProfile(userId: uid);
+                          await FirestoreService.syncCycleLogs(userId: uid);
+                          await FirestoreService.syncProfile(userId: uid);
+                        } catch (_) {}
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Cloud sync enabled — data backed up.'),
+                            ),
+                          );
+                        }
+                      }
                     },
                   ),
                 ],

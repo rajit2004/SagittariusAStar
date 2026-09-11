@@ -39,6 +39,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadProfile();
     _loadEmergencyContacts();
     _fetchDashboardInsights();
+    _recoverLostAvatar();
+  }
+
+  Future<void> _recoverLostAvatar() async {
+    try {
+      final lostData = await ImagePicker().retrieveLostData();
+      final file = lostData.file;
+      if (file != null && mounted) {
+        await _saveAvatarFile(file.path);
+      }
+    } catch (_) {}
+  }
+
+  Future<bool> _saveAvatarFile(String sourcePath) async {
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      final ext = p.extension(sourcePath);
+      final fileName =
+          'avatar_${DateTime.now().millisecondsSinceEpoch}$ext';
+      final savedFile =
+          await File(sourcePath).copy('${appDir.path}/$fileName');
+      if (!mounted) return false;
+      await context.read<ProfileProvider>().mergeProfile({
+        'avatar': savedFile.path,
+      });
+      if (mounted) setState(() {});
+      return true;
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.photoFailed)),
+        );
+      }
+      return false;
+    }
   }
 
   void _loadProfile() {
@@ -667,42 +702,37 @@ void _showAddEditContactDialog(
       picked = null;
     }
 
-    // Handle case where app was killed by OS while camera was open (Xiaomi, etc.)
+    // Handle case where the camera returns without a photo (user cancelled).
+    // A full OS process kill is recovered separately in `_recoverLostAvatar`,
+    // which runs on the next startup.
     if (picked == null) {
       try {
         final lostData = await picker.retrieveLostData();
-        if (lostData.isEmpty) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(AppLocalizations.of(context)!.photoCancelled)),
-            );
-          }
-          return;
-        }
         if (lostData.file != null) {
           picked = XFile(lostData.file!.path);
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content:
+                    Text(AppLocalizations.of(context)!.photoCancelled)),
+          );
+          return;
+        } else {
+          return;
         }
       } catch (_) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.photoFailed)),
+            SnackBar(
+                content: Text(AppLocalizations.of(context)!.photoFailed)),
           );
         }
         return;
       }
     }
 
-    if (picked != null && mounted) {
-      final appDir = await getApplicationDocumentsDirectory();
-      final ext = p.extension(picked.path);
-      final fileName = 'avatar_${DateTime.now().millisecondsSinceEpoch}$ext';
-      final savedFile = await File(picked.path).copy('${appDir.path}/$fileName');
-      if (mounted) {
-        await context.read<ProfileProvider>().mergeProfile({
-          'avatar': savedFile.path,
-        });
-        setState(() {});
-      }
+    if (mounted) {
+      await _saveAvatarFile(picked.path);
     }
   }
 

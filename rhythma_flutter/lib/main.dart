@@ -229,7 +229,11 @@ class _LandingGate extends StatelessWidget {
       future: sessionFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return AppSplashScreen(onLogin: onLogin, onSignUp: onSignUp);
+          return AppSplashScreen(
+            onLogin: () {},
+            onSignUp: () {},
+            checkingSession: true,
+          );
         }
         if (snapshot.data != null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {

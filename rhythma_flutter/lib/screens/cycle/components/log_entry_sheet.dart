@@ -42,14 +42,25 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
   double _stressLevel = 1.0;
   List<String> _symptoms = [];
 
+  // Displayed moods keep their emoji for the UI and local history, but the
+  // backend only accepts a closed set of mood strings — so each option also
+  // carries the server-side value sent in `_serverMood`.
   final List<Map<String, dynamic>> _moodOptions = [
-    {'emoji': '😊', 'label': 'Happy', 'color': RhythmaColors.teal},
-    {'emoji': '😌', 'label': 'Calm', 'color': Color(0xFF7BAFD4)},
-    {'emoji': '😐', 'label': 'Neutral', 'color': RhythmaColors.mutedFg},
-    {'emoji': '😔', 'label': 'Low', 'color': RhythmaColors.rose},
-    {'emoji': '😢', 'label': 'Sad', 'color': RhythmaColors.coral},
-    {'emoji': '😤', 'label': 'Irritated', 'color': Color(0xFFE8905B)},
+    {'emoji': '😊', 'label': 'Happy', 'value': 'happy', 'color': RhythmaColors.teal},
+    {'emoji': '😌', 'label': 'Calm', 'value': 'neutral', 'color': Color(0xFF7BAFD4)},
+    {'emoji': '😐', 'label': 'Neutral', 'value': 'neutral', 'color': RhythmaColors.mutedFg},
+    {'emoji': '😔', 'label': 'Low', 'value': 'sad', 'color': RhythmaColors.rose},
+    {'emoji': '😢', 'label': 'Sad', 'value': 'sad', 'color': RhythmaColors.coral},
+    {'emoji': '😤', 'label': 'Irritated', 'value': 'frustrated', 'color': Color(0xFFE8905B)},
   ];
+
+  String? get _serverMood {
+    if (_mood == null) return null;
+    for (final option in _moodOptions) {
+      if (option['emoji'] == _mood) return option['value'] as String;
+    }
+    return null;
+  }
 
   @override
   void initState() {
@@ -78,27 +89,34 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
     };
     await LocalStorageService.saveCycleLog(log);
 
+    bool serverOk = false;
     try {
-      await CycleService().submitLog(
+      serverOk = await CycleService().submitLog(
         CycleLog(
           startDate: widget.date,
           flowIntensity: log['flow_intensity'] as String?,
-          mood: log['mood'] as String?,
+          mood: _serverMood,
           sleepHours: (log['sleep_hours'] as num?)?.toDouble(),
           stressLevel: (log['stress_level'] as num?)?.toInt(),
           symptoms: List<String>.from(log['symptoms'] as List? ?? []),
         ),
       );
-    } catch (_) {}
+    } catch (_) {
+      serverOk = false;
+    }
 
     if (mounted) {
       context.read<CycleProvider>().refresh();
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.logSaved),
+          content: Text(
+            serverOk
+                ? l10n.logSaved
+                : "Saved on this device — couldn't reach the server yet.",
+          ),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: RhythmaColors.teal,
+          backgroundColor: serverOk ? RhythmaColors.teal : null,
         ),
       );
       Navigator.of(context).pop();

@@ -4,11 +4,13 @@ import '../../config/theme.dart';
 class AppSplashScreen extends StatefulWidget {
   final VoidCallback onLogin;
   final VoidCallback onSignUp;
+  final bool checkingSession;
 
   const AppSplashScreen({
     super.key,
     required this.onLogin,
     required this.onSignUp,
+    this.checkingSession = false,
   });
 
   @override
@@ -112,40 +114,64 @@ class _AppSplashScreenState extends State<AppSplashScreen>
                 opacity: _buttonsFade,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(24, 0, 24, 48),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      ElevatedButton(
-                        onPressed: widget.onLogin,
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 50),
+                  child: widget.checkingSession
+                      ? Column(
+                          children: [
+                            SizedBox(
+                              width: 28,
+                              height: 28,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 3,
+                                color: RhythmaColors.primary,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Checking your session…',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: RhythmaColors.mutedFg,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            ElevatedButton(
+                              onPressed: widget.onLogin,
+                              style: ElevatedButton.styleFrom(
+                                minimumSize: const Size(double.infinity, 50),
+                              ),
+                              child: const Text(
+                                'Login',
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            OutlinedButton(
+                              onPressed: widget.onSignUp,
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size(double.infinity, 50),
+                                side: BorderSide(color: RhythmaColors.primary),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                              child: Text(
+                                'Sign Up',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: RhythmaColors.primary,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        child: const Text(
-                          'Login',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      OutlinedButton(
-                        onPressed: widget.onSignUp,
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 50),
-                          side: BorderSide(color: RhythmaColors.primary),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                        ),
-                        child: Text(
-                          'Sign Up',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: RhythmaColors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
             ],

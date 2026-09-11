@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import '../utils/secure_storage.dart';
 import 'api_client.dart';
+import 'cycle_service.dart';
 import 'firestore_service.dart';
 import 'local_storage_service.dart';
 import 'user_settings_service.dart';
@@ -29,6 +30,7 @@ class AuthService {
           await LocalStorageService.setCurrentUserId(uid);
           await _syncProfile(uid);
           await _syncSettingsFromServer();
+          await _restoreCycleLogsFromServer(uid);
           FirestoreService.pullCycleLogs(userId: uid);
           FirestoreService.pullProfile(userId: uid);
           FirestoreService.syncCycleLogs(userId: uid);
@@ -91,6 +93,7 @@ class AuthService {
           await LocalStorageService.setCurrentUserId(uid);
           await _syncProfile(uid);
           await _syncSettingsFromServer();
+          await _restoreCycleLogsFromServer(uid);
 
           FirestoreService.pullCycleLogs(userId: uid);
           FirestoreService.pullProfile(userId: uid);
@@ -166,8 +169,35 @@ class AuthService {
 
   Future<void> logout() async {
     await SecureStorage.clearAuth();
-    
+
     await LocalStorageService.setCurrentUserId(null);
+  }
+
+  Future<void> _restoreCycleLogsFromServer(String uid) async {
+    try {
+      final data = await CycleService().getCycleHistory(uid, limit: 100);
+      final entries = (data['entries'] as List?) ?? [];
+      for (final entry in entries) {
+        final map = Map<String, dynamic>.from(entry as Map);
+        final rawDate = map['start_date']?.toString() ?? '';
+        if (rawDate.isEmpty) continue;
+        final dateKey =
+            rawDate.length >= 10 ? rawDate.substring(0, 10) : rawDate;
+        final symptoms = map['symptoms'];
+        await LocalStorageService.saveCycleLog({
+          'start_date': dateKey,
+          if (map['end_date'] != null)
+            'end_date': map['end_date'].toString().substring(0, 10),
+          if (map['flow_intensity'] != null)
+            'flow_intensity': map['flow_intensity'],
+          if (map['mood'] != null) 'mood': map['mood'],
+          if (symptoms is List) 'symptoms': List<String>.from(symptoms),
+          if (map['sleep_hours'] != null) 'sleep_hours': map['sleep_hours'],
+          if (map['stress_level'] != null) 'stress_level': map['stress_level'],
+          if (map['notes'] != null) 'notes': map['notes'],
+        });
+      }
+    } catch (_) {}
   }
 
   Future<void> deleteAccount() async {
@@ -200,6 +230,7 @@ class AuthService {
         FirestoreService.syncProfile(userId: uid);
 
         await _syncSettingsFromServer();
+        await _restoreCycleLogsFromServer(uid);
       }
       return uid;
     } on DioException catch (e) {
