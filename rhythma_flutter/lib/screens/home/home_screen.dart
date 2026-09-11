@@ -91,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const RhythmaLoadingIndicator();
     }
 
     if (_error.isNotEmpty) {
@@ -151,6 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ? FileImage(File(avatarPath)) as ImageProvider
                           : AssetImage(avatarPath) as ImageProvider)
                       : null,
+                  onBackgroundImageError: avatarPath.isNotEmpty ? (_, __) {} : null,
                   child: avatarPath.isEmpty
                       ? Icon(Icons.person_rounded,
                           size: 22, color: RhythmaColors.mutedFg)
@@ -234,14 +235,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 Positioned(
                   right: -20,
                   top: -20,
-                  child: Container(
-                    width: 140,
-                    height: 140,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RhythmaGradients.primary,
+                  child: Opacity(
+                    opacity: 0.22,
+                    child: Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RhythmaGradients.primary,
+                      ),
                     ),
-                  ).opacity(0.22),
+                  ),
                 ),
                 Column(
                   children: [
@@ -427,11 +431,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          width: 40,
-                          height: 40,
+                          width: 48,
+                          height: 48,
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.25),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(24),
                           ),
                           child: const Icon(Icons.mic_rounded,
                               size: 18, color: Colors.white),
@@ -972,22 +976,22 @@ class _HeaderIcon extends StatelessWidget {
   const _HeaderIcon({required this.icon, this.onTap, this.color});
 
   @override
-Widget build(BuildContext context) {
-  return GlassCard(
-    padding: EdgeInsets.zero,
-    borderRadius: 20,
-    onTap: onTap,
-    child: SizedBox(
-      width: 48,
-      height: 48,
-      child: Icon(
-        icon,
-        size: 18,
-        color: RhythmaColors.foreground,
+  Widget build(BuildContext context) {
+    return GlassCard(
+      padding: EdgeInsets.zero,
+      borderRadius: 20,
+      onTap: onTap,
+      child: SizedBox(
+        width: 48,
+        height: 48,
+        child: Icon(
+          icon,
+          size: 18,
+          color: color ?? RhythmaColors.foreground,
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
 
 class _StatCell extends StatelessWidget {
@@ -1088,8 +1092,11 @@ class _LearnCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      splashColor: Colors.white.withValues(alpha: 0.15),
+      highlightColor: Colors.white.withValues(alpha: 0.08),
       child: Container(
         width: 152,
         decoration: BoxDecoration(
@@ -1135,9 +1142,4 @@ class _LearnCard extends StatelessWidget {
       ),
     );
   }
-}
-
-extension on Widget {
-  Widget opacity(double value) =>
-      Opacity(opacity: value, child: this);
 }

@@ -118,7 +118,7 @@ class PrivacyScreen extends StatelessWidget {
               body,
               style: TextStyle(
                 fontSize: 14,
-                color: RhythmaColors.mutedFg,
+                color: RhythmaColors.foreground,
                 height: 1.5,
               ),
             ),

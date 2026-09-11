@@ -228,14 +228,17 @@ class _InsightsScreenState extends State<InsightsScreen> {
                   Positioned(
                     right: -30,
                     top: -30,
-                    child: Container(
-                      width: 160,
-                      height: 160,
-                      decoration: BoxDecoration(
-                        gradient: RhythmaGradients.primary,
-                        shape: BoxShape.circle,
+                    child: Opacity(
+                      opacity: 0.2,
+                      child: Container(
+                        width: 160,
+                        height: 160,
+                        decoration: BoxDecoration(
+                          gradient: RhythmaGradients.primary,
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                    ).opacity(0.2),
+                    ),
                   ),
                   Row(
                     children: [
@@ -359,7 +362,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: (isStable ? RhythmaColors.teal : RhythmaColors.coral).withOpacity(0.14),
+                          color: (isStable ? RhythmaColors.teal : RhythmaColors.coral).withValues(alpha: 0.14),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -474,7 +477,6 @@ GlassCard(
 
 const SizedBox(height: 14),
 
-        const SizedBox(height: 14),
             SectionHeader(title: l10n.insightsWellnessLabel),
             ..._buildRecommendations(l10n).map((r) => Padding(
                   padding: const EdgeInsets.only(bottom: 8),
@@ -650,8 +652,4 @@ class _Rec extends StatelessWidget {
       ),
     );
   }
-}
-
-extension on Widget {
-  Widget opacity(double v) => Opacity(opacity: v, child: this);
 }

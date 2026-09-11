@@ -154,131 +154,131 @@ class _AssistantScreenState extends State<AssistantScreen> {
 
     return Scaffold(
       backgroundColor: RhythmaColors.background,
-      appBar: AppBar(
-        title: Text(l10n.assistantTitle),
-        backgroundColor: RhythmaColors.surface,
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                      gradient: RhythmaGradients.primary,
-                      shape: BoxShape.circle),
-                  child: const Icon(Icons.favorite_rounded,
-                      color: Colors.white, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(l10n.assistantTitle,
-                            style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w700,
-                                color: RhythmaColors.foreground)),
-                        Text(l10n.assistantSubtitle,
-                            style: TextStyle(
-                                fontSize: 12, color: RhythmaColors.mutedFg)),
-                      ]),
-                ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: RhythmaColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                        gradient: RhythmaGradients.primary,
+                        shape: BoxShape.circle),
+                    child: const Icon(Icons.favorite_rounded,
+                        color: Colors.white, size: 20),
                   ),
-                  child: Text(lang.toUpperCase(),
-                      style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: RhythmaColors.primary)),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
-            child: Text(
-              l10n.assistantDisclaimer,
-              style: TextStyle(fontSize: 11, color: RhythmaColors.mutedFg),
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          Expanded(
-            child: ListView.builder(
-              controller: _scroll,
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              itemCount: _messages.length + (_isLoading ? 1 : 0),
-              itemBuilder: (ctx, i) {
-                if (_isLoading && i == _messages.length) return _TypingBubble();
-                return _ChatBubble(msg: _messages[i]);
-              },
-            ),
-          ),
-
-          if (_messages.length == 1)
-            SizedBox(
-              height: 38,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: _suggested.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (_, i) => Semantics(
-                  label:
-                      '${AppLocalizations.of(context)!.assistantAccessibilitySuggestedPrompt}: ${_suggested[i]}',
-                  button: true,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(20),
-                    onTap: () => _send(_suggested[i]),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: RhythmaColors.surfaceMuted,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: RhythmaColors.border,
-                        ),
-                      ),
-                      child: Text(
-                        _suggested[i],
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(l10n.assistantTitle,
+                              style: TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700,
+                                  color: RhythmaColors.foreground)),
+                          Text(l10n.assistantSubtitle,
+                              style: TextStyle(
+                                  fontSize: 12, color: RhythmaColors.mutedFg)),
+                        ]),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: RhythmaColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(lang.toUpperCase(),
                         style: TextStyle(
-                          fontSize: 12,
-                          color: RhythmaColors.foreground,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: RhythmaColors.primary)),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
+              child: Text(
+                l10n.assistantDisclaimer,
+                style: TextStyle(fontSize: 11, color: RhythmaColors.mutedFg),
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            Expanded(
+              child: ListView.builder(
+                controller: _scroll,
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+                itemCount: _messages.length + (_isLoading ? 1 : 0),
+                itemBuilder: (ctx, i) {
+                  if (_isLoading && i == _messages.length) return _TypingBubble();
+                  return _ChatBubble(msg: _messages[i]);
+                },
+              ),
+            ),
+
+            if (_messages.length == 1)
+              SizedBox(
+                height: 38,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: _suggested.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (_, i) => Semantics(
+                    label:
+                        '${AppLocalizations.of(context)!.assistantAccessibilitySuggestedPrompt}: ${_suggested[i]}',
+                    button: true,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: () => _send(_suggested[i]),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: RhythmaColors.surfaceMuted,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: RhythmaColors.border,
+                          ),
+                        ),
+                        child: Text(
+                          _suggested[i],
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: RhythmaColors.foreground,
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
-          const SizedBox(height: 8),
+            const SizedBox(height: 8),
 
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(28),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
               child: Container(
                 decoration: BoxDecoration(
                   color: RhythmaColors.surface.withValues(alpha: 0.85),
                   borderRadius: BorderRadius.circular(28),
                   border: Border.all(
                     color: RhythmaColors.lavender.withValues(alpha: 0.5),
-                   ),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: RhythmaColors.primary.withValues(alpha: 0.06),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
@@ -337,8 +337,8 @@ class _AssistantScreenState extends State<AssistantScreen> {
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

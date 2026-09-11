@@ -36,7 +36,7 @@ def _normalize(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
 
 def _tokens(text: str) -> set:
-    return {t for t in _normalize(text).split() if len(t) >= 3}
+    return {t for t in _normalize(text).split() if len(t) >= 4}
 
 class MedicalKnowledgeService:
 

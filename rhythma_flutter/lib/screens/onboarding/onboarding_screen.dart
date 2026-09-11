@@ -424,23 +424,36 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   Widget _buildProgressBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-      child: Row(
-        children: List.generate(_totalPages, (i) {
-          final active = i <= _currentPage;
-          return Expanded(
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              height: 4,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(2),
-                color: active
-                    ? RhythmaColors.primary
-                    : RhythmaColors.primary.withValues(alpha: 0.2),
-              ),
+      child: Column(
+        children: [
+          Row(
+            children: List.generate(_totalPages, (i) {
+              final active = i <= _currentPage;
+              return Expanded(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  height: 4,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(2),
+                    color: active
+                        ? RhythmaColors.primary
+                        : RhythmaColors.primary.withValues(alpha: 0.2),
+                  ),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Step ${_currentPage + 1} of $_totalPages',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: RhythmaColors.mutedFg,
             ),
-          );
-        }),
+          ),
+        ],
       ),
     );
   }
@@ -503,11 +516,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           ...List.generate(_languages.length, (i) {
             final lang = _languages[i];
             final selected = lang['code'] == _selectedLanguage;
-            return GestureDetector(
+            return InkWell(
               onTap: () {
                 setState(() => _selectedLanguage = lang['code']!);
                 context.read<LocaleProvider>().setLocale(Locale(lang['code']!));
               },
+              borderRadius: BorderRadius.circular(16),
+              splashColor: RhythmaColors.primary.withValues(alpha: 0.1),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 220),
                 margin: const EdgeInsets.only(bottom: 12),
@@ -556,7 +571,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('🔒', style: TextStyle(fontSize: 20)),
+                Icon(Icons.lock_outline, color: RhythmaColors.teal, size: 20),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -1281,7 +1296,7 @@ Semantics(
       ),
       child: Row(
         children: [
-          Text(icon, style: const TextStyle(fontSize: 28)),
+          Icon(Icons.notifications_rounded, color: RhythmaColors.primary, size: 28),
           const SizedBox(width: 14),
           Expanded(
             child: Column(

@@ -8,7 +8,16 @@ from services.medical_knowledge_service import (
     MedicalKnowledgeService,
 )
 
-ALLOWED_SOURCE_DOMAINS = {"www.who.int", "www.nhs.uk"}
+ALLOWED_SOURCE_DOMAINS = {
+    "www.who.int",
+    "www.nhs.uk",
+    "www.acog.org",
+    "www.endocrine.org",
+    "www.mayoclinic.org",
+    "www.monash.edu",
+    "www.sleepfoundation.org",
+    "www.thyroid.org",
+}
 
 BANNED_RISK_LABELS = ["high risk", "medium risk", "low risk"]
 

@@ -59,49 +59,56 @@ class RhythmaBottomNav extends StatelessWidget {
                 final tab = tabs[i];
                 final active = i == currentIndex;
                 return Expanded(
-                  child: GestureDetector(
-                    onTap: () => onTap(i),
-                    behavior: HitTestBehavior.opaque,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          width: 40,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            gradient: active ? RhythmaGradients.primary : null,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: active
-                                ? [
-                                    BoxShadow(
-                                      color: RhythmaColors.primary
-                                          .withValues(alpha: 0.3),
-                                      blurRadius: 12,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ]
-                                : null,
+                  child: Semantics(
+                    label: tab.label,
+                    button: true,
+                    selected: active,
+                    child: InkWell(
+                      onTap: () => onTap(i),
+                      borderRadius: BorderRadius.circular(16),
+                      splashColor: RhythmaColors.primary.withValues(alpha: 0.1),
+                      highlightColor: RhythmaColors.primary.withValues(alpha: 0.05),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            curve: Curves.easeInOut,
+                            width: 40,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              gradient: active ? RhythmaGradients.primary : null,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: active
+                                  ? [
+                                      BoxShadow(
+                                        color: RhythmaColors.primary
+                                            .withValues(alpha: 0.3),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: Icon(
+                              tab.icon,
+                              size: 18,
+                              color: active ? Colors.white : RhythmaColors.mutedFg,
+                            ),
                           ),
-                          child: Icon(
-                            tab.icon,
-                            size: 18,
-                            color:
-                                active ? Colors.white : RhythmaColors.mutedFg,
+                          const SizedBox(height: 2),
+                          Text(
+                            tab.label,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: active
+                                  ? RhythmaColors.foreground
+                                  : RhythmaColors.mutedFg,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          tab.label,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: active
-                                ? RhythmaColors.foreground
-                                : RhythmaColors.mutedFg,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );

@@ -53,21 +53,12 @@ class _AppSplashScreenState extends State<AppSplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    const bgStart = Color(0xFFFDF8FF);
-    const bgEnd = Color(0xFFF8EEF8);
-    const fg = Color(0xFF2D1F47);
-    const muted = Color(0xFF7A6E8A);
-
     return Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [bgStart, bgEnd],
-          ),
+        decoration: BoxDecoration(
+          gradient: RhythmaGradients.bg,
         ),
         child: SafeArea(
           child: Column(
@@ -84,6 +75,11 @@ class _AppSplashScreenState extends State<AppSplashScreen>
                         'assets/images/logo.png',
                         height: 120,
                         fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Icon(
+                          Icons.auto_awesome_rounded,
+                          size: 80,
+                          color: RhythmaColors.primary,
+                        ),
                       ),
                       const SizedBox(height: 24),
                       Text(
@@ -91,7 +87,7 @@ class _AppSplashScreenState extends State<AppSplashScreen>
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: fg,
+                          color: RhythmaColors.foreground,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -102,7 +98,7 @@ class _AppSplashScreenState extends State<AppSplashScreen>
                           'Your cycle, your rhythm',
                           style: TextStyle(
                             fontSize: 15,
-                            color: muted,
+                            color: RhythmaColors.mutedFg,
                             fontWeight: FontWeight.w400,
                           ),
                         ),
@@ -134,10 +130,18 @@ class _AppSplashScreenState extends State<AppSplashScreen>
                         onPressed: widget.onSignUp,
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size(double.infinity, 50),
+                          side: BorderSide(color: RhythmaColors.primary),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Sign Up',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: RhythmaColors.primary,
+                          ),
                         ),
                       ),
                     ],

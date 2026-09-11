@@ -48,7 +48,7 @@ class GlassCard extends StatelessWidget {
     final card = ClipRRect(
       borderRadius: BorderRadius.circular(r),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: Container(
           decoration: BoxDecoration(
             color: RhythmaColors.surface.withValues(alpha: 0.55),
@@ -74,7 +74,13 @@ class GlassCard extends StatelessWidget {
       ),
     );
     if (onTap != null) {
-      return GestureDetector(onTap: onTap, child: card);
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(r),
+        splashColor: RhythmaColors.primary.withValues(alpha: 0.08),
+        highlightColor: RhythmaColors.primary.withValues(alpha: 0.04),
+        child: card,
+      );
     }
     return card;
   }
@@ -227,6 +233,26 @@ class RhythmaScaffold extends StatelessWidget {
         backgroundColor: Colors.transparent,
         extendBody: extendBody,
         body: body,
+      ),
+    );
+  }
+}
+
+class RhythmaLoadingIndicator extends StatelessWidget {
+  final double size;
+  const RhythmaLoadingIndicator({super.key, this.size = 40});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          gradient: RhythmaGradients.primary,
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 20),
       ),
     );
   }

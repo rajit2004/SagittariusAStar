@@ -13,6 +13,7 @@ import '../../providers/theme_provider.dart';
 import 'language_screen.dart';
 import 'theme_screen.dart';
 import '../sms/sms_screen.dart';
+import '../home/privacy_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:rhythma/services/report_service.dart';
 
@@ -450,9 +451,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   Divider(height: 1, color: RhythmaColors.border),
                   SwitchListTile(
-                    secondary: TintedIcon(
+                    secondary: const TintedIcon(
                       icon: Icons.edit_calendar_rounded,
-                      color: RhythmaColors.mutedFg,
+                      color: RhythmaColors.coral,
                       size: 36,
                     ),
                     title: Text('Logging Reminders'),
@@ -524,7 +525,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     title: Text(l10n.privacyPolicy),
                     trailing: Icon(Icons.chevron_right_rounded,
                         color: RhythmaColors.mutedFg),
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const PrivacyScreen()),
+                      );
+                    },
                   ),
                 ],
               ),
