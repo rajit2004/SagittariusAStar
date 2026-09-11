@@ -23,6 +23,14 @@ import '../../main.dart';
 
 import 'package:url_launcher/url_launcher_string.dart';
 
+int _asInt(dynamic value, int fallback) {
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value) ?? fallback;
+  return fallback;
+}
+
+String? _asString(dynamic value) => value is String ? value : null;
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -185,17 +193,19 @@ class _HomeScreenState extends State<HomeScreen> {
     final showRetryBanner = _error.isNotEmpty;
 
     final localProfile = context.watch<ProfileProvider>().profile;
-    final localName = localProfile['name'] as String?;
-    final apiName = _userData['name'] as String?;
+    final localName = _asString(localProfile['name']);
+    final apiName = _asString(_userData['name']);
     final userName = (localName != null && localName.isNotEmpty)
         ? localName
         : (apiName ?? 'User');
 
-    final avatarPath = localProfile['avatar'] as String? ?? '';
-    final nextPeriodDays = (_prediction['daysUntilNextPeriod'] as num?)?.toInt()
-        ?? (_cycleData['nextPeriodDays'] ?? 14);
-    final cycleDay = _cycleData['day'] ?? 14;
-    final totalCycle = _cycleData['total'] ?? 28;
+    final avatarPath = _asString(localProfile['avatar']) ?? '';
+    final nextPeriodDays = _asInt(
+      _prediction['daysUntilNextPeriod'],
+      _asInt(_cycleData['nextPeriodDays'], 14),
+    );
+    final cycleDay = _asInt(_cycleData['day'], 14);
+    final totalCycle = _asInt(_cycleData['total'], 28);
     final avgCycle = _insights['averageCycleLength'] ?? 28;
     final avgBleeding = _insights['averageBleedingDuration'] ?? 5;
     final sleepHours = _insights['sleepHours'] ?? '7.2h';

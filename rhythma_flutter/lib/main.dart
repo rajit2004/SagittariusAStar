@@ -79,6 +79,51 @@ void performLogout(BuildContext context) async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  ErrorWidget.builder = (details) {
+    debugPrint('RHYTHMA FATAL UI: ${details.exception}');
+    debugPrint('${details.stack}');
+    return Container(
+      decoration: BoxDecoration(
+        gradient: RhythmaGradients.bg,
+      ),
+      child: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const TintedIcon(
+                  icon: Icons.refresh_rounded,
+                  color: RhythmaColors.coral,
+                  size: 56,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Something went wrong',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: RhythmaColors.foreground,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Please close and reopen Rhythma. Your saved data is safe.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: RhythmaColors.mutedFg,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  };
+
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,

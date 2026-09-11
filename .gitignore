@@ -111,4 +111,7 @@ htmlcov/
 # =========================
 *.hive
 *.lock
+# ...except the Flutter dependency lockfile, which is tracked for
+# reproducible CI builds (Hive lock files stay ignored).
+!rhythma_flutter/pubspec.lock
 *fbsvc*.json
