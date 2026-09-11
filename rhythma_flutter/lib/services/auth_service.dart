@@ -199,7 +199,7 @@ class AuthService {
       return uid;
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
-        
+        await SecureStorage.clearAuth();
         return null;
       }
       

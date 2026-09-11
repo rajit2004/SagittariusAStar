@@ -136,11 +136,11 @@ class MedicalKnowledgeService:
         lines = [
             "--- Trusted Medical Reference ---",
             "The facts below were retrieved from credible health sources. When they are "
-            "relevant to the user's question, base your answer on them and on nothing "
-            "beyond them: do not add medical claims that are not present here. If the "
-            "question is not covered by these facts, say so honestly and suggest "
-            "consulting a qualified healthcare professional. Attribute each fact to its "
-            "source by name when you use it.",
+            "relevant to the user's question, use them as the foundation for your answer. "
+            "You may supplement with your general health knowledge to provide a complete, "
+            "helpful response, but always prioritize the referenced facts when available. "
+            "Always remind users to consult a qualified healthcare professional for personal "
+            "medical advice. Attribute each fact to its source by name when you use it.",
         ]
 
         for ref in references:

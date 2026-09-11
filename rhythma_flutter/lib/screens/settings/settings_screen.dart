@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:rhythma/l10n/app_localizations.dart';
 import '../../components/shared.dart';
 import '../../config/theme.dart';
+import '../../main.dart';
 import '../../services/auth_service.dart';
 import '../../services/export_service.dart';
 import '../../services/local_storage_service.dart';
@@ -98,8 +99,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               );
                               
                               Navigator.of(context, rootNavigator: true)
-                                  .pushNamedAndRemoveUntil(
-                                      '/login', (route) => false);
+                                  .pushAndRemoveUntil(
+                                      MaterialPageRoute(
+                                        builder: (_) => buildLoginGate(),
+                                      ),
+                                      (route) => false);
                             }
                           },
                           style: ElevatedButton.styleFrom(
@@ -195,8 +199,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   ),
                                 );
                                 Navigator.of(context, rootNavigator: true)
-                                    .pushNamedAndRemoveUntil(
-                                        '/login', (route) => false);
+                                    .pushAndRemoveUntil(
+                                        MaterialPageRoute(
+                                          builder: (_) => buildLoginGate(),
+                                        ),
+                                        (route) => false);
                               }
                             } catch (e) {
                               if (context.mounted) {

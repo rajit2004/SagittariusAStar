@@ -53,18 +53,20 @@ class _AppSplashScreenState extends State<AppSplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    const bgStart = Color(0xFFFDF8FF);
+    const bgEnd = Color(0xFFF8EEF8);
+    const fg = Color(0xFF2D1F47);
+    const muted = Color(0xFF7A6E8A);
+
     return Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              RhythmaColors.background,
-              RhythmaColors.backgroundEnd,
-            ],
+            colors: [bgStart, bgEnd],
           ),
         ),
         child: SafeArea(
@@ -89,7 +91,7 @@ class _AppSplashScreenState extends State<AppSplashScreen>
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: RhythmaColors.foreground,
+                          color: fg,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -100,7 +102,7 @@ class _AppSplashScreenState extends State<AppSplashScreen>
                           'Your cycle, your rhythm',
                           style: TextStyle(
                             fontSize: 15,
-                            color: RhythmaColors.mutedFg,
+                            color: muted,
                             fontWeight: FontWeight.w400,
                           ),
                         ),

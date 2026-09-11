@@ -1,7 +1,11 @@
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../config/theme.dart';
@@ -14,13 +18,6 @@ import '../../components/approximate_field.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onComplete;
-
-  static const List<String> avatars = [
-    'assets/avatars/avatar_1.png',
-    'assets/avatars/avatar_2.png',
-    'assets/avatars/avatar_3.png',
-    'assets/avatars/avatar_4.png',
-  ];
 
   const OnboardingScreen({super.key, required this.onComplete});
 
@@ -118,7 +115,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   void initState() {
     super.initState();
     _selectedLanguage = LocalStorageService.preferredLanguage;
-    _selectedAvatar = OnboardingScreen.avatars.first;
+    _selectedAvatar = null;
 
     _pageAnimController = AnimationController(
       vsync: this,
@@ -337,7 +334,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       'name': _nameController.text.trim().isEmpty
           ? 'User'
           : _nameController.text.trim(),
-      'avatar': _selectedAvatar ?? 'assets/avatars/avatar_1.png',
+                  'avatar': _selectedAvatar ?? '',
       'language': _selectedLanguage,
     };
     final age = int.tryParse(_ageController.text);
@@ -592,43 +589,69 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             style: TextStyle(fontSize: 14, color: RhythmaColors.mutedFg),
           ),
           const SizedBox(height: 12),
-          SizedBox(
-            height: 70,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: OnboardingScreen.avatars.length,
-              itemBuilder: (_, i) {
-                final avatarPath = OnboardingScreen.avatars[i];
-                final selected = _selectedAvatar == avatarPath;
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedAvatar = avatarPath),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    margin: const EdgeInsets.only(right: 12),
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: selected
-                          ? RhythmaColors.primary.withValues(alpha: 0.2)
-                          : RhythmaColors.surface,
-                      border: Border.all(
-                        color: selected
-                            ? RhythmaColors.primary
-                            : Colors.transparent,
-                        width: 2.5,
-                      ),
+          GestureDetector(
+            onTap: () async {
+              final picker = ImagePicker();
+              final picked = await picker.pickImage(
+                source: ImageSource.gallery,
+                maxWidth: 512,
+                maxHeight: 512,
+                imageQuality: 85,
+              );
+              if (picked != null) {
+                final appDir = await getApplicationDocumentsDirectory();
+                final fileName = 'avatar_${DateTime.now().millisecondsSinceEpoch}${p.extension(picked.path)}';
+                final savedFile = await File(picked.path).copy('${appDir.path}/$fileName');
+                setState(() => _selectedAvatar = savedFile.path);
+              }
+            },
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _selectedAvatar != null
+                    ? RhythmaColors.primary.withValues(alpha: 0.1)
+                    : RhythmaColors.surfaceMuted,
+                border: Border.all(
+                  color: _selectedAvatar != null
+                      ? RhythmaColors.primary
+                      : RhythmaColors.border,
+                  width: 2,
+                ),
+              ),
+              child: _selectedAvatar != null
+                  ? ClipOval(
+                      child: _selectedAvatar!.startsWith('/')
+                          ? Image.file(
+                              File(_selectedAvatar!),
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.cover,
+                            )
+                          : Image.asset(
+                              _selectedAvatar!,
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.cover,
+                            ),
+                    )
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.camera_alt_rounded,
+                            color: RhythmaColors.mutedFg, size: 24),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Pick',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: RhythmaColors.mutedFg,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(3.0),
-                      child: CircleAvatar(
-                        backgroundImage: AssetImage(avatarPath),
-                        backgroundColor: Colors.transparent,
-                      ),
-                    ),
-                  ),
-                );
-              },
             ),
           ),
           const SizedBox(height: 24),

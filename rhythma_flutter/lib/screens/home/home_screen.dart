@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rhythma/l10n/app_localizations.dart';
@@ -8,6 +9,7 @@ import '../../models/cycle_log.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/profile_provider.dart';
 import '../../services/api_client.dart';
+import '../../services/auth_service.dart';
 import '../../services/cycle_service.dart';
 import '../../services/local_storage_service.dart';
 import '../../utils/log_options.dart';
@@ -15,6 +17,9 @@ import '../cycle/components/log_entry_sheet.dart';
 import '../insights/insights_screen.dart';
 import '../profile/profile_screen.dart';
 import '../settings/language_screen.dart';
+import 'article_screen.dart';
+import 'privacy_screen.dart';
+import '../../main.dart';
 
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -120,8 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ? localName
         : (apiName ?? 'User');
 
-    final avatarPath =
-        localProfile['avatar'] as String? ?? 'assets/avatars/avatar_1.png';
+    final avatarPath = localProfile['avatar'] as String? ?? '';
     final nextPeriodDays = _cycleData['nextPeriodDays'] ?? 14;
     final cycleDay = _cycleData['day'] ?? 14;
     final totalCycle = _cycleData['total'] ?? 28;
@@ -141,8 +145,16 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 CircleAvatar(
                   radius: 22,
-                  backgroundImage: AssetImage(avatarPath),
-                  backgroundColor: RhythmaColors.primary.withOpacity(0.15),
+                  backgroundColor: RhythmaColors.primary.withValues(alpha: 0.15),
+                  backgroundImage: avatarPath.isNotEmpty
+                      ? (avatarPath.startsWith('/')
+                          ? FileImage(File(avatarPath)) as ImageProvider
+                          : AssetImage(avatarPath) as ImageProvider)
+                      : null,
+                  child: avatarPath.isEmpty
+                      ? Icon(Icons.person_rounded,
+                          size: 22, color: RhythmaColors.mutedFg)
+                      : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -198,8 +210,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(width: 8),
                 _HeaderIcon(
                   icon: Icons.shield_outlined,
-                  onTap: () =>
-                      _showComingSoonDialog(context, l10n.homePrivacySecurity),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const PrivacyScreen()),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _HeaderIcon(
+                  icon: Icons.logout_rounded,
+                  color: RhythmaColors.coral,
+                  onTap: () => _showLogoutDialog(context),
                 ),
               ],
             ),
@@ -569,24 +589,36 @@ class _HomeScreenState extends State<HomeScreen> {
                   title: l10n.homeLearnPcos,
                   color: RhythmaColors.rose,
                   label: l10n.homeArticle,
-                  onTap: () =>
-                      _showComingSoonDialog(context, l10n.homeLearnPcos),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) =>
+                            const ArticleScreen(articleId: 'pcos')),
+                  ),
                 ),
                 const SizedBox(width: 10),
                 _LearnCard(
                   title: l10n.homeLearnHormones,
                   color: RhythmaColors.primary,
                   label: l10n.homeArticle,
-                  onTap: () =>
-                      _showComingSoonDialog(context, l10n.homeLearnHormones),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) =>
+                            const ArticleScreen(articleId: 'hormones')),
+                  ),
                 ),
                 const SizedBox(width: 10),
                 _LearnCard(
                   title: l10n.homeLearnIron,
                   color: RhythmaColors.coral,
                   label: l10n.homeArticle,
-                  onTap: () =>
-                      _showComingSoonDialog(context, l10n.homeLearnIron),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) =>
+                            const ArticleScreen(articleId: 'iron')),
+                  ),
                 ),
               ],
             ),
@@ -719,6 +751,93 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Text(l10n.homeOk),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.3),
+      builder: (ctx) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Material(
+            color: Colors.transparent,
+            child: GlassCard(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const TintedIcon(
+                    icon: Icons.logout_rounded,
+                    color: RhythmaColors.coral,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    l10n.logOut,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    l10n.logoutConfirmation,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: RhythmaColors.mutedFg,
+                        ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: RhythmaColors.border),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child: Text(
+                            l10n.cancel,
+                            style:
+                                TextStyle(color: RhythmaColors.mutedFg),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            performLogout(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: RhythmaColors.coral,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child: Text(l10n.logOut),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -1,4 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 import '../../components/shared.dart';
 import '../../config/theme.dart';
@@ -8,7 +12,6 @@ import 'package:rhythma/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/profile_provider.dart';
-import '../onboarding/onboarding_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -113,9 +116,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
   void _showEditProfileSheet() {
     final profile = context.read<ProfileProvider>().profile;
-    String selectedAvatar = profile['avatar'] as String? ?? 'assets/avatars/avatar_1.png';
-    if (!selectedAvatar.startsWith('assets/') || !selectedAvatar.endsWith('.png')) {
-      selectedAvatar = 'assets/avatars/avatar_1.png';
+    String selectedAvatar = profile['avatar'] as String? ?? '';
+    if (selectedAvatar.isNotEmpty && !selectedAvatar.startsWith('/') && !selectedAvatar.startsWith('assets/')) {
+      selectedAvatar = '';
     }
 
     final nameController = TextEditingController(text: _userName);
@@ -152,46 +155,69 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   style: TextStyle(fontSize: 14, color: RhythmaColors.mutedFg),
                 ),
                 const SizedBox(height: 8),
-                SizedBox(
-                  height: 64,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: OnboardingScreen.avatars.length,
-                    itemBuilder: (_, i) {
-                      final avatarPath = OnboardingScreen.avatars[i];
-                      final isSelected = selectedAvatar == avatarPath;
-                      return Semantics(
-                        label: '${AppLocalizations.of(context)!.onboardingAvatarOption} ${i + 1}',
-                        selected: isSelected,
-                        button: true,
-                        child: GestureDetector(
-                          onTap: () => setSheetState(() => selectedAvatar = avatarPath),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            margin: const EdgeInsets.only(right: 12),
-                            width: 54,
-                            height: 54,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isSelected
-                                  ? RhythmaColors.primary.withOpacity(0.2)
-                                  : RhythmaColors.surface,
-                              border: Border.all(
-                                color: isSelected ? RhythmaColors.primary : Colors.transparent,
-                                width: 2.5,
+                GestureDetector(
+                  onTap: () async {
+                    final picker = ImagePicker();
+                    final picked = await picker.pickImage(
+                      source: ImageSource.gallery,
+                      maxWidth: 512,
+                      maxHeight: 512,
+                      imageQuality: 85,
+                    );
+                    if (picked != null) {
+                      final appDir = await getApplicationDocumentsDirectory();
+                      final fileName = 'avatar_${DateTime.now().millisecondsSinceEpoch}${p.extension(picked.path)}';
+                      final savedFile = await File(picked.path).copy('${appDir.path}/$fileName');
+                      setSheetState(() => selectedAvatar = savedFile.path);
+                    }
+                  },
+                  child: Container(
+                    width: 68,
+                    height: 68,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: selectedAvatar.isNotEmpty
+                          ? RhythmaColors.primary.withValues(alpha: 0.1)
+                          : RhythmaColors.surfaceMuted,
+                      border: Border.all(
+                        color: selectedAvatar.isNotEmpty
+                            ? RhythmaColors.primary
+                            : RhythmaColors.border,
+                        width: 2,
+                      ),
+                    ),
+                    child: selectedAvatar.isNotEmpty
+                        ? ClipOval(
+                            child: selectedAvatar.startsWith('/')
+                                ? Image.file(
+                                    File(selectedAvatar),
+                                    width: 68,
+                                    height: 68,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Image.asset(
+                                    selectedAvatar,
+                                    width: 68,
+                                    height: 68,
+                                    fit: BoxFit.cover,
+                                  ),
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.camera_alt_rounded,
+                                  color: RhythmaColors.mutedFg, size: 20),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Pick',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: RhythmaColors.mutedFg,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(3.0),
-                              child: CircleAvatar(
-                                backgroundImage: AssetImage(avatarPath),
-                                backgroundColor: Colors.transparent,
-                              ),
-                            ),
+                            ],
                           ),
-                        ),
-                      );
-                    },
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -531,10 +557,8 @@ void _showAddEditContactDialog(
 
   Widget _buildHeader() {
     final profile = context.read<ProfileProvider>().profile;
-    String avatarPath = profile['avatar'] as String? ?? 'assets/avatars/avatar_1.png';
-    if (!avatarPath.startsWith('assets/') || !avatarPath.endsWith('.png')) {
-      avatarPath = 'assets/avatars/avatar_1.png';
-    }
+    String avatarPath = profile['avatar'] as String? ?? '';
+    final bool hasAvatar = avatarPath.isNotEmpty;
 
     return Column(
       children: [
@@ -552,8 +576,16 @@ void _showAddEditContactDialog(
             ),
             child: CircleAvatar(
               radius: 48,
-              backgroundImage: AssetImage(avatarPath),
-              backgroundColor: Colors.transparent,
+              backgroundColor: RhythmaColors.surfaceMuted,
+              backgroundImage: hasAvatar
+                  ? (avatarPath.startsWith('/')
+                      ? FileImage(File(avatarPath))
+                      : AssetImage(avatarPath) as ImageProvider)
+                  : null,
+              child: hasAvatar
+                  ? null
+                  : Icon(Icons.person_rounded,
+                      size: 48, color: RhythmaColors.mutedFg),
             ),
           ),
         ),

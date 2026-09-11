@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "language": "en",
-  "updated": "2026-08-02",
+  "updated": "2026-09-10",
   "disclaimer": "This reference material is educational and not a medical diagnosis. Always consult a qualified healthcare professional.",
   "references": [
     {
@@ -40,7 +40,7 @@
       "sourceTitle": "Polycystic ovary syndrome",
       "sourceUrl": "https://www.who.int/news-room/fact-sheets/detail/polycystic-ovary-syndrome",
       "reviewedOn": "2026-01-22",
-      "accessedOn": "2026-08-02",
+      "accessedOn": "2026-09-10",
       "language": "en"
     },
     {
@@ -80,7 +80,7 @@
       "sourceTitle": "Polyendocrine metabolic ovarian syndrome (PMOS)",
       "sourceUrl": "https://www.nhs.uk/conditions/polyendocrine-metabolic-ovarian-syndrome-pmos/",
       "reviewedOn": "2026-06-30",
-      "accessedOn": "2026-08-02",
+      "accessedOn": "2026-09-10",
       "language": "en"
     },
     {
@@ -114,7 +114,7 @@
       "sourceTitle": "Menstrual health",
       "sourceUrl": "https://www.who.int/news-room/fact-sheets/detail/menstrual-health",
       "reviewedOn": "2026-06-18",
-      "accessedOn": "2026-08-02",
+      "accessedOn": "2026-09-10",
       "language": "en"
     },
     {
@@ -149,7 +149,7 @@
       "sourceTitle": "Irregular periods",
       "sourceUrl": "https://www.nhs.uk/symptoms/irregular-periods/",
       "reviewedOn": "2026-06-26",
-      "accessedOn": "2026-08-02",
+      "accessedOn": "2026-09-10",
       "language": "en"
     },
     {
@@ -182,7 +182,7 @@
       "sourceTitle": "Heavy periods",
       "sourceUrl": "https://www.nhs.uk/conditions/heavy-periods/",
       "reviewedOn": "2024-09-19",
-      "accessedOn": "2026-08-02",
+      "accessedOn": "2026-09-10",
       "language": "en"
     },
     {
@@ -215,7 +215,1306 @@
       "sourceTitle": "Period pain",
       "sourceUrl": "https://www.nhs.uk/symptoms/period-pain/",
       "reviewedOn": "2026-03-18",
-      "accessedOn": "2026-08-02",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "ovulation",
+      "topic": "Ovulation",
+      "summary": "Ovulation is the release of a mature egg from the ovary; it typically occurs around day 14 of a 28-day cycle and is the most fertile time in the menstrual cycle.",
+      "facts": [
+        "Ovulation is the process where a mature egg (ovum) is released from a follicle in the ovary, usually once per menstrual cycle.",
+        "In a typical 28-day cycle, ovulation occurs around day 14, but the exact timing varies depending on cycle length and individual hormone patterns.",
+        "Ovulation is triggered by a surge in luteinizing hormone (LH), which can be detected using ovulation predictor kits (OPKs) 24-36 hours before the egg is released.",
+        "Common signs of ovulation include a rise in basal body temperature (BBT), changes in cervical mucus (becoming clear and stretchy like egg white), mild pelvic pain on one side (mittelschmerz), and increased libido.",
+        "The egg survives for 12-24 hours after ovulation, while sperm can survive up to 5 days in the reproductive tract, creating a fertile window of about 6 days per cycle.",
+        "Irregular or absent ovulation (anovulation) is a common cause of irregular periods and infertility, and may be associated with conditions like PCOS, thyroid disorders, or high prolactin levels."
+      ],
+      "keywords": [
+        "ovulation",
+        "egg release",
+        "fertile window",
+        "ovulation signs",
+        "basal body temperature",
+        "cervical mucus",
+        "lh surge",
+        "anovulation",
+        "fertility"
+      ],
+      "symptomTags": [
+        "mittelschmerz",
+        "mid-cycle pain",
+        "egg white discharge",
+        "temperature rise",
+        "increased libido",
+        "ovulation spotting"
+      ],
+      "source": "American College of Obstetricians and Gynecologists (ACOG)",
+      "sourceTitle": "Ovulation and Fertile Window",
+      "sourceUrl": "https://www.acog.org/womens-health/faqs/ovulation-and-the-fertile-window",
+      "reviewedOn": "2026-02-15",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "menstrual-cycle-phases",
+      "topic": "Menstrual cycle phases",
+      "summary": "The menstrual cycle has four main phases: menstrual, follicular, ovulation, and luteal, each driven by distinct hormonal changes.",
+      "facts": [
+        "The menstrual phase (days 1-5) is when the uterine lining (endometrium) sheds, resulting in menstrual bleeding; hormone levels are at their lowest.",
+        "The follicular phase (days 1-13) overlaps with menstruation and involves follicle-stimulating hormone (FSH) stimulating ovarian follicles to grow; one dominant follicle emerges containing a maturing egg.",
+        "Ovulation (around day 14) occurs when a surge of luteinizing hormone (LH) triggers the dominant follicle to release the mature egg into the fallopian tube.",
+        "The luteal phase (days 15-28) follows ovulation; the empty follicle becomes the corpus luteum and produces progesterone to thicken the uterine lining in preparation for possible implantation.",
+        "If fertilisation does not occur, the corpus luteum breaks down, progesterone drops, and the uterine lining sheds, starting a new cycle.",
+        "The average cycle is 28 days, but cycles lasting 21-35 days are considered normal; cycle length can vary due to age, stress, medical conditions, and hormonal changes."
+      ],
+      "keywords": [
+        "menstrual cycle",
+        "cycle phases",
+        "follicular phase",
+        "luteal phase",
+        "menstrual phase",
+        "ovulation phase",
+        "endometrium",
+        "progesterone",
+        "estrogen",
+        "fsh",
+        "lh"
+      ],
+      "symptomTags": [
+        "period bleeding",
+        "pms symptoms",
+        "mid-cycle spotting",
+        "bloating",
+        "breast tenderness",
+        "mood changes"
+      ],
+      "source": "Mayo Clinic",
+      "sourceTitle": "Menstrual cycle: What's normal, what's not",
+      "sourceUrl": "https://www.mayoclinic.org/healthy-lifestyle/womens-health/in-depth/menstrual-cycle/art-20047186",
+      "reviewedOn": "2026-03-10",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "pms",
+      "topic": "Premenstrual Syndrome (PMS)",
+      "summary": "PMS is a group of physical and emotional symptoms that occur in the days before menstruation, affecting up to 75% of menstruating women.",
+      "facts": [
+        "PMS affects an estimated 75% of menstruating women to some degree, with symptoms typically starting 1-2 weeks before menstruation and resolving once the period begins.",
+        "Common physical symptoms include bloating, breast tenderness, fatigue, headaches, constipation, and food cravings.",
+        "Emotional and behavioural symptoms include mood swings, irritability, anxiety, depression, difficulty concentrating, and changes in sleep patterns.",
+        "The exact cause of PMS is not fully understood but is linked to hormonal fluctuations, particularly changes in estrogen and progesterone levels during the luteal phase.",
+        "Lifestyle measures that can help include regular exercise, reducing salt, caffeine and alcohol intake, eating complex carbohydrates, getting adequate sleep, and managing stress.",
+        "Over-the-counter pain relievers such as ibuprofen can help with physical symptoms, and a GP may recommend hormonal treatments or SSRIs for severe PMS."
+      ],
+      "keywords": [
+        "pms",
+        "premenstrual syndrome",
+        "premenstrual",
+        "mood swings",
+        "bloating",
+        "breast tenderness",
+        "hormonal",
+        "luteal phase"
+      ],
+      "symptomTags": [
+        "mood swings",
+        "irritability",
+        "bloating",
+        "breast tenderness",
+        "fatigue",
+        "cravings",
+        "anxiety",
+        "headache"
+      ],
+      "source": "NHS",
+      "sourceTitle": "Premenstrual syndrome (PMS)",
+      "sourceUrl": "https://www.nhs.uk/conditions/premenstrual-syndrome/",
+      "reviewedOn": "2026-04-22",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "pmdd",
+      "topic": "Premenstrual Dysphoric Disorder (PMDD)",
+      "summary": "PMDD is a severe form of PMS with debilitating emotional symptoms that significantly impair daily functioning, affecting 3-8% of menstruating women.",
+      "facts": [
+        "PMDD is a severe, chronic condition that causes significant distress and impairment in functioning, with symptoms appearing in the luteal phase and improving within a few days of menstruation starting.",
+        "PMDD affects approximately 3-8% of menstruating women and is not simply 'bad PMS' but a distinct clinical diagnosis recognised in the DSM-5.",
+        "Key emotional symptoms include severe depression, hopelessness, intense anger or irritability, anxiety, difficulty concentrating, and in severe cases, suicidal thoughts.",
+        "Physical symptoms overlap with PMS but are often more intense, including severe bloating, breast tenderness, headaches, and joint or muscle pain.",
+        "PMDD is linked to an abnormal sensitivity to normal hormonal fluctuations rather than abnormal hormone levels; the brain's serotonin system may be involved.",
+        "Treatment options include SSRIs (which can work within days), hormonal contraceptives, cognitive behavioural therapy (CBT), and in severe cases, surgical removal of the ovaries (oophorectomy) as a last resort."
+      ],
+      "keywords": [
+        "pmdd",
+        "premenstrual dysphoric disorder",
+        "severe pms",
+        "luteal phase",
+        "depression",
+        "suicidal thoughts",
+        "ssri",
+        "hormonal sensitivity"
+      ],
+      "symptomTags": [
+        "severe depression",
+        "hopelessness",
+        "intense anger",
+        "severe irritability",
+        "anxiety",
+        "suicidal thoughts",
+        "severe bloating",
+        "severe breast tenderness"
+      ],
+      "source": "American College of Obstetricians and Gynecologists (ACOG)",
+      "sourceTitle": "Premenstrual Dysphoric Disorder (PMDD)",
+      "sourceUrl": "https://www.acog.org/womens-health/faqs/premenstrual-dysphoric-disorder",
+      "reviewedOn": "2026-01-30",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "endometriosis",
+      "topic": "Endometriosis",
+      "summary": "Endometriosis is a condition where tissue similar to the uterine lining grows outside the uterus, causing pain, inflammation, and potential fertility issues.",
+      "facts": [
+        "Endometriosis affects approximately 10% (190 million) of reproductive-age women and girls globally, according to the WHO.",
+        "Endometriosis occurs when tissue similar to the endometrium grows outside the uterus, commonly on the ovaries, fallopian tubes, and pelvic lining, responding to hormonal cycles with pain and inflammation.",
+        "Symptoms include severe menstrual cramps, chronic pelvic pain, pain during or after sex, heavy periods, fatigue, and difficulty getting pregnant; some women have no symptoms.",
+        "Endometriosis is a leading cause of infertility, affecting up to 50% of women with the condition, due to inflammation, scarring, and adhesions that can distort pelvic anatomy.",
+        "Diagnosis typically requires laparoscopic surgery, though imaging and clinical history help; there is currently no cure, but treatments include pain management, hormonal therapies, and surgical excision.",
+        "In India, endometriosis awareness remains low, and many women suffer for years before diagnosis; an average delay of 7-10 years from symptom onset to diagnosis is commonly reported."
+      ],
+      "keywords": [
+        "endometriosis",
+        "pelvic pain",
+        "chronic pain",
+        "fertility",
+        "laparoscopy",
+        "endometrial tissue",
+        "infertility",
+        "painful periods"
+      ],
+      "symptomTags": [
+        "severe period pain",
+        "chronic pelvic pain",
+        "pain during sex",
+        "heavy periods",
+        "fatigue",
+        "painful bowel movements",
+        "infertility"
+      ],
+      "source": "World Health Organization (WHO)",
+      "sourceTitle": "Endometriosis",
+      "sourceUrl": "https://www.who.int/news-room/fact-sheets/detail/endometriosis",
+      "reviewedOn": "2026-03-01",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "fertility-basics",
+      "topic": "Fertility basics",
+      "summary": "Understanding fertility involves knowing the fertile window, how ovulation relates to conception, and factors that influence reproductive health.",
+      "facts": [
+        "The fertile window is the 6-day period each cycle when conception is possible: the 5 days before ovulation and the day of ovulation itself.",
+        "Sperm can survive in the reproductive tract for up to 5 days, while the egg is viable for 12-24 hours after ovulation.",
+        "Factors that reduce fertility include age (especially after 35), irregular cycles, PCOS, thyroid disorders, sexually transmitted infections, smoking, excessive alcohol, and being significantly overweight or underweight.",
+        "To increase chances of conception, have intercourse every 1-2 days during the fertile window, maintain a healthy weight, take folic acid (400-800 mcg daily), and limit caffeine to under 200 mg per day.",
+        "In India, common barriers to fertility care include social stigma, delayed marriage, limited access to reproductive health services in rural areas, and widespread misinformation about fertility.",
+        "If you have not conceived after 12 months of regular unprotected intercourse (or 6 months if over 35), consult a fertility specialist for evaluation."
+      ],
+      "keywords": [
+        "fertility",
+        "conception",
+        "fertile window",
+        "getting pregnant",
+        "ovulation",
+        "trying to conceive",
+        "ttc",
+        "infertility",
+        "folic acid"
+      ],
+      "symptomTags": [
+        "difficulty getting pregnant",
+        "irregular periods",
+        "missed periods",
+        "no period",
+        "painful periods"
+      ],
+      "source": "Mayo Clinic",
+      "sourceTitle": "Fertility: Options for improving your odds",
+      "sourceUrl": "https://www.mayoclinic.org/healthy-lifestyle/getting-pregnant/in-depth/fertility/art-20048228",
+      "reviewedOn": "2026-05-14",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "pcos-management",
+      "topic": "PCOS management",
+      "summary": "PCOS can be managed through lifestyle changes, dietary modifications, exercise, and medications tailored to individual symptoms.",
+      "facts": [
+        "Lifestyle modification is the first-line treatment for PCOS; even a 5-10% reduction in body weight can significantly improve insulin resistance, hormone levels, and restore ovulation.",
+        "A low glycaemic index (GI) diet is recommended for PCOS management, focusing on whole grains, legumes, vegetables, and lean proteins while limiting refined carbohydrates and sugary foods.",
+        "Regular physical activity of at least 150 minutes per week of moderate exercise (such as brisk walking, cycling, or swimming) helps improve insulin sensitivity and menstrual regularity.",
+        "Metformin is commonly prescribed to improve insulin sensitivity and may help restore ovulation; it is widely available and affordable in India.",
+        "For women not seeking pregnancy, combined oral contraceptive pills (COCPs) can regulate periods, reduce excess hair growth, and manage acne by lowering androgen levels.",
+        "Spironolactone may be used for managing hirsutism (excess hair growth) and acne but is not safe during pregnancy; always use contraception alongside it."
+      ],
+      "keywords": [
+        "pcos management",
+        "pcos diet",
+        "pcos exercise",
+        "metformin",
+        "insulin resistance",
+        "weight loss pcos",
+        "low gi diet",
+        "hormonal treatment",
+        "lifestyle changes"
+      ],
+      "symptomTags": [
+        "irregular periods",
+        "weight gain",
+        "excess hair",
+        "acne",
+        "insulin resistance",
+        "difficulty getting pregnant"
+      ],
+      "source": "International Evidence-Based Guideline for the Assessment and Management of PCOS",
+      "sourceTitle": "Evidence-Based Guidelines for the Assessment and Management of Polycystic Ovary Syndrome",
+      "sourceUrl": "https://www.monash.edu/medicine/sphpm/mchri/pcos",
+      "reviewedOn": "2026-02-20",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "dysmenorrhea",
+      "topic": "Painful periods (Dysmenorrhea)",
+      "summary": "Dysmenorrhea refers to painful menstrual cramps; primary dysmenorrhea is period pain without an underlying condition, while secondary dysmenorrhea is caused by a pelvic disorder.",
+      "facts": [
+        "Dysmenorrhea is one of the most common gynaecological complaints, affecting an estimated 45-95% of menstruating women to varying degrees.",
+        "Primary dysmenorrhea is painful menstruation without identifiable pelvic disease, caused by excessive prostaglandin production leading to strong uterine contractions.",
+        "Secondary dysmenorrhea is pain caused by conditions such as endometriosis, adenomyosis, fibroids, pelvic inflammatory disease, or ovarian cysts.",
+        "Common relief measures include NSAIDs (ibuprofen, naproxen), heat therapy on the lower abdomen, gentle exercise, and hormonal contraceptives that reduce prostaglandin production.",
+        "In India, many women rely on home remedies such as warm water bottles, ginger tea, turmeric milk (haldi doodh), and ajwain water for period pain relief.",
+        "See a doctor if pain is severe, worsening over time, not relieved by over-the-counter medications, or accompanied by heavy bleeding, fever, or pain between periods."
+      ],
+      "keywords": [
+        "dysmenorrhea",
+        "painful periods",
+        "period cramps",
+        "menstrual pain",
+        "cramps",
+        "pelvic pain",
+        "nsaids",
+        "prostaglandins"
+      ],
+      "symptomTags": [
+        "cramps",
+        "lower abdominal pain",
+        "back pain",
+        "pain during period",
+        "nausea",
+        "diarrhea during period"
+      ],
+      "source": "NHS",
+      "sourceTitle": "Period pain",
+      "sourceUrl": "https://www.nhs.uk/symptoms/period-pain/",
+      "reviewedOn": "2026-03-18",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "amenorrhea",
+      "topic": "Absent periods (Amenorrhea)",
+      "summary": "Amenorrhea is the absence of menstruation; primary amenorrhea is when periods have not started by age 15, and secondary amenorrhea is when periods stop for 3+ months.",
+      "facts": [
+        "Primary amenorrhea is defined as the absence of menstruation by age 15 in someone who has developed secondary sexual characteristics (breast development), or by age 13 without them.",
+        "Secondary amenorrhea is the absence of menstruation for 3 or more consecutive months in someone who previously had regular periods, or 6 months if periods were irregular.",
+        "Common causes of secondary amenorrhea include pregnancy, hormonal contraception, PCOS, thyroid disorders (hypothyroidism or hyperthyroidism), high prolactin levels, excessive exercise, low body weight, and stress.",
+        "In India, PCOS is the most common cause of secondary amenorrhea in young women, alongside thyroid dysfunction which is prevalent in the Indian population.",
+        "Amenorrhea can lead to health complications including osteoporosis (due to low estrogen), cardiovascular risk, and infertility if left untreated.",
+        "Diagnosis involves pregnancy tests, hormone level checks (FSH, LH, prolactin, thyroid hormones, testosterone), and sometimes imaging; treatment depends on the underlying cause."
+      ],
+      "keywords": [
+        "amenorrhea",
+        "missed period",
+        "no period",
+        "absent periods",
+        "primary amenorrhea",
+        "secondary amenorrhea",
+        "not menstruating",
+        "period stopped"
+      ],
+      "symptomTags": [
+        "missed periods",
+        "no period",
+        "absent menstruation",
+        "delayed puberty",
+        "hot flashes",
+        "vaginal dryness"
+      ],
+      "source": "Mayo Clinic",
+      "sourceTitle": "Amenorrhea",
+      "sourceUrl": "https://www.mayoclinic.org/diseases-conditions/amenorrhea/symptoms-causes/syc-20369299",
+      "reviewedOn": "2026-04-05",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "abnormal-bleeding",
+      "topic": "Bleeding between periods",
+      "summary": "Bleeding between periods (intermenstrual bleeding) can have many causes ranging from hormonal changes to infections or more serious conditions.",
+      "facts": [
+        "Intermenstrual bleeding (IMB) is vaginal bleeding that occurs between regular menstrual periods and can range from light spotting to heavy bleeding.",
+        "Common causes include hormonal contraception (especially when starting or changing), cervical ectropion, cervical or vaginal infections, polyps, and fibroids.",
+        "More serious causes include cervical cancer, endometrial cancer, and pelvic inflammatory disease (PID); these are less common but require medical evaluation.",
+        "In India, cervical cancer is the second most common cancer in women, making any unusual bleeding an important reason for screening.",
+        "See a GP if you experience bleeding between periods, bleeding after sex, unusual vaginal discharge, or pelvic pain, especially if the bleeding persists for more than one cycle.",
+        "Diagnosis may involve cervical screening (Pap smear), STI testing, pelvic ultrasound, and hormonal blood tests to identify the cause."
+      ],
+      "keywords": [
+        "bleeding between periods",
+        "intermenstrual bleeding",
+        "spotting",
+        "mid-cycle bleeding",
+        "abnormal bleeding",
+        "vaginal bleeding",
+        "cervical screening"
+      ],
+      "symptomTags": [
+        "spotting",
+        "bleeding between periods",
+        "postcoital bleeding",
+        "unusual discharge",
+        "pelvic pain"
+      ],
+      "source": "NHS",
+      "sourceTitle": "Vaginal bleeding between periods",
+      "sourceUrl": "https://www.nhs.uk/conditions/vaginal-bleeding-between-periods/",
+      "reviewedOn": "2026-05-10",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "vaginal-discharge",
+      "topic": "Vaginal discharge",
+      "summary": "Vaginal discharge is normal and varies throughout the menstrual cycle; changes in colour, consistency, or smell may indicate an infection.",
+      "facts": [
+        "Normal vaginal discharge is clear or white, may be slightly yellow when dry, and has a mild or no odour; its consistency changes throughout the cycle due to estrogen and progesterone levels.",
+        "Around ovulation, discharge typically becomes clear, stretchy, and resembles raw egg whites (spinnbarkeit), which is a sign of peak fertility.",
+        "Abnormal discharge that may indicate infection includes green or grey colour, strong fishy or foul odour, frothy consistency, or accompanied by itching, burning, or pain.",
+        "Common causes of abnormal discharge include bacterial vaginosis (BV), yeast infections (candidiasis), trichomoniasis, and other sexually transmitted infections (STIs).",
+        "In India, vaginal infections are often underreported due to social stigma; maintaining good hygiene, wearing cotton underwear, and avoiding douching can help prevent infections.",
+        "See a doctor if you experience persistent changes in discharge, unusual odour, itching, pelvic pain, or bleeding alongside discharge changes."
+      ],
+      "keywords": [
+        "vaginal discharge",
+        "normal discharge",
+        "abnormal discharge",
+        "discharge colour",
+        "yeast infection",
+        "bacterial vaginosis",
+        "cervical mucus",
+        "vaginal health"
+      ],
+      "symptomTags": [
+        "discharge",
+        "white discharge",
+        "yellow discharge",
+        "green discharge",
+        "vaginal itching",
+        "foul smell",
+        "vaginal odour"
+      ],
+      "source": "NHS",
+      "sourceTitle": "Vaginal discharge",
+      "sourceUrl": "https://www.nhs.uk/conditions/vaginal-discharge/",
+      "reviewedOn": "2026-04-15",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "breast-tenderness",
+      "topic": "Breast tenderness",
+      "summary": "Breast tenderness is a common cycle-related symptom typically occurring in the luteal phase due to hormonal changes; it usually resolves with menstruation.",
+      "facts": [
+        "Breast tenderness (mastalgia) affects up to 70% of women at some point and is most commonly linked to hormonal fluctuations during the menstrual cycle.",
+        "Cycle-related breast tenderness typically occurs in the luteal phase (1-2 weeks before menstruation) when progesterone levels peak, causing breast tissue to swell.",
+        "Symptoms include soreness, heaviness, swelling, and sensitivity to touch, usually affecting both breasts symmetrically and resolving once the period starts.",
+        "Relief measures include wearing a well-fitted supportive bra, reducing caffeine intake, applying warm or cold compresses, and using over-the-counter pain relievers like ibuprofen.",
+        "Persistent breast pain that is not cycle-related, a lump, nipple discharge, or skin changes should be evaluated by a doctor to rule out other conditions.",
+        "In India, breast cancer is the most common cancer in women; regular self-examination and clinical breast checks are recommended, especially after age 40."
+      ],
+      "keywords": [
+        "breast tenderness",
+        "mastalgia",
+        "sore breasts",
+        "breast pain",
+        "cyclical breast pain",
+        "luteal phase",
+        "hormonal breast pain"
+      ],
+      "symptomTags": [
+        "sore breasts",
+        "breast pain",
+        "breast swelling",
+        "breast heaviness",
+        "nipple sensitivity",
+        "breast lump"
+      ],
+      "source": "NHS",
+      "sourceTitle": "Breast pain",
+      "sourceUrl": "https://www.nhs.uk/conditions/breast-pain/",
+      "reviewedOn": "2026-03-25",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "mood-changes-cycle",
+      "topic": "Mood changes during menstrual cycle",
+      "summary": "Mood changes throughout the menstrual cycle are driven by fluctuations in estrogen, progesterone, and serotonin levels, with the luteal phase being most affected.",
+      "facts": [
+        "Estrogen has mood-enhancing effects by boosting serotonin and endorphin production; levels are highest around ovulation, which is often when women feel their best.",
+        "In the luteal phase, progesterone rises and then falls sharply before menstruation, which can trigger mood swings, anxiety, irritability, and low mood in susceptible individuals.",
+        "Approximately 20-40% of women experience noticeable mood changes in the premenstrual period, with 3-8% meeting criteria for PMDD.",
+        "Serotonin levels fluctuate with estrogen; lower estrogen in the late luteal phase can reduce serotonin activity, contributing to depression, cravings, and sleep disturbances.",
+        "Strategies to manage cycle-related mood changes include regular exercise, consistent sleep, stress management techniques (meditation, yoga), limiting alcohol and caffeine, and maintaining social support.",
+        "If mood changes significantly impair daily life, seek medical help; treatments such as SSRIs, hormonal contraceptives, or cognitive behavioural therapy (CBT) can be highly effective."
+      ],
+      "keywords": [
+        "mood changes",
+        "mood swings",
+        "cycle mood",
+        "premenstrual mood",
+        "estrogen",
+        "progesterone",
+        "serotonin",
+        "irritability",
+        "anxiety"
+      ],
+      "symptomTags": [
+        "mood swings",
+        "irritability",
+        "anxiety",
+        "depression",
+        "crying spells",
+        "anger",
+        "low mood",
+        "emotional sensitivity"
+      ],
+      "source": "Mayo Clinic",
+      "sourceTitle": "Premenstrual syndrome (PMS) - Symptoms and causes",
+      "sourceUrl": "https://www.mayoclinic.org/diseases-conditions/premenstrual-syndrome/symptoms-causes/syc-20196168",
+      "reviewedOn": "2026-02-28",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "sleep-menstruation",
+      "topic": "Sleep and menstruation",
+      "summary": "Hormonal fluctuations during the menstrual cycle can significantly affect sleep quality, with the luteal phase and menstruation often being the most disruptive periods.",
+      "facts": [
+        "Progesterone has a sleep-promoting effect; its rise in the luteal phase can cause increased sleepiness and fatigue, while its drop before menstruation can disrupt sleep.",
+        "Estrogen promotes deeper, more restorative sleep; lower estrogen levels during menstruation may contribute to lighter, more fragmented sleep.",
+        "Up to 30% of women report worsened sleep quality in the days before and during their period, with symptoms including insomnia, frequent waking, and restless sleep.",
+        "Dysmenorrhea (period pain) can directly disrupt sleep; using a heating pad, taking pain medication before bed, and sleeping in a comfortable position can help.",
+        "In the perimenopause and menopause stages, declining estrogen and progesterone can cause significant sleep disturbances, night sweats, and insomnia.",
+        "Good sleep hygiene practices include maintaining a consistent sleep schedule, limiting screen time before bed, keeping the bedroom cool, and avoiding caffeine after midday."
+      ],
+      "keywords": [
+        "sleep",
+        "menstruation sleep",
+        "insomnia",
+        "progesterone sleep",
+        "estrogen sleep",
+        "night sweats",
+        "sleep cycle",
+        "fatigue",
+        "menopause sleep"
+      ],
+      "symptomTags": [
+        "insomnia",
+        "difficulty sleeping",
+        "fatigue",
+        "tiredness",
+        "night sweats",
+        "restless sleep",
+        "waking up tired"
+      ],
+      "source": "National Sleep Foundation",
+      "sourceTitle": "How Your Menstrual Cycle Affects Your Sleep",
+      "sourceUrl": "https://www.sleepfoundation.org/womens-health/menstrual-cycle-and-sleep",
+      "reviewedOn": "2026-01-20",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "exercise-during-periods",
+      "topic": "Exercise during periods",
+      "summary": "Exercise during menstruation is safe and can help relieve cramps and improve mood; the type and intensity may need to be adjusted based on how you feel.",
+      "facts": [
+        "Moderate exercise during periods is safe and beneficial; it can reduce menstrual cramps by increasing blood flow and releasing endorphins, the body's natural painkillers.",
+        "Low-impact activities like walking, yoga, swimming, and gentle stretching are particularly helpful during menstruation and can ease bloating and improve mood.",
+        "The menstrual phase (days 1-5) is when energy levels may be lowest; listen to your body and reduce intensity if needed rather than pushing through extreme fatigue.",
+        "During the follicular phase (after menstruation), rising estrogen levels typically increase energy and endurance, making it a good time for higher-intensity workouts.",
+        "In India, many women avoid exercise during periods due to cultural beliefs; however, medical evidence supports that gentle to moderate exercise is safe and beneficial.",
+        "Stay hydrated, wear comfortable clothing, use a higher-absorbency menstrual product if exercising, and stop if you experience severe pain, dizziness, or unusual symptoms."
+      ],
+      "keywords": [
+        "exercise during period",
+        "period exercise",
+        "yoga menstruation",
+        "workout period",
+        "cramps exercise",
+        "swimming period",
+        "menstrual fitness"
+      ],
+      "symptomTags": [
+        "cramps",
+        "fatigue",
+        "low energy",
+        "bloating",
+        "period pain",
+        "mood improvement"
+      ],
+      "source": "American College of Obstetricians and Gynecologists (ACOG)",
+      "sourceTitle": "Exercise and Fitness During Pregnancy",
+      "sourceUrl": "https://www.acog.org/womens-health/faqs/exercise-during-pregnancy",
+      "reviewedOn": "2026-04-10",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "nutrition-menstruation",
+      "topic": "Nutrition during periods",
+      "summary": "Proper nutrition during menstruation can help manage symptoms like fatigue, cramps, and mood changes; key nutrients include iron, magnesium, and B vitamins.",
+      "facts": [
+        "Iron is critical during menstruation because blood loss depletes iron stores; include iron-rich foods like spinach, lentils (dal), jaggery (gur), red meat, and fortified cereals.",
+        "Vitamin C enhances iron absorption; pair iron-rich foods with citrus fruits, tomatoes, or bell peppers for better uptake.",
+        "Magnesium helps relax muscles and can reduce cramps; good sources include dark chocolate, bananas, nuts, seeds, and leafy green vegetables.",
+        "Omega-3 fatty acids (found in fish, flaxseeds, and walnuts) have anti-inflammatory properties that may help reduce menstrual pain and mood symptoms.",
+        "Limit salt intake during periods to reduce bloating; reduce caffeine and alcohol which can worsen PMS symptoms and disrupt sleep.",
+        "In India, traditional remedies like rasam (tomato-based soup), dates (khajoor), dry fruit laddoos, and jeera water are nutritionally beneficial during menstruation."
+      ],
+      "keywords": [
+        "nutrition period",
+        "iron menstruation",
+        "diet during period",
+        "period diet",
+        "magnesium cramps",
+        "vitamin c iron",
+        "anti-inflammatory diet",
+        "jaggery iron"
+      ],
+      "symptomTags": [
+        "fatigue",
+        "low energy",
+        "cramps",
+        "bloating",
+        "mood changes",
+        "iron deficiency"
+      ],
+      "source": "Mayo Clinic",
+      "sourceTitle": "PMS symptoms: A day-by-day sample menu",
+      "sourceUrl": "https://www.mayoclinic.org/healthy-lifestyle/womens-health/in-depth/premenstrual-syndrome/art-20046008",
+      "reviewedOn": "2026-03-05",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "stress-menstrual-cycle",
+      "topic": "Stress and menstrual cycle",
+      "summary": "Chronic stress can disrupt the menstrual cycle by affecting the hypothalamus, which regulates reproductive hormones, potentially causing irregular or absent periods.",
+      "facts": [
+        "The hypothalamus controls the release of GnRH (gonadotropin-releasing hormone), which regulates the menstrual cycle; chronic stress can suppress GnRH production, leading to cycle disruptions.",
+        "High cortisol (the stress hormone) levels can inhibit the release of FSH and LH from the pituitary gland, preventing ovulation and causing irregular or absent periods.",
+        "Stress-related menstrual disturbances range from luteal phase defects (shortened luteal phase) to functional hypothalamic amenorrhea (complete absence of periods due to stress).",
+        "In India, academic pressure, work stress, and societal expectations are common contributors to stress-related menstrual irregularities in young women and adolescents.",
+        "Stress management techniques include regular physical activity, mindfulness meditation, deep breathing exercises, adequate sleep, and maintaining social connections.",
+        "If stress is causing significant menstrual disruption, addressing the underlying stressors and seeking support from a counsellor or therapist can help restore cycle regularity."
+      ],
+      "keywords": [
+        "stress",
+        "cortisol",
+        "menstrual cycle stress",
+        "stress periods",
+        "hypothalamic amenorrhea",
+        "stress hormones",
+        "irregular periods stress",
+        "gnrh"
+      ],
+      "symptomTags": [
+        "irregular periods",
+        "missed periods",
+        "delayed period",
+        "anxiety",
+        "insomnia",
+        "fatigue"
+      ],
+      "source": "American College of Obstetricians and Gynecologists (ACOG)",
+      "sourceTitle": "Stress and Your Health",
+      "sourceUrl": "https://www.acog.org/womens-health/faqs/stress-and-your-health",
+      "reviewedOn": "2026-02-10",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "when-to-see-doctor",
+      "topic": "When to see a doctor",
+      "summary": "Certain menstrual symptoms are red flags that warrant medical evaluation; knowing when to seek help can prevent complications.",
+      "facts": [
+        "See a doctor if your period suddenly becomes much heavier, more painful, or more irregular than usual, or if you experience bleeding between periods or after sex.",
+        "Seek urgent medical attention if you experience soaking through a pad or tampon every hour for more than 2 hours, passing clots larger than a coin, or feeling dizzy and faint during your period.",
+        "Missed periods (amenorrhea) lasting 3 or more months (when not pregnant, breastfeeding, or using hormonal contraception) should be evaluated.",
+        "See a doctor if you have period pain that does not improve with over-the-counter painkillers, worsens over time, or stops you from doing daily activities.",
+        "Other red flags include: foul-smelling vaginal discharge, fever with pelvic pain, pain during sex, unexplained weight gain with menstrual changes, and new symptoms after age 40.",
+        "In India, many women delay seeking help for menstrual problems due to stigma, embarrassment, or the belief that symptoms are 'normal'; early evaluation can improve outcomes."
+      ],
+      "keywords": [
+        "when to see doctor",
+        "menstrual red flags",
+        "period symptoms",
+        "seek medical help",
+        "gynaecologist",
+        "doctor visit",
+        "urgent care"
+      ],
+      "symptomTags": [
+        "heavy bleeding",
+        "severe pain",
+        "missed periods",
+        "bleeding between periods",
+        "fever",
+        "foul discharge",
+        "dizziness"
+      ],
+      "source": "NHS",
+      "sourceTitle": "When to get medical advice about your periods",
+      "sourceUrl": "https://www.nhs.uk/conditions/periods/when-to-get-help/",
+      "reviewedOn": "2026-05-20",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "contraception-basics",
+      "topic": "Contraception basics",
+      "summary": "There are many safe and effective contraception methods available; the best choice depends on health, lifestyle, and family planning goals.",
+      "facts": [
+        "Long-acting reversible contraceptives (LARCs) including IUDs and contraceptive implants are the most effective reversible methods with failure rates under 1%.",
+        "Combined oral contraceptive pills (containing estrogen and progestogen) are over 99% effective when taken correctly but require daily adherence; they are widely available in India.",
+        "Progestogen-only pills (mini pills) are suitable for women who cannot take estrogen (e.g., those with migraines with aura, smokers over 35, or breastfeeding women).",
+        "Barrier methods (male/female condoms, diaphragms) provide dual protection against pregnancy and sexually transmitted infections (STIs) but have higher typical-use failure rates.",
+        "Permanent methods (tubal ligation for women, vasectomy for men) are suitable for those who have completed their family; reversal is not always possible.",
+        "In India, free contraception is available through government health centres; popular methods include copper IUDs (Cu-T), oral pills, and sterilisation."
+      ],
+      "keywords": [
+        "contraception",
+        "birth control",
+        "family planning",
+        "iud",
+        "oral pill",
+        "condom",
+        "sterilisation",
+        "prevention"
+      ],
+      "symptomTags": [
+        "prevention",
+        "family planning",
+        "unwanted pregnancy",
+        "period changes",
+        "spotting"
+      ],
+      "source": "World Health Organization (WHO)",
+      "sourceTitle": "Family planning/Contraception",
+      "sourceUrl": "https://www.who.int/news-room/fact-sheets/detail/family-planning-contraception",
+      "reviewedOn": "2026-04-18",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "menopause",
+      "topic": "Menopause basics",
+      "summary": "Menopause marks the end of menstruation, typically occurring between ages 45-55; it involves hormonal changes that can cause various symptoms.",
+      "facts": [
+        "Menopause is diagnosed when a woman has not had a menstrual period for 12 consecutive months; the average age in India is around 47-48 years, slightly earlier than in Western countries.",
+        "Perimenopause is the transitional period (lasting 4-8 years) before menopause when hormone levels fluctuate, causing irregular periods and symptoms like hot flashes and mood changes.",
+        "Common symptoms include hot flashes, night sweats, vaginal dryness, sleep disturbances, mood changes, joint pain, and reduced libido; symptoms can last several years.",
+        "Declining estrogen levels during menopause increase the risk of osteoporosis (bone thinning), cardiovascular disease, and urogenital atrophy (thinning of vaginal and urinary tissues).",
+        "Hormone replacement therapy (HRT) can effectively relieve menopausal symptoms but has risks; discuss benefits and risks with your doctor, especially if you have a history of breast cancer or blood clots.",
+        "In India, menopause is often surrounded by myths and silence; many women do not seek help for symptoms, but effective treatments and lifestyle strategies are available."
+      ],
+      "keywords": [
+        "menopause",
+        "perimenopause",
+        "hot flashes",
+        "night sweats",
+        "hrt",
+        "hormone replacement",
+        "climacteric",
+        "end of period"
+      ],
+      "symptomTags": [
+        "hot flashes",
+        "night sweats",
+        "vaginal dryness",
+        "missed periods",
+        "mood changes",
+        "sleep problems",
+        "joint pain"
+      ],
+      "source": "Mayo Clinic",
+      "sourceTitle": "Menopause",
+      "sourceUrl": "https://www.mayoclinic.org/diseases-conditions/menopause/symptoms-causes/syc-20353394",
+      "reviewedOn": "2026-06-01",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "adolescent-menstruation",
+      "topic": "Adolescent menstruation",
+      "summary": "First periods (menarche) typically occur between ages 10-16; cycles may be irregular for the first few years as the reproductive system matures.",
+      "facts": [
+        "The average age of menarche (first period) globally is 12-13 years, though it can range from 10 to 16 years and still be considered normal.",
+        "Irregular cycles are normal in the first 1-2 years after menarche as the hypothalamic-pituitary-ovarian axis matures; cycles typically become regular within 2-3 years.",
+        "In India, the average age of menarche has been decreasing over the decades, now averaging around 11-12 years in urban areas, possibly due to improved nutrition and lifestyle.",
+        "Education about menstruation is crucial; many girls in India still lack adequate information, leading to stigma, shame, and poor menstrual hygiene practices.",
+        "Adolescents should see a doctor if they have not started menstruating by age 16, have very heavy or painful periods, have cycles shorter than 21 days or longer than 45 days, or have symptoms of PCOS.",
+        "Encourage open conversations, provide access to menstrual products, and teach proper hygiene practices to help young girls manage menstruation with confidence."
+      ],
+      "keywords": [
+        "adolescent menstruation",
+        "menarche",
+        "first period",
+        "teen periods",
+        "puberty",
+        "irregular periods teens",
+        "menstrual education"
+      ],
+      "symptomTags": [
+        "first period",
+        "irregular periods",
+        "heavy periods",
+        "period pain",
+        "missed periods",
+        "puberty"
+      ],
+      "source": "World Health Organization (WHO)",
+      "sourceTitle": "Adolescent health",
+      "sourceUrl": "https://www.who.int/health-topics/adolescent-health",
+      "reviewedOn": "2026-03-15",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "fibroids",
+      "topic": "Fibroids (Uterine Leiomyomas)",
+      "summary": "Fibroids are non-cancerous growths of the uterine muscle that can cause heavy periods, pelvic pain, and fertility issues; they are very common, especially after age 30.",
+      "facts": [
+        "Uterine fibroids (leiomyomas) are benign tumours that grow from the muscle wall of the uterus; they are the most common tumours in women of reproductive age.",
+        "Fibroids are estimated to affect 20-40% of women over age 35; prevalence is higher in African and South Asian women, and they tend to shrink after menopause.",
+        "Many fibroids cause no symptoms, but when symptomatic they can cause heavy menstrual bleeding, prolonged periods, pelvic pressure or pain, frequent urination, and constipation.",
+        "Large or numerous fibroids can affect fertility by distorting the uterine cavity, blocking fallopian tubes, or interfering with implantation; they are also associated with pregnancy complications.",
+        "Treatment options depend on symptoms and fertility goals and include watchful waiting, medications (hormonal treatments, GnRH agonists), fibroid embolisation, myomectomy (surgical removal), and hysterectomy.",
+        "In India, fibroids are a common reason for hysterectomy; awareness and access to less invasive treatments like embolisation are growing but remain limited in rural areas."
+      ],
+      "keywords": [
+        "fibroids",
+        "uterine fibroids",
+        "leiomyoma",
+        "non-cancerous",
+        "heavy periods",
+        "pelvic pain",
+        "myomectomy",
+        "hysterectomy"
+      ],
+      "symptomTags": [
+        "heavy periods",
+        "prolonged periods",
+        "pelvic pressure",
+        "frequent urination",
+        "constipation",
+        "infertility"
+      ],
+      "source": "NHS",
+      "sourceTitle": "Fibroids",
+      "sourceUrl": "https://www.nhs.uk/conditions/fibroids/",
+      "reviewedOn": "2026-04-25",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "ovarian-cysts",
+      "topic": "Ovarian cysts",
+      "summary": "Ovarian cysts are fluid-filled sacs on or within the ovary; most are functional and resolve on their own, but some may cause pain or require treatment.",
+      "facts": [
+        "Functional cysts (follicular and corpus luteum cysts) are the most common type and form as part of the normal ovulation process; they usually resolve within 1-3 menstrual cycles.",
+        "Most ovarian cysts are small and cause no symptoms; larger cysts can cause pelvic pain, bloating, painful periods, pain during sex, and in rare cases, ovarian torsion (twisting).",
+        "Complex cysts (dermoid cysts, endometriomas, cystadenomas) may require surgical removal as they do not resolve on their own and carry a small risk of malignancy.",
+        "Ovarian cysts are common during reproductive years; the combined oral contraceptive pill may reduce the risk of new functional cysts but does not treat existing ones.",
+        "Seek urgent medical care if you experience sudden, severe pelvic pain, fever, vomiting, or dizziness with pelvic pain, which may indicate cyst rupture or ovarian torsion.",
+        "In India, regular pelvic examinations and ultrasounds are recommended when symptoms arise; most cysts are benign, but persistent or growing cysts should be monitored or treated."
+      ],
+      "keywords": [
+        "ovarian cysts",
+        "cyst on ovary",
+        "functional cyst",
+        "complex cyst",
+        "pelvic pain",
+        "ovarian torsion",
+        "follicular cyst",
+        "endometrioma"
+      ],
+      "symptomTags": [
+        "pelvic pain",
+        "bloating",
+        "painful periods",
+        "pain during sex",
+        "heavy bleeding",
+        "nausea"
+      ],
+      "source": "NHS",
+      "sourceTitle": "Ovarian cysts",
+      "sourceUrl": "https://www.nhs.uk/conditions/ovarian-cysts/",
+      "reviewedOn": "2026-05-05",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "uti-menstruation",
+      "topic": "Urinary tract infections and menstruation",
+      "summary": "Women are more prone to UTIs due to their anatomy, and hormonal changes during the menstrual cycle can increase susceptibility, especially around menstruation.",
+      "facts": [
+        "Women are 30 times more likely to develop a UTI than men due to their shorter urethra, which allows bacteria to reach the bladder more easily.",
+        "Hormonal fluctuations during the menstrual cycle, particularly low estrogen in the late luteal and menstrual phases, can alter the vaginal and urethral microbiome, increasing UTI risk.",
+        "Menstrual blood can change vaginal pH and promote bacterial growth; using scented hygiene products, pads, or tampons for prolonged periods can also increase risk.",
+        "Symptoms of UTI include burning sensation during urination, frequent urination, cloudy or strong-smelling urine, pelvic pain, and sometimes blood in the urine.",
+        "Prevention tips include staying well-hydrated, wiping from front to back, urinating after sex, changing menstrual products regularly, and avoiding douching.",
+        "In India, UTIs are very common and often self-treated with antibiotics from pharmacies; however, proper diagnosis and complete antibiotic courses are important to prevent recurrence and complications."
+      ],
+      "keywords": [
+        "uti",
+        "urinary tract infection",
+        "bladder infection",
+        "burning urination",
+        "frequent urination",
+        "menstruation uti",
+        "uti prevention"
+      ],
+      "symptomTags": [
+        "burning urination",
+        "frequent urination",
+        "cloudy urine",
+        "pelvic pain",
+        "blood in urine",
+        "strong smell urine"
+      ],
+      "source": "NHS",
+      "sourceTitle": "Urinary tract infection (UTI)",
+      "sourceUrl": "https://www.nhs.uk/conditions/urinary-tract-infection-uti/",
+      "reviewedOn": "2026-06-10",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "anemia-periods",
+      "topic": "Anemia and periods",
+      "summary": "Heavy menstrual bleeding is a leading cause of iron deficiency anemia in women, causing fatigue, weakness, and reduced quality of life.",
+      "facts": [
+        "Iron deficiency anemia (IDA) affects an estimated 29% of non-pregnant women of reproductive age worldwide, with heavy menstrual bleeding being a primary cause.",
+        "Symptoms of anemia include fatigue, weakness, pale skin, shortness of breath, dizziness, cold hands and feet, headaches, and difficulty concentrating.",
+        "Women who menstruate need approximately 18 mg of iron per day (compared to 8 mg for men), increasing to 27 mg during pregnancy.",
+        "Iron-rich foods include red meat, liver, spinach (palak), lentils (masoor dal), chickpeas (chana), jaggery (gur), pomegranate, and iron-fortified cereals.",
+        "Vitamin C (from citrus fruits, amla, tomatoes) enhances iron absorption; avoid taking iron supplements with tea, coffee, or calcium-rich foods as they inhibit absorption.",
+        "In India, anemia is highly prevalent among women; the National Family Health Survey (NFHS-5) found that 57% of Indian women aged 15-49 are anemic, making it a significant public health concern."
+      ],
+      "keywords": [
+        "anemia",
+        "iron deficiency",
+        "iron deficiency anemia",
+        "heavy periods anemia",
+        "fatigue",
+        "pale",
+        "iron supplement",
+        "jaggery"
+      ],
+      "symptomTags": [
+        "fatigue",
+        "weakness",
+        "pallor",
+        "shortness of breath",
+        "dizziness",
+        "headache",
+        "difficulty concentrating"
+      ],
+      "source": "World Health Organization (WHO)",
+      "sourceTitle": "Anaemia",
+      "sourceUrl": "https://www.who.int/news-room/fact-sheets/detail/anaemia",
+      "reviewedOn": "2026-01-15",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "thyroid-menstrual",
+      "topic": "Thyroid and menstrual cycle",
+      "summary": "Thyroid hormones directly regulate the menstrual cycle; both hypothyroidism and hyperthyroidism can cause menstrual irregularities, heavy periods, or missed periods.",
+      "facts": [
+        "Thyroid hormones regulate metabolism and reproductive function; abnormal thyroid levels can disrupt the hypothalamic-pituitary-ovarian axis, affecting ovulation and menstruation.",
+        "Hypothyroidism (underactive thyroid) can cause heavy, prolonged, or irregular periods, and is associated with menstrual cycles longer than 35 days or shorter than 21 days.",
+        "Hyperthyroidism (overactive thyroid) can cause light, infrequent, or absent periods, and may be associated with shorter cycle lengths.",
+        "Thyroid disorders are more common in women, with hypothyroidism affecting approximately 1 in 10 women; autoimmune thyroid disease (Hashimoto's) is the most common cause.",
+        "In India, iodine deficiency remains a cause of thyroid dysfunction in many regions; the Universal Salt Iodisation programme has improved but not eliminated this issue.",
+        "Thyroid function tests (TSH, free T4) are recommended for women with unexplained menstrual irregularities, fertility problems, or recurrent pregnancy loss."
+      ],
+      "keywords": [
+        "thyroid",
+        "hypothyroidism",
+        "hyperthyroidism",
+        "thyroid menstrual",
+        "thyroid irregular periods",
+        "hashimoto",
+        "tsh",
+        "thyroid fertility"
+      ],
+      "symptomTags": [
+        "irregular periods",
+        "heavy periods",
+        "missed periods",
+        "fatigue",
+        "weight gain",
+        "weight loss",
+        "hair loss",
+        "cold intolerance"
+      ],
+      "source": "American Thyroid Association",
+      "sourceTitle": "Thyroid Disease and Women",
+      "sourceUrl": "https://www.thyroid.org/women-thyroid/",
+      "reviewedOn": "2026-02-25",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "weight-menstrual",
+      "topic": "Weight and menstrual cycle",
+      "summary": "Body weight significantly impacts the menstrual cycle; both underweight and overweight conditions can cause irregular or absent periods due to hormonal disruption.",
+      "facts": [
+        "Being significantly underweight (BMI below 18.5) can suppress the hypothalamus, reducing GnRH production and leading to absent periods (hypothalamic amenorrhea).",
+        "Being overweight or obese (BMI above 25-30) increases the risk of irregular periods and anovulation due to excess estrogen production from adipose tissue and insulin resistance.",
+        "PCOS, which is strongly linked to insulin resistance and weight gain, is the most common cause of weight-related menstrual irregularity in young women.",
+        "Even modest weight changes (5-10% of body weight) can significantly improve or worsen menstrual regularity; weight loss of 5-10% can restore ovulation in many overweight women with PCOS.",
+        "Excessive exercise combined with low calorie intake (relative energy deficiency in sport - RED-S) can disrupt menstrual function, a condition known as the female athlete triad.",
+        "In India, both undernutrition and rising obesity rates contribute to menstrual irregularities; maintaining a healthy weight through balanced diet and regular activity is key."
+      ],
+      "keywords": [
+        "weight",
+        "bmi",
+        "obesity",
+        "underweight",
+        "menstrual irregularity",
+        "hypothalamic amenorrhea",
+        "insulin resistance",
+        "female athlete triad"
+      ],
+      "symptomTags": [
+        "irregular periods",
+        "missed periods",
+        "weight gain",
+        "weight loss",
+        "absent periods",
+        "heavy periods"
+      ],
+      "source": "Endocrine Society",
+      "sourceTitle": "Endocrine Society - Obesity and Menstrual Irregularity",
+      "sourceUrl": "https://www.endocrine.org/patient-engagement/endocrine-library/hormones-and-endocrine-function/reproductive-hormones",
+      "reviewedOn": "2026-03-20",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "pcos-pregnancy",
+      "topic": "PCOS and pregnancy",
+      "summary": "Women with PCOS can conceive, but may face higher risks of ovulatory infertility, gestational diabetes, and pre-eclampsia; with proper management, most have successful pregnancies.",
+      "facts": [
+        "PCOS is the most common cause of anovulatory infertility; however, with treatment (lifestyle changes, ovulation induction, IVF), most women with PCOS can conceive.",
+        "Women with PCOS have a 3-4 times higher risk of gestational diabetes compared to women without PCOS, requiring closer monitoring during pregnancy.",
+        "The risk of pre-eclampsia (high blood pressure in pregnancy) is also elevated in women with PCOS, making regular antenatal check-ups essential.",
+        "Metformin is sometimes used to improve fertility and reduce miscarriage risk in women with PCOS, though its use in pregnancy remains debated; always consult your doctor.",
+        "Weight management before conception significantly improves outcomes; even a 5-10% weight loss can restore ovulation and reduce pregnancy complications.",
+        "In India, PCOS-related infertility is a growing concern; early diagnosis and preconception counselling can help women plan pregnancies safely and reduce complications."
+      ],
+      "keywords": [
+        "pcos pregnancy",
+        "pcos fertility",
+        "getting pregnant pcos",
+        "gestational diabetes",
+        "pre-eclampsia",
+        "ovulation induction",
+        "infertility treatment"
+      ],
+      "symptomTags": [
+        "difficulty getting pregnant",
+        "irregular periods",
+        "missed periods",
+        "weight gain",
+        "anxiety"
+      ],
+      "source": "American College of Obstetricians and Gynecologists (ACOG)",
+      "sourceTitle": "Polycystic Ovary Syndrome (PCOS) and Pregnancy",
+      "sourceUrl": "https://www.acog.org/womens-health/faqs/polycystic-ovary-syndrome",
+      "reviewedOn": "2026-04-08",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "miscarriage",
+      "topic": "Miscarriage",
+      "summary": "Miscarriage is the loss of a pregnancy before 20 weeks; it affects 10-20% of known pregnancies and is rarely caused by something the mother did or did not do.",
+      "facts": [
+        "Miscarriage is the loss of a pregnancy before 20 weeks of gestation; it is more common than many people think, occurring in an estimated 10-20% of clinically recognised pregnancies.",
+        "The most common cause is chromosomal abnormality in the embryo (accounting for about 50% of first-trimester miscarriages), which is not preventable.",
+        "Risk factors include advanced maternal age (over 35), previous miscarriage, PCOS, thyroid disorders, diabetes, uterine abnormalities, smoking, and excessive alcohol use.",
+        "Symptoms include vaginal bleeding (which may be light or heavy), abdominal cramping, pelvic pain, and passage of tissue; not all bleeding in early pregnancy results in miscarriage.",
+        "Miscarriage can be emotionally devastating; seeking support from healthcare providers, counselling, and support groups is important for emotional recovery.",
+        "In India, miscarriage may carry significant social stigma, and women may face pressure or blame; it is important to understand that miscarriage is common and rarely the mother's fault."
+      ],
+      "keywords": [
+        "miscarriage",
+        "pregnancy loss",
+        "early pregnancy loss",
+        "abortion",
+        "spontaneous abortion",
+        "pregnancy bleeding",
+        "first trimester loss"
+      ],
+      "symptomTags": [
+        "pregnancy bleeding",
+        "abdominal pain",
+        "cramping",
+        "heavy bleeding",
+        "passage of tissue",
+        "pregnancy symptoms stopping"
+      ],
+      "source": "NHS",
+      "sourceTitle": "Miscarriage",
+      "sourceUrl": "https://www.nhs.uk/conditions/miscarriage/",
+      "reviewedOn": "2026-05-15",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "cervical-health",
+      "topic": "Cervical health",
+      "summary": "Regular cervical screening (Pap smears) and HPV vaccination are essential for preventing cervical cancer, which is the second most common cancer in Indian women.",
+      "facts": [
+        "Cervical cancer is caused almost entirely by persistent infection with high-risk human papillomavirus (HPV), particularly HPV types 16 and 18.",
+        "The HPV vaccine (Gardasil 9) protects against 9 HPV types and is recommended for girls aged 9-14 before sexual debut; India introduced the HPV vaccine in its national immunisation programme in 2023.",
+        "Pap smears (cervical cytology) detect abnormal cervical cells before they become cancerous; screening should begin at age 21 and be repeated every 3 years, or every 5 years with HPV co-testing after age 30.",
+        "In India, cervical cancer is the second most common cancer in women, with approximately 75,000 new cases annually; awareness and screening rates remain low, especially in rural areas.",
+        "Signs that require medical evaluation include unusual vaginal bleeding (between periods, after sex, or post-menopause), foul-smelling vaginal discharge, and pelvic pain.",
+        "HPV vaccination and regular screening together can nearly eliminate cervical cancer risk; India's programme aims to vaccinate girls aged 9-14 to prevent future cases."
+      ],
+      "keywords": [
+        "cervical health",
+        "pap smear",
+        "hpv",
+        "cervical cancer",
+        "hpv vaccine",
+        "cervical screening",
+        "gynaecological exam"
+      ],
+      "symptomTags": [
+        "bleeding after sex",
+        "bleeding between periods",
+        "foul discharge",
+        "pelvic pain",
+        "postmenopausal bleeding"
+      ],
+      "source": "World Health Organization (WHO)",
+      "sourceTitle": "Cervical cancer",
+      "sourceUrl": "https://www.who.int/news-room/fact-sheets/detail/cervical-cancer",
+      "reviewedOn": "2026-06-15",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "sexual-health",
+      "topic": "Sexual health basics",
+      "summary": "Sexual health is an integral part of overall well-being; it includes safe practices, STI prevention, and understanding how the menstrual cycle affects sexual response.",
+      "facts": [
+        "Sexual health encompasses physical, emotional, and social well-being related to sexuality; it includes the ability to have safe, pleasurable, and consensual sexual experiences.",
+        "Barrier methods (condoms) are the only contraception that also protects against sexually transmitted infections (STIs) including HIV, chlamydia, gonorrhoea, and syphilis.",
+        "Libido can fluctuate with the menstrual cycle, typically peaking around ovulation due to rising estrogen and testosterone levels.",
+        "Common STIs in India include chlamydia, gonorrhoea, syphilis, herpes, and HPV; regular screening is recommended for sexually active individuals, especially those with multiple partners.",
+        "Vaginal dryness can occur at any age but is more common during breastfeeding, perimenopause, and menopause; water-based lubricants can help, and persistent dryness should be discussed with a doctor.",
+        "Open communication with partners about protection, consent, and sexual health is essential; Indian sexual health clinics and online services offer confidential testing and advice."
+      ],
+      "keywords": [
+        "sexual health",
+        "sti",
+        "sexually transmitted infection",
+        "condom",
+        "safe sex",
+        "libido",
+        "sexual wellness",
+        "hpv"
+      ],
+      "symptomTags": [
+        "vaginal dryness",
+        "pain during sex",
+        "discharge",
+        "genital sores",
+        "burning urination"
+      ],
+      "source": "World Health Organization (WHO)",
+      "sourceTitle": "Sexual health",
+      "sourceUrl": "https://www.who.int/news-room/fact-sheets/detail/sexual-health",
+      "reviewedOn": "2026-02-18",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "hormonal-birth-control",
+      "topic": "Hormonal birth control",
+      "summary": "Hormonal contraception uses synthetic hormones to prevent pregnancy by suppressing ovulation, thickening cervical mucus, or thinning the uterine lining.",
+      "facts": [
+        "Combined oral contraceptive pills contain estrogen and progestogen; they work by suppressing ovulation, thickening cervical mucus, and thinning the uterine lining, with over 99% effectiveness when used perfectly.",
+        "Progestogen-only methods (mini pill, implant, injection, hormonal IUD) are suitable for women who cannot take estrogen, including smokers over 35, those with migraines with aura, or breastfeeding women.",
+        "The contraceptive injection (Depo-Provera) is given every 3 months and is highly effective, but may cause irregular bleeding initially and can delay return to fertility after stopping.",
+        "Hormonal IUDs (e.g., Mirena) release levonorgestrel locally, reducing heavy periods by up to 90% and providing contraception for 5-8 years; they are increasingly used for heavy menstrual bleeding management.",
+        "Common side effects of hormonal contraception include nausea, breast tenderness, headaches, mood changes, and breakthrough bleeding, which usually improve within 3 months.",
+        "In India, oral contraceptive pills are widely available over the counter, and government health centres offer free contraception including IUDs, oral pills, and sterilisation services."
+      ],
+      "keywords": [
+        "hormonal birth control",
+        "oral contraceptive",
+        "the pill",
+        "contraceptive pill",
+        "hormonal iud",
+        "contraceptive implant",
+        "depo provera",
+        "progestogen"
+      ],
+      "symptomTags": [
+        "period changes",
+        "spotting",
+        "nausea",
+        "breast tenderness",
+        "mood changes",
+        "missed period"
+      ],
+      "source": "NHS",
+      "sourceTitle": "Combined pill",
+      "sourceUrl": "https://www.nhs.uk/conditions/contraception/combined-contraceptive-pill/",
+      "reviewedOn": "2026-03-12",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "emergency-contraception",
+      "topic": "Emergency contraception",
+      "summary": "Emergency contraception can prevent pregnancy after unprotected sex; it includes the morning-after pill (up to 72-120 hours) and the copper IUD (up to 5 days).",
+      "facts": [
+        "The morning-after pill (levonorgestrel or ulipristal acetate) can be used up to 72 hours (3 days) after unprotected sex; ulipristal acetate (ellaOne) is effective up to 120 hours (5 days).",
+        "Emergency contraception is not the same as abortion; it prevents ovulation or fertilisation and does not terminate an existing pregnancy.",
+        "The copper IUD is the most effective form of emergency contraception (over 99%) and can be inserted up to 5 days after unprotected sex; it also provides long-term contraception.",
+        "Emergency contraception is more effective the sooner it is taken; levonorgestrel is most effective within 24 hours of unprotected sex.",
+        "In India, levonorgestrel emergency contraceptive pills are available over the counter at pharmacies; the copper IUD is available at government health centres and private clinics.",
+        "Emergency contraception should not be used as a regular contraceptive method; if you use it frequently, consider switching to a reliable ongoing method."
+      ],
+      "keywords": [
+        "emergency contraception",
+        "morning after pill",
+        "plan b",
+        "levonorgestrel",
+        "ulipristal",
+        "postinor",
+        "unprotected sex",
+        "copper iud emergency"
+      ],
+      "symptomTags": [
+        "unprotected sex",
+        "contraception failure",
+        "missed pill",
+        "morning after",
+        "emergency pill"
+      ],
+      "source": "NHS",
+      "sourceTitle": "Emergency contraception",
+      "sourceUrl": "https://www.nhs.uk/conditions/contraception/emergency-contraception/",
+      "reviewedOn": "2026-04-20",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "menstrual-hygiene",
+      "topic": "Menstrual hygiene products",
+      "summary": "Menstrual hygiene products include pads, tampons, menstrual cups, and period underwear; proper use and regular changing are essential for health.",
+      "facts": [
+        "Disposable pads are the most commonly used menstrual product in India; they should be changed every 4-6 hours to prevent skin irritation, rashes, and infection.",
+        "Tampons are inserted into the vaginal canal and absorb menstrual blood; they should be changed every 4-8 hours and should never be left in for more than 8 hours to reduce the risk of toxic shock syndrome (TSS).",
+        "Menstrual cups are reusable silicone cups inserted into the vagina to collect blood; they can be worn for up to 12 hours, are environmentally friendly, and cost-effective long-term.",
+        "In India, approximately 36% of women still use unhygienic materials like rags, newspaper, or ash during menstruation, particularly in rural areas, increasing infection risk.",
+        "Reusable cloth pads and period underwear are sustainable alternatives; when using cloth pads, wash them thoroughly with soap and dry in sunlight for natural antibacterial action.",
+        "Menstrual hygiene is a public health issue in India; the government's Menstrual Hygiene Scheme provides free sanitary pads to adolescent girls in government schools."
+      ],
+      "keywords": [
+        "menstrual hygiene",
+        "sanitary pad",
+        "tampon",
+        "menstrual cup",
+        "period underwear",
+        "cloth pad",
+        "menstrual products",
+        "hygiene"
+      ],
+      "symptomTags": [
+        "rashes",
+        "skin irritation",
+        "infection",
+        "vaginal odour",
+        "allergic reaction"
+      ],
+      "source": "World Health Organization (WHO)",
+      "sourceTitle": "Menstrual health",
+      "sourceUrl": "https://www.who.int/news-room/fact-sheets/detail/menstrual-health",
+      "reviewedOn": "2026-06-18",
+      "accessedOn": "2026-09-10",
+      "language": "en"
+    },
+    {
+      "id": "cycle-tracking",
+      "topic": "Tracking your cycle",
+      "summary": "Tracking the menstrual cycle helps understand patterns, predict periods, identify fertile windows, and detect potential health issues early.",
+      "facts": [
+        "Cycle tracking involves recording the start and end dates of periods, symptoms, and other changes to identify patterns and predict future cycles.",
+        "Methods include calendar tracking, mobile apps (Clue, Flo, Period Tracker), basal body temperature (BBT) charting, and cervical mucus monitoring.",
+        "Tracking helps predict fertile windows for conception or avoidance, identify irregular patterns that may indicate health issues, and provide valuable information for healthcare visits.",
+        "BBT tracking involves taking temperature first thing each morning before getting up; a sustained rise of 0.2-0.5°C indicates ovulation has occurred.",
+        "Apps with AI and data analysis can provide increasingly personalised predictions as more cycle data is entered; however, no app is a substitute for medical advice.",
+        "In India, menstrual tracking is gaining popularity through smartphone apps, but cultural taboos around discussing menstruation can still hinder open use and data sharing with healthcare providers."
+      ],
+      "keywords": [
+        "cycle tracking",
+        "period tracker",
+        "menstrual app",
+        "basal body temperature",
+        "cervical mucus",
+        "fertile window",
+        "ovulation tracking",
+        "cycle calendar"
+      ],
+      "symptomTags": [
+        "period tracking",
+        "fertile window",
+        "ovulation prediction",
+        "cycle patterns",
+        "symptom tracking"
+      ],
+      "source": "NHS",
+      "sourceTitle": "How to track your menstrual cycle",
+      "sourceUrl": "https://www.nhs.uk/pregnancy/trying-to-conceive/how-to-track-your-menstrual-cycle/",
+      "reviewedOn": "2026-05-25",
+      "accessedOn": "2026-09-10",
       "language": "en"
     }
   ]

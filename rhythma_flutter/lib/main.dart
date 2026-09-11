@@ -41,6 +41,41 @@ import 'services/offline_sync_service.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
+Widget buildLoginGate() {
+  void goToSignUp() {
+    rootNavigatorKey.currentState!.push(MaterialPageRoute(
+      builder: (_) => OnboardingScreen(
+        onComplete: () async {
+          await LocalStorageService.setOnboardingCompleted(true);
+          rootNavigatorKey.currentState!.pushNamedAndRemoveUntil(
+            '/home',
+            (route) => false,
+          );
+        },
+      ),
+    ));
+  }
+
+  return AppSplashScreen(
+    onLogin: () {
+      rootNavigatorKey.currentState!.push(MaterialPageRoute(
+        builder: (_) => LoginScreen(onSwitchToSignUp: goToSignUp),
+      ));
+    },
+    onSignUp: goToSignUp,
+  );
+}
+
+void performLogout(BuildContext context) async {
+  await AuthService().logout();
+  if (context.mounted) {
+    rootNavigatorKey.currentState!.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => buildLoginGate()),
+      (route) => false,
+    );
+  }
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -78,7 +113,10 @@ Future<void> main() async {
   ApiClient.init(onUnauthorized: () {
     final navigator = rootNavigatorKey.currentState;
     if (navigator == null) return;
-    navigator.pushNamedAndRemoveUntil('/login', (route) => false);
+    navigator.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => buildLoginGate()),
+      (route) => false,
+    );
   });
 
   SystemChrome.setSystemUIOverlayStyle(
