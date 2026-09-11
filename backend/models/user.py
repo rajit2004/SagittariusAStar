@@ -100,6 +100,15 @@ class UserProfileResponse(BaseModel):
     state: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    settings: Optional[dict] = Field(default=None, description="Per-user app settings")
+
+class UserSettings(BaseModel):
+    primary_color: Optional[int] = Field(None, description="ARGB int value of the primary theme color")
+    dark_mode: Optional[bool] = Field(None, description="Whether dark mode is enabled")
+    language: Optional[str] = Field(None, description="Preferred language code")
+    cloud_sync: Optional[bool] = Field(None, description="Whether cloud sync is enabled")
+    sms_enabled: Optional[bool] = Field(None, description="Whether SMS summaries are enabled")
+    biometric_enabled: Optional[bool] = Field(None, description="Whether biometric auth is enabled")
 
 class ScoresResponse(BaseModel):
     averageCycleLength: Optional[float] = Field(

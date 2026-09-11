@@ -35,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, dynamic> _userData = {};
   Map<String, dynamic> _cycleData = {};
   Map<String, dynamic> _insights = {};
+  Map<String, dynamic> _prediction = {};
   String _error = '';
 
   @override
@@ -51,6 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _userData = cached['user'] ?? {};
         _cycleData = cached['cycle'] ?? {};
         _insights = cached['insights'] ?? {};
+        _prediction = cached['prediction'] ?? {};
         _loading = false;
       });
     }
@@ -64,6 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'user': response.data['user'] ?? {},
         'cycle': response.data['cycle'] ?? {},
         'insights': response.data['insights'] ?? {},
+        'prediction': response.data['prediction'] ?? {},
       };
       await LocalStorageService.saveCachedDashboard(data);
       if (!mounted) return;
@@ -71,6 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _userData = data['user'] as Map<String, dynamic>;
         _cycleData = data['cycle'] as Map<String, dynamic>;
         _insights = data['insights'] as Map<String, dynamic>;
+        _prediction = data['prediction'] as Map<String, dynamic>;
         _loading = false;
         _error = '';
       });
@@ -126,7 +130,8 @@ class _HomeScreenState extends State<HomeScreen> {
         : (apiName ?? 'User');
 
     final avatarPath = localProfile['avatar'] as String? ?? '';
-    final nextPeriodDays = _cycleData['nextPeriodDays'] ?? 14;
+    final nextPeriodDays = (_prediction['daysUntilNextPeriod'] as num?)?.toInt()
+        ?? (_cycleData['nextPeriodDays'] ?? 14);
     final cycleDay = _cycleData['day'] ?? 14;
     final totalCycle = _cycleData['total'] ?? 28;
     final avgCycle = _insights['averageCycleLength'] ?? 28;
@@ -158,18 +163,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       : null,
                 ),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${l10n.homeGreeting}, $userName',
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w700,
-                          color: RhythmaColors.foreground,
-                        ),
-                      ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${l10n.homeGreeting}, $userName',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: RhythmaColors.foreground,
+                                ),
+                              ),
                       const SizedBox(height: 2),
                       Text(
                         l10n.homePhaseDesc,
@@ -198,7 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 _HeaderIcon(
                   icon: Icons.language_rounded,
                   onTap: () {
@@ -208,7 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 _HeaderIcon(
                   icon: Icons.shield_outlined,
                   onTap: () => Navigator.push(
@@ -216,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     MaterialPageRoute(builder: (_) => const PrivacyScreen()),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 _HeaderIcon(
                   icon: Icons.logout_rounded,
                   color: RhythmaColors.coral,
@@ -258,11 +265,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                l10n.homeNextPeriod,
+                                nextPeriodDays < 0 ? 'OVERDUE' : l10n.homeNextPeriod,
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w600,
-                                  color: RhythmaColors.mutedFg,
+                                  color: nextPeriodDays < 0
+                                      ? RhythmaColors.coral
+                                      : RhythmaColors.mutedFg,
                                   letterSpacing: 1,
                                 ),
                               ),
@@ -272,11 +281,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                 textBaseline: TextBaseline.alphabetic,
                                 children: [
                                   Text(
-                                    '$nextPeriodDays',
+                                    '${nextPeriodDays.abs()}',
                                     style: TextStyle(
                                       fontSize: 36,
                                       fontWeight: FontWeight.w700,
-                                      color: RhythmaColors.foreground,
+                                      color: nextPeriodDays < 0
+                                          ? RhythmaColors.coral
+                                          : RhythmaColors.foreground,
                                       height: 1,
                                     ),
                                   ),
@@ -979,14 +990,14 @@ class _HeaderIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassCard(
       padding: EdgeInsets.zero,
-      borderRadius: 20,
+      borderRadius: 16,
       onTap: onTap,
       child: SizedBox(
-        width: 48,
-        height: 48,
+        width: 40,
+        height: 40,
         child: Icon(
           icon,
-          size: 18,
+          size: 16,
           color: color ?? RhythmaColors.foreground,
         ),
       ),

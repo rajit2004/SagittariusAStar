@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rhythma/l10n/app_localizations.dart';
+import '../../../components/shared.dart';
+import '../../../config/theme.dart';
 import '../../../providers/cycle_provider.dart';
 import '../../../services/cycle_service.dart';
 import '../../../services/local_storage_service.dart';
@@ -23,9 +25,7 @@ class LogEntrySheet extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) => LogEntrySheet(date: date, existingLog: existingLog),
     );
   }
@@ -41,7 +41,14 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
   double _stressLevel = 1.0;
   List<String> _symptoms = [];
 
-  final List<String> _moodEmojis = ['😀', '😌', '😐', '😔', '😢', '😡'];
+  final List<Map<String, dynamic>> _moodOptions = [
+    {'emoji': '😊', 'label': 'Happy', 'color': RhythmaColors.teal},
+    {'emoji': '😌', 'label': 'Calm', 'color': Color(0xFF7BAFD4)},
+    {'emoji': '😐', 'label': 'Neutral', 'color': RhythmaColors.mutedFg},
+    {'emoji': '😔', 'label': 'Low', 'color': RhythmaColors.rose},
+    {'emoji': '😢', 'label': 'Sad', 'color': RhythmaColors.coral},
+    {'emoji': '😤', 'label': 'Irritated', 'color': Color(0xFFE8905B)},
+  ];
 
   @override
   void initState() {
@@ -69,13 +76,14 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
       'symptoms': _symptoms,
     };
     LocalStorageService.saveCycleLog(log);
-    
+
     if (mounted) {
       final l10n = AppLocalizations.of(context)!;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(l10n.logSaved),
           behavior: SnackBarBehavior.floating,
+          backgroundColor: RhythmaColors.teal,
         ),
       );
       Navigator.of(context).pop();
@@ -86,6 +94,8 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: RhythmaColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Delete Entry'),
         content: const Text(
           'Are you sure you want to delete this day\'s log? This cannot be undone.',
@@ -121,9 +131,7 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
 
     try {
       await CycleService().deleteLog(dateKey);
-    } catch (_) {
-      
-    }
+    } catch (_) {}
 
     if (!mounted) return;
     context.read<CycleProvider>().refresh();
@@ -133,173 +141,150 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.9,
+      initialChildSize: 0.92,
       minChildSize: 0.5,
-      maxChildSize: 0.9,
+      maxChildSize: 0.95,
       expand: false,
       builder: (context, scrollController) {
-        return Padding(
-          padding: const EdgeInsets.all(24.0),
+        return Container(
+          decoration: BoxDecoration(
+            color: RhythmaColors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    l10n.logTitle,
-                    style: theme.textTheme.headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  Row(
-                    children: [
-                      if (widget.existingLog != null)
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded),
-                          color: Colors.red,
-                          tooltip: 'Delete entry',
-                          onPressed: _deleteLog,
-                        ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ],
-                  ),
-                ],
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(top: 12),
+                decoration: BoxDecoration(
+                  color: RhythmaColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView(
-                  controller: scrollController,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    
-                    Text(l10n.logFlowIntensity,
-                        style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 8),
-                    SegmentedButton<String>(
-                      segments: LogOptions.flow(l10n)
-                          .where((o) => o.value != 'none')
-                          .map((option) => ButtonSegment(
-                              value: option.value,
-                              label: Text(option.label)))
-                          .toList(),
-                      selected: _flowIntensity != null
-                          ? {_flowIntensity!}
-                          : <String>{},
-                      onSelectionChanged: (Set<String> newSelection) {
-                        setState(() {
-                          _flowIntensity = newSelection.first;
-                        });
-                      },
-                      emptySelectionAllowed: true,
-                    ),
-                    const SizedBox(height: 24),
-
-                    Text(l10n.logMood, style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      height: 60,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: _moodEmojis.length,
-                        itemBuilder: (context, index) {
-                          final emoji = _moodEmojis[index];
-                          final isSelected = _mood == emoji;
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _mood = isSelected ? null : emoji;
-                              });
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.only(right: 12),
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? theme.colorScheme.primaryContainer
-                                    : theme.colorScheme.surfaceContainerHighest,
-                                shape: BoxShape.circle,
-                                border: isSelected
-                                    ? Border.all(
-                                        color: theme.colorScheme.primary,
-                                        width: 2)
-                                    : null,
-                              ),
-                              child: Center(
-                                child: Text(emoji,
-                                    style: const TextStyle(fontSize: 24)),
-                              ),
-                            ),
-                          );
-                        },
+                    Text(
+                      l10n.logTitle,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: RhythmaColors.foreground,
                       ),
                     ),
-                    const SizedBox(height: 24),
-
-                    Text('${l10n.logSleepHours}: ${_sleepHours.toInt()}h',
-                        style: theme.textTheme.titleMedium),
-                    Slider(
-                      value: _sleepHours.clamp(0.0, 16.0),
-                      min: 0,
-                      max: 16,
-                      divisions: 16,
-                      label: _sleepHours.toInt().toString(),
-                      onChanged: (value) {
-                        setState(() {
-                          _sleepHours = value;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    Text('${l10n.logStressLevel}: ${_stressLevel.toInt()}',
-                        style: theme.textTheme.titleMedium),
-                    Slider(
-                      value: _stressLevel,
-                      min: 1,
-                      max: 5,
-                      divisions: 4,
-                      label: _stressLevel.toInt().toString(),
-                      onChanged: (value) {
-                        setState(() {
-                          _stressLevel = value;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    Text(l10n.logLabelSymptoms,
-                        style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                    Row(
                       children: [
-                        _buildSymptomChip('Cramps', l10n.logSympCramps),
-                        _buildSymptomChip('Headache', l10n.logSympHeadache),
-                        _buildSymptomChip('Bloating', l10n.logSympBloating),
-                        _buildSymptomChip('Fatigue', l10n.logSympFatigue),
-                        _buildSymptomChip('Nausea', l10n.logSympNausea),
-                        _buildSymptomChip('Acne', l10n.logSympAcne),
-                        _buildSymptomChip('Back Pain', l10n.logSympBackPain),
-                        _buildSymptomChip('severe pain', l10n.logSympSeverePain),
-                        _buildSymptomChip('fainting', l10n.logSympFainting),
+                        if (widget.existingLog != null)
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                            color: RhythmaColors.coral,
+                            onPressed: _deleteLog,
+                          ),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 20),
+                          color: RhythmaColors.mutedFg,
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 40),
                   ],
                 ),
               ),
-              ElevatedButton(
-                onPressed: _saveLog,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                  children: [
+                    _buildSection(
+                      icon: Icons.water_drop_rounded,
+                      label: l10n.logFlowIntensity,
+                      color: RhythmaColors.rose,
+                      child: _buildFlowPicker(l10n),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSection(
+                      icon: Icons.emoji_emotions_rounded,
+                      label: l10n.logMood,
+                      color: RhythmaColors.teal,
+                      child: _buildMoodPicker(),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSection(
+                      icon: Icons.bedtime_rounded,
+                      label: '${l10n.logSleepHours}: ${_sleepHours.toInt()}h',
+                      color: Color(0xFF7BAFD4),
+                      child: _buildSlider(
+                        value: _sleepHours.clamp(0.0, 16.0),
+                        min: 0,
+                        max: 16,
+                        divisions: 16,
+                        label: '${_sleepHours.toInt()}h',
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF7BAFD4), Color(0xFF3B6B8E)],
+                        ),
+                        onChanged: (v) => setState(() => _sleepHours = v),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSection(
+                      icon: Icons.psychology_rounded,
+                      label: '${l10n.logStressLevel}: ${_stressLevel.toInt()}/5',
+                      color: RhythmaColors.coral,
+                      child: _buildSlider(
+                        value: _stressLevel,
+                        min: 1,
+                        max: 5,
+                        divisions: 4,
+                        label: '${_stressLevel.toInt()}',
+                        gradient: const LinearGradient(
+                          colors: [RhythmaColors.coral, Color(0xFFE8905B)],
+                        ),
+                        onChanged: (v) => setState(() => _stressLevel = v),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildSection(
+                      icon: Icons.healing_rounded,
+                      label: l10n.logLabelSymptoms,
+                      color: RhythmaColors.primary,
+                      child: _buildSymptomPicker(l10n),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
                 ),
-                child: Text(l10n.logSave),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RhythmaGradients.primary,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: ElevatedButton(
+                    onPressed: _saveLog,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Text(
+                      l10n.logSave,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -308,20 +293,309 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
     );
   }
 
-  Widget _buildSymptomChip(String id, String label) {
-    final isSelected = _symptoms.contains(id);
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (selected) {
-        setState(() {
-          if (selected) {
-            _symptoms.add(id);
-          } else {
-            _symptoms.remove(id);
-          }
-        });
-      },
+  Widget _buildSection({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required Widget child,
+  }) {
+    return GlassCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              TintedIcon(icon: icon, color: color, size: 32),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: RhythmaColors.foreground,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFlowPicker(AppLocalizations l10n) {
+    final options = [
+      {'value': 'spotting', 'label': l10n.logFlowSpotting, 'icon': Icons.circle, 'size': 8.0, 'color': RhythmaColors.rose},
+      {'value': 'light', 'label': l10n.logLight, 'icon': Icons.circle, 'size': 12.0, 'color': RhythmaColors.coral},
+      {'value': 'medium', 'label': l10n.logMedium, 'icon': Icons.circle, 'size': 16.0, 'color': RhythmaColors.primary},
+      {'value': 'heavy', 'label': l10n.logHeavy, 'icon': Icons.circle, 'size': 20.0, 'color': RhythmaColors.teal},
+    ];
+
+    return Row(
+      children: options.map((opt) {
+        final isSelected = _flowIntensity == opt['value'];
+        return Expanded(
+          child: GestureDetector(
+            onTap: () => setState(() {
+              _flowIntensity = isSelected ? null : opt['value'] as String;
+            }),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                gradient: isSelected ? RhythmaGradients.primary : null,
+                color: isSelected ? null : RhythmaColors.surfaceMuted,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected
+                      ? RhythmaColors.primary
+                      : RhythmaColors.border,
+                  width: isSelected ? 1.5 : 1,
+                ),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    opt['icon'] as IconData,
+                    size: opt['size'] as double,
+                    color: isSelected ? Colors.white : (opt['color'] as Color),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    opt['label'] as String,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      color: isSelected ? Colors.white : RhythmaColors.mutedFg,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildMoodPicker() {
+    return SizedBox(
+      height: 72,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _moodOptions.length,
+        itemBuilder: (context, index) {
+          final option = _moodOptions[index];
+          final isSelected = _mood == option['emoji'];
+          final color = option['color'] as Color;
+
+          return GestureDetector(
+            onTap: () => setState(() {
+              _mood = isSelected ? null : option['emoji'] as String;
+            }),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.only(right: 10),
+              width: 64,
+              decoration: BoxDecoration(
+                gradient: isSelected
+                    ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          color.withValues(alpha: 0.3),
+                          color.withValues(alpha: 0.15),
+                        ],
+                      )
+                    : null,
+                color: isSelected ? null : RhythmaColors.surfaceMuted,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isSelected ? color : RhythmaColors.border,
+                  width: isSelected ? 1.5 : 1,
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    option['emoji'] as String,
+                    style: TextStyle(fontSize: isSelected ? 28 : 24),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    option['label'] as String,
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      color: isSelected ? color : RhythmaColors.mutedFg,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSlider({
+    required double value,
+    required double min,
+    required double max,
+    required int divisions,
+    required String label,
+    required LinearGradient gradient,
+    required ValueChanged<double> onChanged,
+  }) {
+    final fraction = (value - min) / (max - min);
+    return Column(
+      children: [
+        SliderTheme(
+          data: SliderThemeData(
+            trackHeight: 6,
+            activeTrackColor: Colors.transparent,
+            inactiveTrackColor: RhythmaColors.surfaceMuted,
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+            thumbColor: Colors.white,
+            overlayColor: RhythmaColors.primary.withValues(alpha: 0.15),
+          ),
+          child: Stack(
+            children: [
+              Slider(
+                value: value,
+                min: min,
+                max: max,
+                divisions: divisions,
+                label: label,
+                onChanged: onChanged,
+              ),
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: FractionallySizedBox(
+                      widthFactor: fraction.clamp(0.0, 1.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: gradient,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                min.toInt().toString(),
+                style: TextStyle(fontSize: 10, color: RhythmaColors.mutedFg),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  gradient: gradient,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              Text(
+                max.toInt().toString(),
+                style: TextStyle(fontSize: 10, color: RhythmaColors.mutedFg),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSymptomPicker(AppLocalizations l10n) {
+    final symptoms = [
+      {'id': 'Cramps', 'label': l10n.logSympCramps, 'icon': Icons.fiber_manual_record_rounded},
+      {'id': 'Headache', 'label': l10n.logSympHeadache, 'icon': Icons.psychology_rounded},
+      {'id': 'Bloating', 'label': l10n.logSympBloating, 'icon': Icons.water_rounded},
+      {'id': 'Fatigue', 'label': l10n.logSympFatigue, 'icon': Icons.battery_2_bar_rounded},
+      {'id': 'Nausea', 'label': l10n.logSympNausea, 'icon': Icons.sick_rounded},
+      {'id': 'Acne', 'label': l10n.logSympAcne, 'icon': Icons.face_rounded},
+      {'id': 'Back Pain', 'label': l10n.logSympBackPain, 'icon': Icons.accessibility_new_rounded},
+      {'id': 'severe pain', 'label': l10n.logSympSeverePain, 'icon': Icons.warning_amber_rounded},
+      {'id': 'fainting', 'label': l10n.logSympFainting, 'icon': Icons.air_rounded},
+    ];
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: symptoms.map((s) {
+        final isSelected = _symptoms.contains(s['id']);
+        return GestureDetector(
+          onTap: () => setState(() {
+            if (isSelected) {
+              _symptoms.remove(s['id'] as String);
+            } else {
+              _symptoms.add(s['id'] as String);
+            }
+          }),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              gradient: isSelected
+                  ? LinearGradient(
+                      colors: [
+                        RhythmaColors.primary.withValues(alpha: 0.25),
+                        RhythmaColors.primary.withValues(alpha: 0.15),
+                      ],
+                    )
+                  : null,
+              color: isSelected ? null : RhythmaColors.surfaceMuted,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected ? RhythmaColors.primary : RhythmaColors.border,
+                width: isSelected ? 1.5 : 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  s['icon'] as IconData,
+                  size: 14,
+                  color: isSelected ? RhythmaColors.primary : RhythmaColors.mutedFg,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  s['label'] as String,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    color: isSelected ? RhythmaColors.primary : RhythmaColors.mutedFg,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }

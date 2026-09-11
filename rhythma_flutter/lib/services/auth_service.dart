@@ -3,6 +3,7 @@ import '../utils/secure_storage.dart';
 import 'api_client.dart';
 import 'firestore_service.dart';
 import 'local_storage_service.dart';
+import 'user_settings_service.dart';
 
 class AuthService {
   final Dio _dio = ApiClient.dio;
@@ -27,6 +28,7 @@ class AuthService {
         if (uid != null) {
           await LocalStorageService.setCurrentUserId(uid);
           await _syncProfile(uid);
+          await _syncSettingsFromServer();
           FirestoreService.pullCycleLogs(userId: uid);
           FirestoreService.pullProfile(userId: uid);
           FirestoreService.syncCycleLogs(userId: uid);
@@ -88,7 +90,8 @@ class AuthService {
         if (uid != null) {
           await LocalStorageService.setCurrentUserId(uid);
           await _syncProfile(uid);
-          
+          await _syncSettingsFromServer();
+
           FirestoreService.pullCycleLogs(userId: uid);
           FirestoreService.pullProfile(userId: uid);
           FirestoreService.syncCycleLogs(userId: uid);
@@ -190,11 +193,13 @@ class AuthService {
       if (uid != null) {
         await LocalStorageService.setCurrentUserId(uid);
         await _syncProfile(uid);
-        
+
         FirestoreService.pullCycleLogs(userId: uid);
         FirestoreService.pullProfile(userId: uid);
         FirestoreService.syncCycleLogs(userId: uid);
         FirestoreService.syncProfile(userId: uid);
+
+        await _syncSettingsFromServer();
       }
       return uid;
     } on DioException catch (e) {
@@ -202,9 +207,32 @@ class AuthService {
         await SecureStorage.clearAuth();
         return null;
       }
-      
+
       return LocalStorageService.currentUserId;
     }
+  }
+
+  Future<void> _syncSettingsFromServer() async {
+    try {
+      final settings = await UserSettingsService.getSettings();
+      if (settings.isNotEmpty) {
+        if (settings.containsKey('primary_color')) {
+          await LocalStorageService.setPrimaryColor(settings['primary_color'] as int);
+        }
+        if (settings.containsKey('dark_mode')) {
+          await LocalStorageService.setThemeMode(
+            (settings['dark_mode'] as bool) ? 'dark' : 'light',
+          );
+        }
+        if (settings.containsKey('language')) {
+          await LocalStorageService.setPreferredLanguage(settings['language'] as String);
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<Map<String, dynamic>> getSettingsFromServer() async {
+    return UserSettingsService.getSettings();
   }
 
   String _readErrorMessage(DioException error, String fallback) {

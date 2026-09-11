@@ -115,6 +115,10 @@ class AssistantRequest(BaseModel):
             )
         return normalized
 
+class AssistantHistoryResponse(BaseModel):
+    messages: List[ChatMessage] = Field(default_factory=list)
+
+
 class AssistantSource(BaseModel):
 
     name: str
@@ -288,3 +292,19 @@ async def chat(
 )
 async def supported_languages(current_user: dict = Depends(get_current_user)):
     return SUPPORTED_LANGUAGES
+
+
+@router.get(
+    "/history",
+    response_model=AssistantHistoryResponse,
+    summary="Get recent chat history for the current user",
+    description="Returns the last 50 messages from the server-side conversation history.",
+)
+async def get_chat_history(current_user: dict = Depends(get_current_user)):
+    user_id = current_user["id"]
+    messages = AssistantConversationService.get_recent_messages(user_id, limit=50)
+    parsed = [
+        ChatMessage(**m) if isinstance(m, dict) else m
+        for m in messages
+    ]
+    return AssistantHistoryResponse(messages=parsed)

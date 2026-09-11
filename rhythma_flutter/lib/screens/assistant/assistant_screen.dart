@@ -20,6 +20,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
   late List<String> _suggested;
   late List<_Msg> _messages;
   bool _initialized = false;
+  bool _serverHistoryAttempted = false;
 
   String get _displayName {
     final name =
@@ -57,6 +58,9 @@ class _AssistantScreenState extends State<AssistantScreen> {
 
       if (restored.isNotEmpty) {
         _messages = restored;
+      } else if (!_serverHistoryAttempted) {
+        _serverHistoryAttempted = true;
+        _fetchServerHistory(l10n);
       } else {
         _messages = [
           _Msg(
@@ -65,10 +69,32 @@ class _AssistantScreenState extends State<AssistantScreen> {
         ];
       }
       _initialized = true;
+    }
+  }
 
-      if (restored.length != saved.length) {
+  Future<void> _fetchServerHistory(AppLocalizations l10n) async {
+    try {
+      final serverHistory = await AssistantService().getHistory();
+      if (serverHistory.isNotEmpty) {
+        _messages = serverHistory
+            .map((m) => _Msg(
+                  role: m['role'] ?? 'model',
+                  content: m['content'] ?? '',
+                  isError: m['isError'] == 'true',
+                ))
+            .where((m) => m.content.trim().isNotEmpty)
+            .toList();
         _persistHistory();
+      } else {
+        _messages = [
+          _Msg(
+              role: 'model',
+              content: _personalizedWelcome(l10n)),
+        ];
       }
+      if (mounted) setState(() {});
+    } catch (_) {
+      if (mounted) setState(() {});
     }
   }
 
@@ -264,7 +290,7 @@ class _AssistantScreenState extends State<AssistantScreen> {
             const SizedBox(height: 8),
 
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Container(
                 decoration: BoxDecoration(
                   color: RhythmaColors.surface.withValues(alpha: 0.85),

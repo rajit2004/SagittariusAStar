@@ -232,6 +232,10 @@ class _LandingGate extends StatelessWidget {
           return AppSplashScreen(onLogin: onLogin, onSignUp: onSignUp);
         }
         if (snapshot.data != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            context.read<ThemeProvider>().reloadFromHive();
+            context.read<LocaleProvider>().reloadFromHive();
+          });
           return const BiometricAuthGate(child: RhythmaRoot());
         }
         if (!LocalStorageService.languageSelectionCompleted) {

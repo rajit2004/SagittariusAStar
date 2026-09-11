@@ -4,6 +4,30 @@ import 'api_client.dart';
 class AssistantService {
   final Dio _dio = ApiClient.dio;
 
+  Future<List<Map<String, String>>> getHistory() async {
+    try {
+      final response = await _dio.get('/assistant/history');
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        final messages = data['messages'];
+        if (messages is List) {
+          return messages
+              .map((m) => {
+                    'role': (m['role'] ?? 'model').toString(),
+                    'content': (m['content'] ?? '').toString(),
+                    'isError': 'false',
+                  })
+              .where((m) => (m['content'] as String).trim().isNotEmpty)
+              .toList()
+              .cast<Map<String, String>>();
+        }
+      }
+      return [];
+    } on DioException {
+      return [];
+    }
+  }
+
   Future<String> chat(
     String message, {
     String language = 'en',

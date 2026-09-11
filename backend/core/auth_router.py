@@ -234,6 +234,27 @@ async def update_profile(
     user.pop("password", None)
     return user
 
+@router.get("/settings", summary="Get per-user app settings")
+async def get_settings(current_user: dict = Depends(get_current_user)):
+    user = UserService.get_user_by_id(current_user["id"])
+    if not user:
+        from fastapi import HTTPException, status
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    return {"settings": user.get("settings", {})}
+
+@router.put("/settings", summary="Save per-user app settings")
+async def save_settings(
+    settings: dict,
+    current_user: dict = Depends(get_current_user),
+):
+    allowed_keys = {"primary_color", "dark_mode", "language", "cloud_sync", "sms_enabled", "biometric_enabled"}
+    filtered = {k: v for k, v in settings.items() if k in allowed_keys and v is not None}
+    UserService.update_user(current_user["id"], {"settings": filtered})
+    return {"settings": filtered}
+
 @router.delete("/me")
 async def delete_me(response: Response, current_user: dict = Depends(get_current_user)):
     user_id = current_user["id"]

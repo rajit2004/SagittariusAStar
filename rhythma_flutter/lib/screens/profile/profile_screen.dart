@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 import '../../components/shared.dart';
 import '../../config/theme.dart';
+import '../../services/api_client.dart';
 import '../../services/local_storage_service.dart';
 import '../settings/settings_screen.dart';
 import 'package:rhythma/l10n/app_localizations.dart';
@@ -26,6 +27,10 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   int _cycleLength = 28;
   final int _cycleDay = 12;
 
+  double? _avgCycleFromApi;
+  double? _avgBleeding;
+  List<int> _cycleHistory = [];
+
   List<Map<String, String>> _emergencyContacts = [];
 
   late final AnimationController _controller;
@@ -41,6 +46,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     super.initState();
     _loadProfile();
     _loadEmergencyContacts();
+    _fetchDashboardInsights();
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
@@ -105,6 +111,25 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
 
   void _loadEmergencyContacts() {
     _emergencyContacts = LocalStorageService.getEmergencyContacts();
+  }
+
+  Future<void> _fetchDashboardInsights() async {
+    try {
+      final response = await ApiClient.dio.get('/dashboard');
+      final data = response.data as Map;
+      final insights = data['insights'] as Map? ?? {};
+      final history = data['cycleHistory'] as List? ?? [];
+      if (!mounted) return;
+      setState(() {
+        _avgCycleFromApi = (insights['averageCycleLength'] as num?)?.toDouble();
+        _avgBleeding = (insights['averageBleedingDuration'] as num?)?.toDouble();
+        _cycleHistory = history
+            .map((e) => (e as Map)['cycle_length'])
+            .whereType<num>()
+            .map((n) => n.toInt())
+            .toList();
+      });
+    } catch (_) {}
   }
 
   String _getCyclePhase(int day) {
@@ -555,6 +580,151 @@ void _showAddEditContactDialog(
   );
 }
 
+  void _showAvatarOptionsSheet() {
+    final profile = context.read<ProfileProvider>().profile;
+    final avatarPath = profile['avatar'] as String? ?? '';
+    final hasAvatar = avatarPath.isNotEmpty;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: RhythmaColors.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: RhythmaColors.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            if (hasAvatar)
+              ListTile(
+                leading: TintedIcon(
+                  icon: Icons.visibility_rounded,
+                  color: RhythmaColors.primary,
+                  size: 36,
+                ),
+                title: const Text('View Photo'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _viewAvatarFullScreen(avatarPath);
+                },
+              ),
+            if (hasAvatar) Divider(height: 1, color: RhythmaColors.border),
+            ListTile(
+              leading: TintedIcon(
+                icon: Icons.photo_library_rounded,
+                color: RhythmaColors.teal,
+                size: 36,
+              ),
+              title: Text(AppLocalizations.of(context)!.onboardingAvatarLabel),
+              onTap: () async {
+                Navigator.pop(ctx);
+                final picker = ImagePicker();
+                final picked = await picker.pickImage(
+                  source: ImageSource.gallery,
+                  maxWidth: 512,
+                  maxHeight: 512,
+                  imageQuality: 85,
+                );
+                if (picked != null) {
+                  final appDir = await getApplicationDocumentsDirectory();
+                  final fileName = 'avatar_${DateTime.now().millisecondsSinceEpoch}${p.extension(picked.path)}';
+                  final savedFile = await File(picked.path).copy('${appDir.path}/$fileName');
+                  if (mounted) {
+                    await context.read<ProfileProvider>().mergeProfile({
+                      'avatar': savedFile.path,
+                    });
+                    setState(() {});
+                  }
+                }
+              },
+            ),
+            Divider(height: 1, color: RhythmaColors.border),
+            ListTile(
+              leading: TintedIcon(
+                icon: Icons.camera_alt_rounded,
+                color: RhythmaColors.coral,
+                size: 36,
+              ),
+              title: const Text('Take Photo'),
+              onTap: () async {
+                Navigator.pop(ctx);
+                final picker = ImagePicker();
+                final picked = await picker.pickImage(
+                  source: ImageSource.camera,
+                  maxWidth: 512,
+                  maxHeight: 512,
+                  imageQuality: 85,
+                );
+                if (picked != null) {
+                  final appDir = await getApplicationDocumentsDirectory();
+                  final fileName = 'avatar_${DateTime.now().millisecondsSinceEpoch}${p.extension(picked.path)}';
+                  final savedFile = await File(picked.path).copy('${appDir.path}/$fileName');
+                  if (mounted) {
+                    await context.read<ProfileProvider>().mergeProfile({
+                      'avatar': savedFile.path,
+                    });
+                    setState(() {});
+                  }
+                }
+              },
+            ),
+            if (hasAvatar) ...[
+              Divider(height: 1, color: RhythmaColors.border),
+              ListTile(
+                leading: const TintedIcon(
+                  icon: Icons.delete_outline_rounded,
+                  color: Colors.redAccent,
+                  size: 36,
+                ),
+                title: const Text('Remove Photo',
+                    style: TextStyle(color: Colors.redAccent)),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  await context.read<ProfileProvider>().mergeProfile({
+                    'avatar': '',
+                  });
+                  setState(() {});
+                },
+              ),
+            ],
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _viewAvatarFullScreen(String avatarPath) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => Scaffold(
+          backgroundColor: Colors.black,
+          appBar: AppBar(
+            backgroundColor: Colors.black,
+            iconTheme: const IconThemeData(color: Colors.white),
+          ),
+          body: Center(
+            child: avatarPath.startsWith('/')
+                ? Image.file(File(avatarPath), fit: BoxFit.contain)
+                : Image.asset(avatarPath, fit: BoxFit.contain),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildHeader() {
     final profile = context.read<ProfileProvider>().profile;
     String avatarPath = profile['avatar'] as String? ?? '';
@@ -562,34 +732,41 @@ void _showAddEditContactDialog(
 
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RhythmaGradients.primary,
-          ),
+        InkWell(
+          onTap: () => _showAvatarOptionsSheet(),
+          borderRadius: BorderRadius.circular(56),
           child: Container(
-            padding: const EdgeInsets.all(3),
+            padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: RhythmaColors.background,
+              gradient: RhythmaGradients.primary,
             ),
-            child: CircleAvatar(
-              radius: 48,
-              backgroundColor: RhythmaColors.surfaceMuted,
-              backgroundImage: hasAvatar
-                  ? (avatarPath.startsWith('/')
-                      ? FileImage(File(avatarPath))
-                      : AssetImage(avatarPath) as ImageProvider)
-                  : null,
-              child: hasAvatar
-                  ? null
-                  : Icon(Icons.person_rounded,
-                      size: 48, color: RhythmaColors.mutedFg),
+            child: Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: RhythmaColors.background,
+              ),
+              child: CircleAvatar(
+                radius: 48,
+                backgroundColor: RhythmaColors.surfaceMuted,
+                backgroundImage: hasAvatar
+                    ? (avatarPath.startsWith('/')
+                        ? FileImage(File(avatarPath))
+                        : AssetImage(avatarPath) as ImageProvider)
+                    : null,
+                onBackgroundImageError: hasAvatar ? (_, __) {} : null,
+                child: hasAvatar
+                    ? null
+                    : Icon(Icons.person_rounded,
+                        size: 48, color: RhythmaColors.mutedFg),
+              ),
             ),
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
+        Icon(Icons.camera_alt_rounded, size: 16, color: RhythmaColors.mutedFg),
+        const SizedBox(height: 8),
         Text(
           _userName,
           style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 24),
@@ -680,6 +857,13 @@ void _showAddEditContactDialog(
   }
 
   Widget _buildStatsCards() {
+    final avgCycleDisplay = _avgCycleFromApi != null
+        ? '${_avgCycleFromApi!.toStringAsFixed(_avgCycleFromApi! % 1 == 0 ? 0 : 1)} ${AppLocalizations.of(context)!.homeDaysLabel}'
+        : '$_cycleLength ${AppLocalizations.of(context)!.homeDaysLabel}';
+    final variability = _cycleHistory.length >= 2 ? _computeVariability(_cycleHistory) : 0;
+    final variabilityDisplay = _cycleHistory.length >= 2 ? '$variability ${AppLocalizations.of(context)!.homeDaysLabel}' : '--';
+    final lastCycleDisplay = _cycleHistory.isNotEmpty ? '${_cycleHistory.first} ${AppLocalizations.of(context)!.homeDaysLabel}' : '--';
+
     return Column(
       children: [
         Row(
@@ -688,17 +872,17 @@ void _showAddEditContactDialog(
               child: _buildStatCard(
                 icon: Icons.calendar_month_rounded,
                 color: RhythmaColors.rose,
-                value: '$_cycleLength ${AppLocalizations.of(context)!.homeDaysLabel}',
+                value: avgCycleDisplay,
                 label: AppLocalizations.of(context)!.profileAvgCycleLength,
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _buildStatCard(
-                icon: Icons.psychology_rounded,
+                icon: Icons.water_drop_rounded,
                 color: RhythmaColors.teal,
-                value: '--',
-                label: AppLocalizations.of(context)!.profileAvgMentalHealth,
+                value: _avgBleeding != null ? '${_avgBleeding!.toStringAsFixed(_avgBleeding! % 1 == 0 ? 0 : 1)}d' : '--',
+                label: AppLocalizations.of(context)!.homeLogFlow,
               ),
             ),
           ],
@@ -710,7 +894,7 @@ void _showAddEditContactDialog(
               child: _buildStatCard(
                 icon: Icons.insights_rounded,
                 color: RhythmaColors.coral,
-                value: '--',
+                value: variabilityDisplay,
                 label: AppLocalizations.of(context)!.profileCycleVariability,
               ),
             ),
@@ -719,7 +903,7 @@ void _showAddEditContactDialog(
               child: _buildStatCard(
                 icon: Icons.history_toggle_off_rounded,
                 color: RhythmaColors.primary,
-                value: '--',
+                value: lastCycleDisplay,
                 label: AppLocalizations.of(context)!.profileLastCycleLength,
               ),
             ),
@@ -727,6 +911,14 @@ void _showAddEditContactDialog(
         ),
       ],
     );
+  }
+
+  int _computeVariability(List<int> lengths) {
+    if (lengths.length < 2) return 0;
+    final mean = lengths.reduce((a, b) => a + b) / lengths.length;
+    final variance =
+        lengths.map((v) => (v - mean) * (v - mean)).reduce((a, b) => a + b) / lengths.length;
+    return variance <= 0 ? 0 : variance.round();
   }
 
   Widget _buildActionMenu() {
